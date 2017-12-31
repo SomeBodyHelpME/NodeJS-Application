@@ -13,9 +13,9 @@ router.post('/login', async(req, res, next) => {
   let checkQuery = 'SELECT * FROM admin.user WHERE id = ?';
   let checkResult = await db.queryParamCnt_Arr(checkQuery, [id]);
   if(checkResult.length === 1) {
-    const hashedpwd = await crypto.pbkdf2(pwd, checkResult.salt, 100000, 32, 'sha512');
-    if(hashedpwd === checkResult.pwd) {
-      const token = jwt.sign(id,checkResult.u_idx);
+    const hashedpwd = await crypto.pbkdf2(pwd, checkResult[0].salt, 100000, 32, 'sha512');
+    if(hashedpwd.toString('base64') === checkResult[0].pwd) {
+      const token = jwt.sign(id,checkResult[0].u_idx);
       res.status(201).send({
         message : "Login Success",
         token : token
@@ -41,12 +41,12 @@ router.post('/register', async(req, res, next) => {
   var birthday = req.body.birthday;
 
   const salt = await crypto.randomBytes(32);
-  const hashedpwd = await crypto.pbkdf2(pwd, salt, 100000, 32, 'sha512');
+  const hashedpwd = await crypto.pbkdf2(pwd, salt.toString('base64'), 100000, 32, 'sha512');
   let checkIDQuery = 'SELECT * FROM admin.user WHERE id = ?';
   let checkID = await db.queryParamCnt_Arr(checkIDQuery, [id]);
   if(checkID.length === 0) {
     let insertQuery = 'INSERT INTO admin.user (name, salt, pwd, phone, id) VALUES (?, ?, ?, ?, ?)';
-    let insertResult = await db.queryParamCnt_Arr(insertQuery, [name, salt, hashedpwd, phone, id]);
+    let insertResult = await db.queryParamCnt_Arr(insertQuery, [name, salt.toString('base64'), hashedpwd.toString('base64'), phone, id]);
     res.status(200).send({
       message : "Success Register"
     });

@@ -2,12 +2,15 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto-promise');
 
-const jwt = require('../module/jwt.js');
-const db = require('../module/pool.js');
-const sql = require('../module/sql.js');
+const jwt = require('../../module/jwt.js');
+const db = require('../../module/pool.js');
+const sql = require('../../module/sql.js');
 
 router.post('/register/notice', async(req, res, next) => {
-  let u_idx = req.body.u_idx;
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  let u_idx = decoded.u_idx;
+
   let chat_idx = req.body.chat_idx;
   let g_idx = req.body.g_idx;
   let write_time = ''; 
@@ -21,7 +24,10 @@ router.post('/register/notice', async(req, res, next) => {
 });
 
 router.post('/register/lights', async(req, res, next) => {
-  let u_idx = req.body.u_idx;
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  let u_idx = decoded.u_idx;
+
   let g_idx = req.body.g_idx;
   let status = req.body.status;
   let content = req.body.content;
@@ -38,7 +44,10 @@ router.post('/register/lights', async(req, res, next) => {
 });
 
 router.post('/register/pick', async(req, res, next) => {
-  let u_idx = req.body.u_idx;
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  let u_idx = decoded.u_idx;
+
   let chat_idx = req.body.chat_idx;
   let g_idx = req.body.g_idx;
   let write_time = '';
@@ -51,7 +60,10 @@ router.post('/register/pick', async(req, res, next) => {
 });
 
 router.post('/register/vote', async(req, res, next) => {
-  let u_idx = req.body.u_idx;
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  let u_idx = decoded.u_idx;
+  
   let chat_idx = req.body.chat_idx;
   let g_idx = req.body.g_idx;
   let write_time = '';

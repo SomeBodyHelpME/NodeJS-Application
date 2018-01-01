@@ -171,7 +171,6 @@ module.exports = {
       }
     }// for(let i = 0)
 
-
     let result = {
       notice : NoticeArray,
       lights : LightsArray,

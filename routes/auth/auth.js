@@ -24,11 +24,14 @@ router.post('/login', async(req, res, next) => {
       res.status(400).send({
         message : "Login Failed"
       });
+      console.log("pwd error");
     }
+
   } else {
     res.status(400).send({
       message : "Login Failed"
     });
+    console.log("id error");
   }
 
 });
@@ -72,4 +75,32 @@ router.get('/register/check', async(req, res, next) => {
     });
   }
 });
+
+router.post('/profile', async(req, res, next) => {
+    let token = req.headers.token;
+    let decoded = jwt.verify(token);
+    let u_idx = decoded.u_idx;
+
+    var name = req.body.name;
+    var bio = req.body.bio;
+    var phone = req.body.phone;
+
+    let updateProfileQuery = 'UPDATE admin.user SET name=?, bio=?,phone=? where u_idx=? ';
+    let updateProfile = await db.queryParamCnt_Arr(updateProfileQuery,[name,bio,phone,u_idx]);
+   
+   if(updateProfile.changedRows === 1){
+    res.status(201).send({
+      message:"Success Change"
+    });
+   }
+   else{
+    //값은 넘어왔는데 바뀐게 없다.오류는 x 
+    res.status(400).send({
+      message:"No Change"
+    })
+   }
+    console.log("u_idx:",u_idx);
+    console.log("update결과: ",updateProfile);
+});
+
 module.exports = router;

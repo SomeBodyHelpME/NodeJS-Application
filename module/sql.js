@@ -77,21 +77,23 @@ module.exports = {
     for(let i = 0 ; i < findUserJoined.length ; i++) {
       //let findGroupNameQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
       //let findGroupName = await db.queryParamCnt_Arr(findGroupNameQuery, [g_idx]);
-
       let findUserIndexQuery = 'SELECT * FROM admin.joined JOIN chat.group ON admin.joined.g_idx=chat.group.g_idx WHERE g_idx = ? AND u_idx != ?';
       let findUserIndex = await db.queryParamCnt_Arr(findUserIndexQuery, [findUserJoined[i].g_idx, u_idx]);
 
       for(let j = 0 ; j < findUserIndex.length ; j++) {
+        let AgendaJson = {};
+        AgendaJson.real_name = findUserIndex[j].real_name;
+        AgendaJson.ctrl_name = findUserIndex[j].ctrl_name;
         let findUserDetailInfoQuery = 'SELECT * FROM admin.user WHERE u_idx = ?';
         let findUserDetailInfo = await db.queryParamCnt_Arr(findUserDetailInfoQuery, [findUserIndex[j].u_idx]);
-
-        // 이 럼 될 것 같 은 데 ? 되 지 않 을 까 ? 될 거 야 . . . 외 않 되?
-        for(let k = 0 ; k < findUserDetailInfo.length ; k++) {
-          findUserDetailInfo[k].real_name = findUserIndex[j].real_name;
-          findUserDetailInfo[k].ctrl_name = findUserIndex[j].ctrl_name;
-        }
+        AgendaJson.data = findUserDetailInfo;
+        // // 이 럼 될 것 같 은 데 ? 되 지 않 을 까 ? 될 거 야 . . . 외 않 되?
+        // for(let k = 0 ; k < findUserDetailInfo.length ; k++) {
+        //   findUserDetailInfo[k].real_name = findUserIndex[j].real_name;
+        //   findUserDetailInfo[k].ctrl_name = findUserIndex[j].ctrl_name;
+        // }
       }
-      result.push(findUserDetailInfo);
+      result.push(AgendaJson);
     }
     return result;
   },
@@ -201,24 +203,45 @@ module.exports = {
     let u_idx = args[0];
     let findUserJoinedQuery = 'SELECT g_idx FROM admin.joined WHERE u_idx = ?';
     let findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
-    let result = [];
+
+    // 수신자에 대한 내용
+    let resArray = [];
     for(let i = 0 ; i < findUserJoined.length ; i++) {
       let findEachGroupLightsQuery = 'SELECT * FROM chat.group JOIN chat.lights USING(g_idx) WHERE g_idx = ? ORDER BY chat.lights.light_idx';
       let findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [findUserJoined[i].g_idx]);
       let groupArray = [];
       for(let j = 0 ; j < findEachGroupLights.length ; j++) {
-        let agenda = {};                      //이상하다 다시 생각해보자
-        agenda.Q = findEachGroupLights[j];
+        let AgendaJson = {};                      //이상하다 다시 생각해보자
+        AgendaJson.Q = findEachGroupLights[j];
         if(findEachGroupLights[j].status === true) {  //true check
           let findEachGroupLightsResAllQuery = 'SELECT * FROM chat.light_response WHERE g_idx = ? AND light_idx = ?';
           let findEachGroupLightsResAll = await db.queryParamCnt_Arr(findEachGroupLightsResAllQuery, [findUserJoined[i].g_idx, findEachGroupLights[j].light_idx]);
-          agenda.A = findEachGroupLightsResAll;
+          AgendaJson.A = findEachGroupLightsResAll;
         } else {
           let findEachGroupLightsResAloneQuery = 'SELECT * FROM chat.light_response WHERE g_idx = ? AND u_idx = ? AND light_idx = ?';
           let findEachGroupLightsResAlone = await db.queryParamCnt_Arr(findEachGroupLightsResAloneQuery, [findUserJoined[i].g_idx, u_idx, findEachGroupLights[j].light_idx]);
-          agenda.A = findEachGroupLightsResAlone; //배열?
+          AgendaJson.A = findEachGroupLightsResAlone; //배열?
         }
-        groupArray.push(agenda);
+        groupArray.push(AgendaJson);
+      }
+      result.push(groupArray);
+    }
+
+    // 발신자에 대한 내용
+    let reqArray = [];
+    for(let i = 0 ; i < findUserJoined.length ; i++) {
+      let findEachGroupLightsQuery = 'SELECT * FROM chat.group JOIN chat.lights USING(g_idx) WHERE g_idx = ? AND u_idx = ? ORDER BY chat.lights.light_idx';
+      let findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [findUserJoined[i].g_idx, u_idx]);
+      let groupArray = [];
+      for(let j = 0 ; j < findEachGroupLights.length ; j++) {
+        let AgendaJson = {};                      //이상하다 다시 생각해보자
+        AgendaJson.Q = findEachGroupLights[j];
+
+        let findEachGroupLightsResAllQuery = 'SELECT * FROM chat.light_response WHERE g_idx = ? AND light_idx = ?';
+        let findEachGroupLightsResAll = await db.queryParamCnt_Arr(findEachGroupLightsResAllQuery, [findUserJoined[i].g_idx, findEachGroupLights[j].light_idx]);
+        AgendaJson.A = findEachGroupLightsResAll;
+
+        groupArray.push(AgendaJson);
       }
       result.push(groupArray);
     }

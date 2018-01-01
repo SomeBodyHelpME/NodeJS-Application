@@ -10,7 +10,7 @@ router.post('/register/notice', async(req, res, next) => {
   let u_idx = req.body.u_idx;
   let chat_idx = req.body.chat_idx;
   let g_idx = req.body.g_idx;
-  let write_time = '';
+  let write_time = ''; 
   let content = req.body.content;
 
   let result = await sql.makeNotice(u_idx, chat_idx, g_idx, write_time, content);

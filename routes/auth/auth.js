@@ -38,7 +38,7 @@ router.post('/register', async(req, res, next) => {
   var pwd = req.body.pwd;
   var name = req.body.name;
   var phone = req.body.phone;
-  var birthday = req.body.birthday;
+
 
   const salt = await crypto.randomBytes(32);
   const hashedpwd = await crypto.pbkdf2(pwd, salt.toString('base64'), 100000, 32, 'sha512');
@@ -47,7 +47,7 @@ router.post('/register', async(req, res, next) => {
   if(checkID.length === 0) {
     let insertQuery = 'INSERT INTO admin.user (name, salt, pwd, phone, id) VALUES (?, ?, ?, ?, ?)';
     let insertResult = await db.queryParamCnt_Arr(insertQuery, [name, salt.toString('base64'), hashedpwd.toString('base64'), phone, id]);
-    res.status(200).send({
+    res.status(201).send({
       message : "Success Register"
     });
   } else {
@@ -59,7 +59,7 @@ router.post('/register', async(req, res, next) => {
 });
 
 router.get('/register/check', async(req, res, next) => {
-  var id = req.body.id;
+  var id = req.query.id;
   let checkIDQuery = 'SELECT * FROM admin.user WHERE id = ?';
   let checkID = await db.queryParamCnt_Arr(checkIDQuery, [id]);
   if(checkID.length === 0) {

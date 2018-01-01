@@ -7,7 +7,9 @@ const db = require('../../module/pool.js');
 const sql = require('../../module/sql.js');
 
 router.get('/notice', async(req, res, next) => {
-  let u_idx = req.query.u_idx;
+  let token = req.header.token;
+  let test = jwt.verify(token);
+  let u_idx = test.u_idx;
   let result = await sql.homeNotice(u_idx);
   res.status(200).send({
     message : "success",

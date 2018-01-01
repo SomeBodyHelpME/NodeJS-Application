@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-//const secretKey = require('../../config/secretKey').key;
+const secretKey = require('../config/secretKey').key;
 
 
 module.exports = {
@@ -11,8 +11,8 @@ module.exports = {
             expiresIn : 60 * 60 * 24 * 30 //30 days
         };
         const payload = {
-            user_id : id,
-            user_idx : idx
+            id : id,
+            u_idx : idx
         };
         let token = jwt.sign(payload, secretKey, options);
         return token;

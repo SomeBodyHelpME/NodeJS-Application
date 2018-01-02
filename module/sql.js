@@ -48,7 +48,7 @@ module.exports = {
     let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
     let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [g_idx]);
     let searchUserInfoQuery = 'SELECT * FROM admin.user WHERE u_idx = ?';
-    let searchUserInfo = await db.queryParamCnt_Arr(searchAllInfoQuery, [u_idx]);
+    let searchUserInfo = await db.queryParamCnt_Arr(searchUserInfoQuery, [u_idx]);
 
     let insertUserInfoQuery = 'INSERT INTO admin.joined (u_idx, g_idx) VALUES (?,?)';
     let insertUserInfo = await db.queryParamCnt_Arr(insertUserInfoQuery, [u_idx, g_idx]);
@@ -208,15 +208,15 @@ module.exports = {
         let AgendaJson = {};                      //이상하다 다시 생각해보자
 
         if(findEachGroupLights[j].open_status === true) {  //true check
-          let findEachGroupLightsResAllQuery = 'SELECT * FROM chat.light_response WHERE g_idx = ? AND light_idx = ?';
-          let findEachGroupLightsResAll = await db.queryParamCnt_Arr(findEachGroupLightsResAllQuery, [findUserJoined[i].g_idx, findEachGroupLights[j].light_idx]);
+          let findEachGroupLightsResAllQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ?';
+          let findEachGroupLightsResAll = await db.queryParamCnt_Arr(findEachGroupLightsResAllQuery, [findEachGroupLights[j].light_idx]);
           if(findEachGroupLightsResAll.length != 0) {
             AgendaJson.Q = findEachGroupLights[j];
             AgendaJson.A = findEachGroupLightsResAll;
           }
         } else {
-          let findEachGroupLightsResAloneQuery = 'SELECT * FROM chat.light_response WHERE g_idx = ? AND u_idx = ? AND light_idx = ?';
-          let findEachGroupLightsResAlone = await db.queryParamCnt_Arr(findEachGroupLightsResAloneQuery, [findUserJoined[i].g_idx, u_idx, findEachGroupLights[j].light_idx]);
+          let findEachGroupLightsResAloneQuery = 'SELECT * FROM chat.light_response WHERE u_idx = ? AND light_idx = ?';
+          let findEachGroupLightsResAlone = await db.queryParamCnt_Arr(findEachGroupLightsResAloneQuery, [u_idx, findEachGroupLights[j].light_idx]);
           if(findEachGroupLightsResAlone.length != 0) {
             AgendaJson.Q = findEachGroupLights[j];
             AgendaJson.A = findEachGroupLightsResAlone;
@@ -243,8 +243,8 @@ module.exports = {
         let AgendaJson = {};                      //이상하다 다시 생각해보자
         AgendaJson.Q = findEachGroupLights[j];
 
-        let findEachGroupLightsResAllQuery = 'SELECT * FROM chat.light_response WHERE g_idx = ? AND light_idx = ?';
-        let findEachGroupLightsResAll = await db.queryParamCnt_Arr(findEachGroupLightsResAllQuery, [findUserJoined[i].g_idx, findEachGroupLights[j].light_idx]);
+        let findEachGroupLightsResAllQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ?';
+        let findEachGroupLightsResAll = await db.queryParamCnt_Arr(findEachGroupLightsResAllQuery, [findEachGroupLights[j].light_idx]);
         AgendaJson.A = findEachGroupLightsResAll;
 
         groupArray.push(AgendaJson);
@@ -331,17 +331,17 @@ module.exports = {
     for(let j = 0 ; j < findEachGroupLightsRes.length ; j++) {
       let AgendaJson = {};                      //이상하다 다시 생각해보자
 
-      if(findEachGroupLightsRes[j].open_status === true) {  //true check
-        let findEachGroupLightsResAllQuery = 'SELECT * FROM chat.light_response WHERE g_idx = ? AND light_idx = ?';
-        let findEachGroupLightsResAll = await db.queryParamCnt_Arr(findEachGroupLightsResAllQuery, [g_idx, findEachGroupLights[j].light_idx]);
+      if(findEachGroupLightsRes[j].open_status === 1) {  //true check
+        let findEachGroupLightsResAllQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ?';
+        let findEachGroupLightsResAll = await db.queryParamCnt_Arr(findEachGroupLightsResAllQuery, [findEachGroupLightsRes[j].light_idx]);
         if(findEachGroupLightsResAll.length != 0) {
           AgendaJson.Q = findEachGroupLightsRes[j];
           AgendaJson.A = findEachGroupLightsResAll;
         }
       } else {
-        let findEachGroupLightsResAloneQuery = 'SELECT * FROM chat.light_response WHERE g_idx = ? AND u_idx = ? AND light_idx = ?';
-        let findEachGroupLightsResAlone = await db.queryParamCnt_Arr(findEachGroupLightsResAloneQuery, [g_idx, u_idx, findEachGroupLights[j].light_idx]);
-        if(findEachGroupLightsResAll.length != 0) {
+        let findEachGroupLightsResAloneQuery = 'SELECT * FROM chat.light_response WHERE u_idx = ? AND light_idx = ?';
+        let findEachGroupLightsResAlone = await db.queryParamCnt_Arr(findEachGroupLightsResAloneQuery, [u_idx, findEachGroupLightsRes[j].light_idx]);
+        if(findEachGroupLightsResAlone.length != 0) {
           AgendaJson.Q = findEachGroupLightsRes[j];
           AgendaJson.A = findEachGroupLightsResAlone;
         }
@@ -354,13 +354,13 @@ module.exports = {
     let reqArray = [];
 
     let findEachGroupLightsReqQuery = 'SELECT * FROM chat.group JOIN chat.lights USING(g_idx) WHERE g_idx = ? AND u_idx = ? ORDER BY chat.lights.light_idx';
-    let findEachGroupLightsReq = await db.queryParamCnt_Arr(findEachGroupLightsReqQuery, [findUserJoined[i].g_idx, u_idx]);
+    let findEachGroupLightsReq = await db.queryParamCnt_Arr(findEachGroupLightsReqQuery, [g_idx, u_idx]);
     for(let j = 0 ; j < findEachGroupLightsReq.length ; j++) {
       let AgendaJson = {};                      //이상하다 다시 생각해보자
       AgendaJson.Q = findEachGroupLightsReq[j];
 
       let findEachGroupLightsResAllQuery = 'SELECT * FROM chat.light_response WHERE g_idx = ? AND light_idx = ?';
-      let findEachGroupLightsResAll = await db.queryParamCnt_Arr(findEachGroupLightsResAllQuery, [findUserJoined[i].g_idx, findEachGroupLights[j].light_idx]);
+      let findEachGroupLightsResAll = await db.queryParamCnt_Arr(findEachGroupLightsResAllQuery, [g_idx, findEachGroupLightsReq[j].light_idx]);
       AgendaJson.A = findEachGroupLightsResAll;
 
       reqArray.push(AgendaJson);
@@ -440,8 +440,8 @@ module.exports = {
     let insertLights = await db.queryParamCnt_Arr(insertLightsQuery, [u_idx, g_idx, open_status, entire_status, content, write_time, chat_idx]);
 
     if(entire_status === 1) {
-      let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM admin.joined WHERE g_idx = ?';
-      let searchAllUsersInSpecificGroup = await db.queryParamCnt_Arr(searchAllUsersInSpecificGroupQuery, [g_idx]);
+      let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM admin.joined WHERE g_idx = ? AND u_idx != ?';
+      let searchAllUsersInSpecificGroup = await db.queryParamCnt_Arr(searchAllUsersInSpecificGroupQuery, [g_idx,u_idx]);
       for(let i = 0 ; i < searchAllUsersInSpecificGroup.length ; i++) {
         let insertLightsResponseQuery = 'INSERT INTO chat.light_response (light_idx, u_idx, color, content, write_time) VALUES (?, ?, ?, ?, ?)';
         let insertLightsResponse = await db.queryParamCnt_Arr(insertLightsResponseQuery, [insertLights.insertId, searchAllUsersInSpecificGroup[i].u_idx, "r", null, null]);
@@ -495,7 +495,6 @@ module.exports = {
     let color = args[2];
     let content = args[3];
     let write_time = args[4];
-
     let updateLightsResQuery = 'UPDATE chat.light_response SET color = ?, content = ?, write_time = ? WHERE light_idx = ? AND u_idx = ?';
     let updateLightsRes = await db.queryParamCnt_Arr(updateLightsResQuery, [color, content, write_time, light_idx, u_idx]);
   },
@@ -514,9 +513,9 @@ module.exports = {
     let getUsersListInGroupQuery = 'SELECT u_idx FROM admin.joined WHERE g_idx = ?';
     let getUsersListInGroup = await db.queryParamCnt_Arr(getUsersListInGroupQuery, [g_idx]);
     let result = [];
-    for(let i = 0 ; i < getUsersInfoInGroup.length ; i++) {
+    for(let i = 0 ; i < getUsersListInGroup.length ; i++) {
       let getUsersInfoQuery = 'SELECT * FROM admin.user WHERE u_idx = ?';
-      let getUsersInfo = await db.queryParamCnt_Arr(getUsersInfoQuery, [u_idx]);
+      let getUsersInfo = await db.queryParamCnt_Arr(getUsersInfoQuery, [getUsersListInGroup[i].u_idx]);
       result.push(getUsersInfo[0]);
     }
     return result;
@@ -528,9 +527,10 @@ module.exports = {
     let getUsersListInGroupQuery = 'SELECT u_idx FROM admin.joined WHERE g_idx = ? AND u_idx != ?';
     let getUsersListInGroup = await db.queryParamCnt_Arr(getUsersListInGroupQuery, [g_idx, u_idx]);
     let result = [];
-    for(let i = 0 ; i < getUsersInfoInGroup.length ; i++) {
+
+    for(let i = 0 ; i < getUsersListInGroup.length ; i++) {
       let getUsersInfoQuery = 'SELECT * FROM admin.user WHERE u_idx = ?';
-      let getUsersInfo = await db.queryParamCnt_Arr(getUsersInfoQuery, [u_idx]);
+      let getUsersInfo = await db.queryParamCnt_Arr(getUsersInfoQuery, [getUsersListInGroup[i].u_idx]);
       result.push(getUsersInfo[0]);
     }
     return result;

@@ -6,71 +6,102 @@ const jwt = require('../../module/jwt.js');
 const db = require('../../module/pool.js');
 const sql = require('../../module/sql.js');
 
-router.post('/register/notice', async(req, res, next) => {
+router.post('/notice', async(req, res, next) => {
   let token = req.headers.token;
   let decoded = jwt.verify(token);
-  let u_idx = decoded.u_idx;
-
-  let chat_idx = req.body.chat_idx;
-  let g_idx = req.body.g_idx;
-  let write_time = '';
-  let content = req.body.content;
-
-  let result = await sql.makeNotice(u_idx, chat_idx, g_idx, write_time, content);
-  res.status(201).send({
-    message : "Success Add Notice"
-  });
-
+  if(decoded == -1)
+  {
+    res.status(400).send({
+      message : "verification failed"
+    })
+  }
+  else 
+  {
+      let u_idx = decoded.u_idx;
+      let chat_idx = req.body.chat_idx;
+      let g_idx = req.body.g_idx;
+      let write_time = req.body.write_time;
+      let content = req.body.content;
+      let result = await sql.makeNotice(u_idx, chat_idx, g_idx, write_time, content);
+      res.status(201).send({
+          message: "Success Make Notice"
+      });
+  }
 });
 
-router.post('/register/lights', async(req, res, next) => {
+router.post('/lights', async(req, res, next) => {
   let token = req.headers.token;
   let decoded = jwt.verify(token);
-  let u_idx = decoded.u_idx;
+  if(decoded == -1)
+  {
+    res.status(400).send({
+      message : "verification failed"
+    })
+  }
+  else 
+  {
+      let u_idx = decoded.u_idx;
+      let chat_idx = req.body.chat_idx;
+      let g_idx = req.body.g_idx;
+      let write_time = 'moment will be used';
+      let content = req.body.content;
+      let status = req.body.status;
+      let userArray = req.body.userArray;
+      let result = await sql.makeLights(u_idx, g_idx, status, content, write_time, chat_idx, userArray);
 
-  let g_idx = req.body.g_idx;
-  let status = req.body.status;
-  let content = req.body.content;
-  let userArray = [];
-
-  let write_time = '';
-  let chat_idx = req.body.chat_idx;
-
-  let result = await sql.makeNotice(u_idx, g_idx, status, content, userArray, write_time, chat_idx);
-  res.status(201).send({
-    message : "Success Add Lights"
-  });
-
+      res.status(201).send({
+          message: "Success Make Light"
+      });
+  }
 });
 
-router.post('/register/pick', async(req, res, next) => {
+router.post('/pick', async(req, res, next) => {
   let token = req.headers.token;
   let decoded = jwt.verify(token);
-  let u_idx = decoded.u_idx;
-
-  let chat_idx = req.body.chat_idx;
-  let g_idx = req.body.g_idx;
-  let write_time = '';
-  let content = req.body.content;
-
-  let result = await sql.makeNotice(u_idx, chat_idx, g_idx, write_time, content);
-  res.status(201).send({
-    message : "Success Add Pick"
-  });
+  if(decoded == -1)
+  {
+    res.status(400).send({
+      message : "verification failed"
+    })
+  }
+  else 
+  {
+      let u_idx = decoded.u_idx;
+      let chat_idx = req.body.chat_idx;
+      let g_idx = req.body.g_idx;
+      let write_time = req.body.write_time;
+      let content = req.body.content;
+      let result = await sql.makePick(u_idx, chat_idx, g_idx, write_time, content);
+      
+      res.status(201).send({
+          message: "Success Make Pick"
+      });
+  }
 });
 
-router.post('/register/vote', async(req, res, next) => {
+router.post('/vote', async(req, res, next) => {
   let token = req.headers.token;
   let decoded = jwt.verify(token);
-  let u_idx = decoded.u_idx;
-  
-  let chat_idx = req.body.chat_idx;
-  let g_idx = req.body.g_idx;
-  let write_time = '';
-  let content = req.body.content;
-
-  let result = await sql.makeNotice(u_idx, chat_idx, g_idx, write_time, content);
+  if(decoded == -1)
+  {
+    res.status(400).send({
+      message : "verification failed"
+    })
+  }
+  else 
+  {
+      let u_idx = decoded.u_idx;
+      let chat_idx = req.body.chat_idx;
+      let g_idx = req.body.g_idx;
+      let write_time = 'moment will be used';
+      let content = req.body.content;
+      let title = req.body.title;
+      let result = await sql.makeVote(u_idx, chat_idx, g_idx, write_time, content, title);
+      
+      res.status(201).send({
+          message: "Success Make Pick"
+      });
+  }
 });
-
 
 module.exports = router;

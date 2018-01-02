@@ -19,7 +19,7 @@ router.get('/notice', async(req, res, next) => {
         let u_idx = decoded.u_idx;
         let result = await sql.homeNotice(u_idx);
         res.status(200).send({
-            message: "Success to Laod All Notices",
+            message: "Success to Load All Notices",
             data: result
         });
     }

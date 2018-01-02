@@ -292,11 +292,11 @@ module.exports = {
         let agenda = {};
         agenda.Q = findEachGroupVote[j];
         if(findEachGroupVote[j].status === true) {
-          let findEachGroupVoteResAllQuery = 'SELECT * FROM chat.vote_response WHERE g_idx = ? AND vote_idx = ?';
+          let findEachGroupVoteResAllQuery = 'SELECT * FROM chat.vote_response JOIN admin.user USING(u_idx) WHERE g_idx = ? AND vote_idx = ?';
           let findEachGroupVoteResAll = await db.queryParamCnt_Arr(findEachGroupVoteResAllQuery, [findUserJoined[i].g_idx, findEachGroupVote[j].vote_idx]);
           agenda.A = findEachGroupVoteResAll;
         } else {
-          let findEachGroupVoteResAloneQuery = 'SELECT * FROM chat.vote_response WHERE g_idx = ? AND u_idx = ? AND vote_idx = ?';
+          let findEachGroupVoteResAloneQuery = 'SELECT * FROM chat.vote_response JOIN admin.user USING(u_idx) WHERE g_idx = ? AND u_idx = ? AND vote_idx = ?';
           let findEachGroupLightsResAlone = await db.queryParamCnt_Arr(findEachGroupVoteResAloneQuery, [findUserJoined[i].g_idx, u_idx, findEachGroupVote[j].vote_idx]);
           agenda.A = findEachGroupLightsResAlone; //배열?
         }
@@ -362,15 +362,11 @@ module.exports = {
     for(let i = 0 ; i < findEachGroupVote.length ; i++) {
       let agenda = {};
       agenda.Q = findEachGroupVote[i];
-      if(findEachGroupVote[i].status === "t") {
-        let findEachGroupVoteResAllQuery = 'SELECT * FROM chat.vote_response WHERE g_idx = ? AND vote_idx = ?';
-        let findEachGroupVoteResAll = await db.queryParamCnt_Arr(findEachGroupVoteResAllQuery, [g_idx, findEachGroupVote[i].vote_idx]);
-        agenda.A = findEachGroupVoteResAll;
-      } else {
-        let findEachGroupVoteResAloneQuery = 'SELECT * FROM chat.vote_response WHERE g_idx = ? AND u_idx = ? AND vote_idx = ?';
-        let findEachGroupVoteResAlone = await db.queryParamCnt_Arr(findEachGroupVoteResAloneQuery, [g_idx, u_idx, findEachGroupVote[i].vote_idx]);
-        agenda.A = findEachGroupVoteResAlone; //배열?
-      }
+
+      let findEachGroupVoteResAllQuery = 'SELECT * FROM chat.vote_response JOIN admin.user USING(u_idx) WHERE g_idx = ? AND vote_idx = ?';
+      let findEachGroupVoteResAll = await db.queryParamCnt_Arr(findEachGroupVoteResAllQuery, [g_idx, findEachGroupVote[i].vote_idx]);
+      agenda.A = findEachGroupVoteResAll;
+
       result.push(agenda);
 
     }
@@ -492,7 +488,7 @@ module.exports = {
       message : "Success Update Vote Response"
     });
   },
-  showSpecificMemberInLights : async (...args) => {
+  showSpecificMemberInChat : async (...args) => {
     let g_idx = args[0];
 
     let getUsersListInGroupQuery = 'SELECT u_idx FROM admin.joined WHERE g_idx = ?';
@@ -503,6 +499,39 @@ module.exports = {
       let getUsersInfo = await db.queryParamCnt_Arr(getUsersInfoQuery, [u_idx]);
       result.push(getUsersInfo[0]);
     }
+  }
+  showSpecificMemberInLights : async (...args) => {
+    let u_idx = args[0];
+    let g_idx = args[1];
+
+    let getUsersListInGroupQuery = 'SELECT u_idx FROM admin.joined WHERE g_idx = ? AND u_idx != ?';
+    let getUsersListInGroup = await db.queryParamCnt_Arr(getUsersListInGroupQuery, [g_idx, u_idx]);
+    let result = [];
+    for(let i = 0 ; i < getUsersInfoInGroup.length ; i++) {
+      let getUsersInfoQuery = 'SELECT * FROM admin.user WHERE u_idx = ?';
+      let getUsersInfo = await db.queryParamCnt_Arr(getUsersInfoQuery, [u_idx]);
+      result.push(getUsersInfo[0]);
+    }
   return result;
+  },
+  showGroupLists : async (...args) => {
+    let u_idx = args[0];
+
+    let findUserJoinedQuery = 'SELECT g_idx FROM admin.joined WHERE u_idx = ?';
+    let findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
+    let result = [];
+    for(let i = 0 ; i < findUserJoined.length ; i++) {
+      let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
+      let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [g_idx]);
+
+      let getInfoAboutSpecificGroupQuery = 'SELECT * FROM chat.'searchGroupInfo[0].ctrl_name;
+      let getInfoAboutSpecificGroup = await db.queryParamCnt_None(getInfoAboutSpecificGroupQuery);
+      let AgendaJson = {
+        name : searchGroupInfo,
+        data : getInfoAboutSpecificGroup
+      };
+      result.push(AgendaJson);
+    }
+    return result;
   }
 };

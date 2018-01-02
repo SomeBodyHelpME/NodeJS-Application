@@ -111,16 +111,7 @@ router.post('/profile', async(req, res, next) => {
 });
 
 router.post('/invite', async(req, res, next) => {
-  let token = req.headers.token;
-    let decoded = jwt.verify(token);
-    if(decoded == -1)
-    {
-        res.status(400).send({
-            message : "verification failed"
-        });
-    }
-    else{
-    let u_idx = decoded.u_idx;
+    let u_idx = req.body.u_idx;
     let g_idx =req.body.g_idx;
 
     let result = await sql.joinNewPerson(g_idx, u_idx);
@@ -128,6 +119,6 @@ router.post('/invite', async(req, res, next) => {
             message: "Success to Load Lights for the Specific Room",
             data: result
         });
-    }
+    
 });
 module.exports = router;

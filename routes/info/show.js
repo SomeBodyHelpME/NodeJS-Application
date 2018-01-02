@@ -52,7 +52,6 @@ router.get('/userlist/chat',async(req,res,next)=>{
 	var g_idx=req.query.g_idx;
 
 	let result = await sql.showSpecificMemberInChat(g_idx);
-
         res.status(200).send({
         	message : "Success to Load Userlist",
         	data : result
@@ -72,7 +71,7 @@ router.get('/userlist/lights',async(req,res,next)=>{
     }
     else{
     	let u_idx = decoded.u_idx;
-        let result = await sql.showSpecificMemberInLights([u_idx,g_idx]);
+        let result = await sql.showSpecificMemberInLights(u_idx,g_idx);
 
         res.status(200).send({
         	message : "Success to Load Userlist",

@@ -495,7 +495,6 @@ module.exports = {
     let color = args[2];
     let content = args[3];
     let write_time = args[4];
-
     let updateLightsResQuery = 'UPDATE chat.light_response SET color = ?, content = ?, write_time = ? WHERE light_idx = ? AND u_idx = ?';
     let updateLightsRes = await db.queryParamCnt_Arr(updateLightsResQuery, [color, content, write_time, light_idx, u_idx]);
   },
@@ -528,6 +527,7 @@ module.exports = {
     let getUsersListInGroupQuery = 'SELECT u_idx FROM admin.joined WHERE g_idx = ? AND u_idx != ?';
     let getUsersListInGroup = await db.queryParamCnt_Arr(getUsersListInGroupQuery, [g_idx, u_idx]);
     let result = [];
+
     for(let i = 0 ; i < getUsersListInGroup.length ; i++) {
       let getUsersInfoQuery = 'SELECT * FROM admin.user WHERE u_idx = ?';
       let getUsersInfo = await db.queryParamCnt_Arr(getUsersInfoQuery, [getUsersListInGroup[i].u_idx]);

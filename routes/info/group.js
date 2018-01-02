@@ -9,13 +9,11 @@ const sql = require('../../module/sql.js');
 router.get('/notice', async(req, res, next) => {
     let token = req.headers.token;
     let decoded = jwt.verify(token);
-    if(decoded == -1)
-    {
+    if (decoded == -1) {
         res.status(400).send({
-            message : "verification failed"
+            message: "verification failed"
         })
-    }
-    else{
+    } else {
         let u_idx = decoded.u_idx;
         let result = await sql.homeNotice(u_idx);
         res.status(200).send({
@@ -28,13 +26,11 @@ router.get('/notice', async(req, res, next) => {
 router.get('/lights', async(req, res, next) => {
     let token = req.headers.token;
     let decoded = jwt.verify(token);
-    if(decoded == -1)
-    {
+    if (decoded == -1) {
         res.status(400).send({
-            message : "verification failed"
+            message: "verification failed"
         })
-    }
-    else{
+    } else {
         let u_idx = decoded.u_idx;
         let result = await sql.homeLights(u_idx);
         res.status(200).send({
@@ -47,13 +43,11 @@ router.get('/lights', async(req, res, next) => {
 router.get('/pick', async(req, res, next) => {
     let token = req.headers.token;
     let decoded = jwt.verify(token);
-    if(decoded == -1)
-    {
+    if (decoded == -1) {
         res.status(400).send({
-            message : "verification failed"
+            message: "verification failed"
         })
-    }
-    else{
+    } else {
         let u_idx = decoded.u_idx;
         let result = await sql.homePick(u_idx);
         res.status(200).send({
@@ -66,13 +60,11 @@ router.get('/pick', async(req, res, next) => {
 router.get('/vote', async(req, res, next) => {
     let token = req.headers.token;
     let decoded = jwt.verify(token);
-    if(decoded == -1)
-    {
+    if (decoded == -1) {
         res.status(400).send({
-            message : "verification failed"
+            message: "verification failed"
         })
-    }
-    else{
+    } else {
         let u_idx = decoded.u_idx;
         let result = await sql.homeVote(u_idx);
         res.status(200).send({

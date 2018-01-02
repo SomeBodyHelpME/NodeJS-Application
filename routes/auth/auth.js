@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto-promise');
+const upload = require('../../config/multer');
 
 const jwt = require('../../module/jwt.js');
 const db = require('../../module/pool.js');
@@ -76,39 +77,39 @@ router.get('/register/check', async(req, res, next) => {
     }
 });
 
-router.post('/profile', async(req, res, next) => {
-    let token = req.headers.token;
-    let decoded = jwt.verify(token);
-    if(decoded == -1)
-    {
-        res.status(400).send({
-            message : "verification failed"
-        })
-    }
-    else{
-    let u_idx = decoded.u_idx;
-
-    var name = req.body.name;
-    var bio = req.body.bio;
-    var phone = req.body.phone;
-
-    let updateProfileQuery = 'UPDATE admin.user SET name=?, bio=?,phone=? where u_idx=? ';
-    let updateProfile = await db.queryParamCnt_Arr(updateProfileQuery, [name, bio, phone, u_idx]);
-
-    if (updateProfile.changedRows === 1) {
-        res.status(201).send({
-            message: "Success Change"
-        });
-    } else {
-        //값은 넘어왔는데 바뀐게 없다.오류는 x 
-        res.status(400).send({
-            message: "No Change"
-        });
-    }
-    console.log("u_idx:", u_idx);
-    console.log("update결과: ", updateProfile);
-  }
-});
+// router.post('/profile', async(req, res, next) => {
+//     let token = req.headers.token;
+//     let decoded = jwt.verify(token);
+//     if(decoded == -1)
+//     {
+//         res.status(400).send({
+//             message : "verification failed"
+//         })
+//     }
+//     else{
+//     let u_idx = decoded.u_idx;
+//
+//     var name = req.body.name;
+//     var bio = req.body.bio;
+//     var phone = req.body.phone;
+//
+//     let updateProfileQuery = 'UPDATE admin.user SET name=?, bio=?,phone=? where u_idx=? ';
+//     let updateProfile = await db.queryParamCnt_Arr(updateProfileQuery, [name, bio, phone, u_idx]);
+//
+//     if (updateProfile.changedRows === 1) {
+//         res.status(201).send({
+//             message: "Success Change"
+//         });
+//     } else {
+//         //값은 넘어왔는데 바뀐게 없다.오류는 x
+//         res.status(400).send({
+//             message: "No Change"
+//         });
+//     }
+//     console.log("u_idx:", u_idx);
+//     console.log("update결과: ", updateProfile);
+//   }
+// });
 
 router.post('/invite', async(req, res, next) => {
     let u_idx = req.body.u_idx;
@@ -119,6 +120,42 @@ router.post('/invite', async(req, res, next) => {
             message: "Success to Load Lights for the Specific Room",
             data: result
         });
-    
+
 });
+
+router.post('/profile', upload.single('image'), async(req, res, next) => {
+  if(req.file != undefined) {
+    let photo = req.file.location;
+  }
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if(decoded == -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+
+    var name = req.body.name;
+    var bio = req.body.bio;
+    var phone = req.body.phone;
+
+    let updateProfileQuery = 'UPDATE admin.user SET name=?, bio=?, phone=?, photo where u_idx=? ';
+    let updateProfile = await db.queryParamCnt_Arr(updateProfileQuery, [name, bio, phone, photo, u_idx]);
+
+    if (updateProfile.changedRows === 1) {
+      res.status(201).send({
+        message: "Success Change"
+      });
+    } else {
+      //값은 넘어왔는데 바뀐게 없다.오류는 x
+      res.status(400).send({
+        message: "No Change"
+      });
+    }
+    console.log("u_idx:", u_idx);
+    console.log("update결과: ", updateProfile);
+  }
+});
+
 module.exports = router;

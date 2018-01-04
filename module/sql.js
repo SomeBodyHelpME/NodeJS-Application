@@ -389,8 +389,8 @@ module.exports = {
       let agenda = {};
       agenda.Q = showAllVote[i];
 
-      let findEachGroupVoteResAllQuery = 'SELECT * FROM chat.vote_response JOIN admin.user USING(u_idx) WHERE g_idx = ? AND vote_idx = ?';
-      let findEachGroupVoteResAll = await db.queryParamCnt_Arr(findEachGroupVoteResAllQuery, [g_idx, showAllVote[i].vote_idx]);
+      let findEachGroupVoteResAllQuery = 'SELECT * FROM chat.vote_response JOIN admin.user USING(u_idx) WHERE vote_idx = ?';
+      let findEachGroupVoteResAll = await db.queryParamCnt_Arr(findEachGroupVoteResAllQuery, [showAllVote[i].vote_idx]);
       agenda.A = findEachGroupVoteResAll;
 
       result.push(agenda);
@@ -547,6 +547,19 @@ module.exports = {
         data : getInfoAboutSpecificGroup
       };
       result.push(AgendaJson);
+    }
+    return result;
+  },
+  showAllGroupsJoined : async (...args) => {
+    let u_idx = args[0];
+
+    let findUserJoinedQuery = 'SELECT g_idx FROM admin.joined WHERE u_idx = ?';
+    let findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
+    let result = [];
+    for(let i = 0 ; i < findUserJoined.length ; i++) {
+      let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
+      let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].g_idx]);
+      result.push(searchGroupInfo[0]);
     }
     return result;
   }

@@ -138,7 +138,7 @@ router.post('/profile', upload.single('image'), async(req, res, next) => {
   }
   let token = req.headers.token;
   let decoded = jwt.verify(token);
-  if(decoded == -1) {
+  if(decoded === -1) {
     res.status(400).send({
       message : "Verification Failed"
     });

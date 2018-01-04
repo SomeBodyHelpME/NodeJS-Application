@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto-promise');
@@ -10,7 +9,7 @@ const sql = require('../../module/sql.js');
 router.get('/unperformed', async(req, res, next) => {
     let token = req.headers.token;
     let decoded = jwt.verify(token);
-    if(decoded == -1)
+    if(decoded === -1)
     {
         res.status(400).send({
             message : "Verification Failed"
@@ -31,7 +30,7 @@ router.get('/unperformed', async(req, res, next) => {
 router.get('/address', async(req, res, next) => {
 	  let token = req.headers.token;
     let decoded = jwt.verify(token);
-    if(decoded == -1)
+    if(decoded === -1)
     {
         res.status(400).send({
             message : "Verification Failed"
@@ -63,7 +62,7 @@ router.get('/userlist/lights', async(req, res, next) => {
 
 	  let token = req.headers.token;
     let decoded = jwt.verify(token);
-    if(decoded == -1) {
+    if(decoded === -1) {
         res.status(400).send({
             message : "Verification Failed"
         });
@@ -81,7 +80,7 @@ router.get('/userlist/lights', async(req, res, next) => {
 router.get('/chatlist', async(req, res, next) => {
 	  let token = req.headers.token;
     let decoded = jwt.verify(token);
-    if(decoded == -1)
+    if(decoded === -1)
     {
         res.status(400).send({
             message : "Verification Failed"
@@ -95,4 +94,22 @@ router.get('/chatlist', async(req, res, next) => {
       	});
     }
 });
+
+router.get('/grouplist', async(req, res, next) => {
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if(decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+    let result = await sql.showAllGroupsJoined(u_idx);
+    res.status(200).send({
+      message : "Success to Load Group List",
+      data : result
+    });
+  }
+});
+
 module.exports = router;

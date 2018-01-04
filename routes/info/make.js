@@ -12,8 +12,8 @@ router.post('/notice', async(req, res, next) => {
     let decoded = jwt.verify(token);
     if (decoded == -1) {
         res.status(400).send({
-            message: "Verification Failed"
-        })
+            message : "Verification Failed"
+        });
     } else {
         let u_idx = decoded.u_idx;
         let chat_idx = req.body.chat_idx;
@@ -22,7 +22,7 @@ router.post('/notice', async(req, res, next) => {
         let content = req.body.content;
         let result = await sql.makeNotice(u_idx, chat_idx, g_idx, write_time, content);
         res.status(201).send({
-            message: "Success Make Notice"
+            message : "Success Make Notice"
         });
     }
 });
@@ -32,8 +32,8 @@ router.post('/lights', async(req, res, next) => {
     let decoded = jwt.verify(token);
     if (decoded == -1) {
         res.status(400).send({
-            message: "Verification Failed"
-        })
+            message : "Verification Failed"
+        });
     } else {
         let u_idx = decoded.u_idx;
         let chat_idx = req.body.chat_idx;
@@ -44,18 +44,10 @@ router.post('/lights', async(req, res, next) => {
         let entire_status = req.body.entire_status;
         let userArray = req.body.userArray;
 
-        if (open_status === "false") {
-             open_status = 0;
-        } else { open_status = 1; }
-
-        if (entire_status === "false") {
-             entire_status = 0;
-        } else { entire_status = 1; }
-
         let result = await sql.makeLights(u_idx, g_idx, open_status, entire_status, content, write_time, chat_idx, userArray);
 
         res.status(201).send({
-            message: "Success Make Lights"
+            message : "Success Make Lights"
         });
     }
 });
@@ -66,7 +58,7 @@ router.post('/pick', async(req, res, next) => {
     if (decoded == -1) {
         res.status(400).send({
             message: "Verification Failed"
-        })
+        });
     } else {
         let u_idx = decoded.u_idx;
         let chat_idx = req.body.chat_idx;
@@ -87,7 +79,7 @@ router.post('/vote', async(req, res, next) => {
     if (decoded == -1) {
         res.status(400).send({
             message: "Verification Failed"
-        })
+        });
     } else {
         let u_idx = decoded.u_idx;
         let chat_idx = req.body.chat_idx;

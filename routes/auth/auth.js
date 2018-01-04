@@ -112,14 +112,23 @@ router.get('/register/check', async(req, res, next) => {
 // });
 
 router.post('/invite', async(req, res, next) => {
-    let u_idx = req.body.u_idx;
+    let name = req.body.name;
+    let phone = req.body.phone;
     let g_idx =req.body.g_idx;
 
-    let result = await sql.joinNewPerson(g_idx, u_idx);
-        res.status(201).send({
-            message: "Success to Load Lights for the Specific Room",
-            data: result
-        });
+    let findUserQuery = 'SELECT u_idx FROM admin.user WHERE name = ? AND phone = ?';
+    let findUser = await db.queryParamCnt_Arr(findUserQuery, [name, phone]);
+
+    if(findUser.length === 1) {
+      let result = await sql.joinNewPerson(g_idx, findUser[0].u_idx);
+      res.status(201).send({
+        message: "Success to Invite Person"
+      });
+    } else {
+      res.status(400).send({
+        message : "Fail to Search Person"
+      });
+    }
 
 });
 
@@ -140,12 +149,12 @@ router.post('/profile', upload.single('image'), async(req, res, next) => {
     var bio = req.body.bio;
     var phone = req.body.phone;
 
-    let updateProfileQuery = 'UPDATE admin.user SET name=?, bio=?, phone=?, photo where u_idx=? ';
+    let updateProfileQuery = 'UPDATE admin.user SET name = ?, bio = ?, phone = ?, photo = ? where u_idx = ?';
     let updateProfile = await db.queryParamCnt_Arr(updateProfileQuery, [name, bio, phone, photo, u_idx]);
 
     if (updateProfile.changedRows === 1) {
       res.status(201).send({
-        message: "Success Change"
+        message: "Success to Change"
       });
     } else {
       //값은 넘어왔는데 바뀐게 없다.오류는 x

@@ -21,7 +21,8 @@ router.post('/login', async(req, res, next) => {
             let info = await db.queryParamCnt_Arr(infoQuery, id);
             res.status(201).send({
                 message: "Login Success",
-                data : info,
+                name : info.name,
+                u_idx : info.u_idx,
                 token: token
             });
         } else {

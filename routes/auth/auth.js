@@ -17,8 +17,11 @@ router.post('/login', async(req, res, next) => {
         const hashedpwd = await crypto.pbkdf2(pwd, checkResult[0].salt, 100000, 32, 'sha512');
         if (hashedpwd.toString('base64') === checkResult[0].pwd) {
             const token = jwt.sign(id, checkResult[0].u_idx);
+            let infoQuery = 'SELECT name, u_idx FROM admin.user WHERE id = ?';
+            let info = await db.queryParamCnt_Arr(infoQuery, id);
             res.status(201).send({
                 message: "Login Success",
+                data : info,
                 token: token
             });
         } else {

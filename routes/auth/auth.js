@@ -136,7 +136,31 @@ router.post('/invite', async(req, res, next) => {
 
 });
 
-router.post('/profile', upload.single('image'), async(req, res, next) => {
+router.delete('/leave', async(req, res, next) => {
+  let g_idx = req.body.g_idx;
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if(decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+
+    let result = await sql.leaveRoom(u_idx, g_idx);
+    console.log(result);
+    res.status(201).send({
+      message : "Success Leave Group"
+    });
+  }
+});
+
+router.delete('/test', async(req, res, next) => {
+  let g_idx = req.body.g_idx;
+  console.log(g_idx);
+  console.log(typeof g_idx);
+});
+router.put('/profile', upload.single('image'), async(req, res, next) => {
   if(req.file != undefined) {
     let photo = req.file.location;
   }

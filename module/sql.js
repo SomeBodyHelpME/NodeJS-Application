@@ -144,7 +144,10 @@ module.exports = {
     for(let i = 0 ; i < findUserJoined.length ; i++) {
       let GroupJson = {};
       let GroupArray3 = [];
-      let findVotesIndexQuery = 'SELECT * FROM chat.group JOIN chat.vote USING(g_idx) WHERE g_idx = ?';
+      let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
+      let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].g_idx]);
+
+      let findVotesIndexQuery = 'SELECT * FROM chat.vote WHERE g_idx = ?';
       let findVotesIndex = await db.queryParamCnt_Arr(findVotesIndexQuery, [findUserJoined[i].g_idx]);
       for(let j = 0 ; j < findVotesIndex.length ; j++) {
         let findVotesQuery = 'SELECT * FROM chat.vote_response WHERE vote_idx = ? AND status = ? AND u_idx = ?';
@@ -201,7 +204,7 @@ module.exports = {
       let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
       let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].g_idx]);
 
-      let findEachGroupLightsQuery = 'SELECT * FROM chat.lights WHERE g_idx = ? ORDER BY chat.lights.light_idx';
+      let findEachGroupLightsQuery = 'SELECT * FROM chat.lights WHERE g_idx = ? ORDER BY chat.lights.light_idx DESC';
       let findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [findUserJoined[i].g_idx]);
       let groupArray = [];
       for(let j = 0 ; j < findEachGroupLights.length ; j++) {
@@ -236,7 +239,7 @@ module.exports = {
       let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
       let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].g_idx]);
 
-      let findEachGroupLightsQuery = 'SELECT * FROM chat.lights WHERE g_idx = ? AND u_idx = ? ORDER BY chat.lights.light_idx';
+      let findEachGroupLightsQuery = 'SELECT * FROM chat.lights WHERE g_idx = ? AND u_idx = ? ORDER BY chat.lights.light_idx DESC';
       let findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [findUserJoined[i].g_idx, u_idx]);
       let groupArray = [];
       for(let j = 0 ; j < findEachGroupLights.length ; j++) {
@@ -269,7 +272,7 @@ module.exports = {
       let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
       let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].g_idx]);
 
-      let findEachGroupPickQuery = 'SELECT * FROM chat.group JOIN chat.pick USING(g_idx) WHERE u_idx = ? AND g_idx = ? ORDER BY write_time';
+      let findEachGroupPickQuery = 'SELECT * FROM chat.pick WHERE u_idx = ? AND g_idx = ? ORDER BY write_time DESC';
       let findEachGroupPick = await db.queryParamCnt_Arr(findEachGroupPickQuery, [u_idx, findUserJoined[i].g_idx]);
       result.push(
         {
@@ -290,7 +293,7 @@ module.exports = {
       let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
       let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].g_idx]);
 
-      let findEachGroupVoteQuery = 'SELECT * FROM chat.vote WHERE g_idx = ? ORDER BY chat.vote.vote_idx';
+      let findEachGroupVoteQuery = 'SELECT * FROM chat.vote WHERE g_idx = ? ORDER BY chat.vote.vote_idx DESC';
       let findEachGroupVote = await db.queryParamCnt_Arr(findEachGroupVoteQuery, [findUserJoined[i].g_idx]);
       let groupArray = [];
       for(let j = 0 ; j < findEachGroupVote.length ; j++) {
@@ -321,7 +324,7 @@ module.exports = {
     // 수신자에 대한 내용
 
     let resArray = [];
-    let findEachGroupLightsResQuery = 'SELECT * FROM chat.lights WHERE g_idx = ? ORDER BY chat.lights.light_idx';
+    let findEachGroupLightsResQuery = 'SELECT * FROM chat.lights WHERE g_idx = ? ORDER BY chat.lights.light_idx DESC';
     let findEachGroupLightsRes = await db.queryParamCnt_Arr(findEachGroupLightsResQuery, [g_idx]);
     for(let j = 0 ; j < findEachGroupLightsRes.length ; j++) {
       let AgendaJson = {};                      //이상하다 다시 생각해보자
@@ -348,7 +351,7 @@ module.exports = {
     // 발신자에 대한 내용
     let reqArray = [];
 
-    let findEachGroupLightsReqQuery = 'SELECT * FROM chat.group JOIN chat.lights USING(g_idx) WHERE g_idx = ? AND u_idx = ? ORDER BY chat.lights.light_idx';
+    let findEachGroupLightsReqQuery = 'SELECT * FROM chat.lights WHERE g_idx = ? AND u_idx = ? ORDER BY chat.lights.light_idx DESC';
     let findEachGroupLightsReq = await db.queryParamCnt_Arr(findEachGroupLightsReqQuery, [g_idx, u_idx]);
     for(let j = 0 ; j < findEachGroupLightsReq.length ; j++) {
       let AgendaJson = {};                      //이상하다 다시 생각해보자
@@ -368,10 +371,38 @@ module.exports = {
     };
     return result;
   },// forEachLights
+  forEachLightsResponse : async (...args) => {
+    let u_idx = args[0];
+    let g_idx = args[1];
+    let light_idx = args[2];
+
+    let findEachGroupLightsResQuery = 'SELECT * FROM chat.lights WHERE g_idx = ? AND light_idx ORDER BY chat.lights.light_idx DESC';
+    let findEachGroupLightsRes = await db.queryParamCnt_Arr(findEachGroupLightsResQuery, [g_idx, light_idx]);
+
+    let AgendaJson = {};                      //이상하다 다시 생각해보자
+
+    if(findEachGroupLightsRes[0].open_status === 1) {  //true check
+      let findEachGroupLightsResAllQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ?';
+      let findEachGroupLightsResAll = await db.queryParamCnt_Arr(findEachGroupLightsResAllQuery, [findEachGroupLightsRes[0].light_idx]);
+      if(findEachGroupLightsResAll.length != 0) {
+        AgendaJson.Q = findEachGroupLightsRes[0];
+        AgendaJson.A = findEachGroupLightsResAll;
+      }
+    } else {
+      let findEachGroupLightsResAloneQuery = 'SELECT * FROM chat.light_response WHERE u_idx = ? AND light_idx = ?';
+      let findEachGroupLightsResAlone = await db.queryParamCnt_Arr(findEachGroupLightsResAloneQuery, [u_idx, findEachGroupLightsRes[0].light_idx]);
+      if(findEachGroupLightsResAlone.length != 0) {
+        AgendaJson.Q = findEachGroupLightsRes[0];
+        AgendaJson.A = findEachGroupLightsResAlone;
+      }
+    }
+
+    return AgendaJson;
+  },//forEachLightsResponse
   forEachPick : async (...args) => {
     let u_idx = args[0];
     let g_idx = args[1];
-    let showAllPickQuery = 'SELECT * FROM chat.group JOIN chat.pick USING(g_idx) WHERE u_idx = ? AND g_idx = ? ORDER BY write_time';
+    let showAllPickQuery = 'SELECT * FROM chat.pick WHERE u_idx = ? AND g_idx = ? ORDER BY write_time DESC';
     let showAllPick = await db.queryParamCnt_Arr(showAllPickQuery, [u_idx, g_idx]);
     // res.status(200).send({
     //   message : "success",
@@ -383,7 +414,7 @@ module.exports = {
     let u_idx = args[0];
     let g_idx = args[1];
     let result = [];
-    let showAllVoteQuery = 'SELECT * FROM chat.group JOIN chat.vote USING(g_idx) WHERE g_idx = ? ORDER BY chat.vote.vote_idx';
+    let showAllVoteQuery = 'SELECT * FROM chat.vote WHERE g_idx = ? ORDER BY chat.vote.vote_idx DESC';
     let showAllVote = await db.queryParamCnt_Arr(showAllVoteQuery, [g_idx]);
     for(let i = 0 ; i < showAllVote.length ; i++) {
       let agenda = {};
@@ -397,6 +428,21 @@ module.exports = {
     }
     return result;
   },// forEachVote
+  forEachVoteResponse : async (...args) => {
+    let g_idx = args[0];
+    let vote_idx = args[1];
+    let agenda = {};
+
+    let showAllVoteQuery = 'SELECT * FROM chat.vote WHERE g_idx = ? AND vote_idx = ?';
+    let showAllVote = await db.queryParamCnt_Arr(showAllVoteQuery, [g_idx, vote_idx]);
+    agenda.Q = showAllVote[0];
+
+    let findEachGroupVoteResAllQuery = 'SELECT * FROM chat.vote_response JOIN admin.user USING(u_idx) WHERE vote_idx = ?';
+    let findEachGroupVoteResAll = await db.queryParamCnt_Arr(findEachGroupVoteResAllQuery, [vote_idx]);
+    agenda.A = findEachGroupVoteResAll;
+
+    return agenda;
+  },//forEachVoteResponse
   makeNotice : async (...args) => {
     let u_idx = args[0];
     let chat_idx = args[1];
@@ -562,5 +608,13 @@ module.exports = {
       result.push(searchGroupInfo[0]);
     }
     return result;
+  },
+  leaveRoom : async (...args) => {
+    let u_idx = args[0];
+    let g_idx = args[1];
+
+    let leaveGroupQuery = 'DELETE FROM admin.joined WHERE g_idx = ? AND u_idx = ?';
+    let leaveGroup = await db.queryParamCnt_Arr(leaveGroupQuery, [g_idx, u_idx]);
+    return leaveGroup;
   }
 };

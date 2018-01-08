@@ -50,7 +50,7 @@ module.exports = {
       var findUserIndex = await db.queryParamCnt_Arr(findUserIndexQuery, [findUserJoined[i].g_idx, u_idx]);
       let GroupArray = [];
       for(let j = 0 ; j < findUserIndex.length ; j++) {
-        let findUserDetailInfoQuery = 'SELECT * FROM admin.user WHERE u_idx = ?';
+        let findUserDetailInfoQuery = 'SELECT u_idx, name, phone, bio, photo, id FROM admin.user WHERE u_idx = ?';
         var findUserDetailInfo = await db.queryParamCnt_Arr(findUserDetailInfoQuery, [findUserIndex[j].u_idx]);
         GroupArray.push(findUserDetailInfo[0]);
       }
@@ -133,7 +133,7 @@ module.exports = {
       var findVotesIndex = await db.queryParamCnt_Arr(findVotesIndexQuery, [findUserJoined[i].g_idx]);
       for(let j = 0 ; j < findVotesIndex.length ; j++) {
         let findVotesQuery = 'SELECT * FROM chat.vote_response WHERE vote_idx = ? AND status = ? AND u_idx = ?';
-        var findVotes = await db.queryParamCnt_Arr(findVotesQuery, [findVotesIndex[j].vote_idx, false, u_idx]); // 미응답은 : w, 응답은 : a
+        var findVotes = await db.queryParamCnt_Arr(findVotesQuery, [findVotesIndex[j].vote_idx, 0, u_idx]); // 미응답은 : w, 응답은 : a
         if(findVotes.length != 0) {
           let AgendaJson = findVotesIndex[j];
           GroupArray3.push(AgendaJson);
@@ -355,31 +355,25 @@ module.exports = {
     let u_idx = args[0];
     let g_idx = args[1];
     let light_idx = args[2];
-
-    let findEachGroupLightsResQuery = 'SELECT * FROM chat.lights WHERE g_idx = ? AND light_idx ORDER BY chat.lights.light_idx DESC';
-    var findEachGroupLightsRes = await db.queryParamCnt_Arr(findEachGroupLightsResQuery, [g_idx, light_idx]);
-
-    let AgendaJson = {};                      //이상하다 다시 생각해보자
+    let result;
 
     if(findEachGroupLightsRes[0].open_status === 1) {  //true check
       let findEachGroupLightsResAllQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ?';
-      var findEachGroupLightsResAll = await db.queryParamCnt_Arr(findEachGroupLightsResAllQuery, [findEachGroupLightsRes[0].light_idx]);
+      var findEachGroupLightsResAll = await db.queryParamCnt_Arr(findEachGroupLightsResAllQuery, [light_idx]);
       if(findEachGroupLightsResAll.length != 0) {
-        AgendaJson.Q = findEachGroupLightsRes[0];
-        AgendaJson.A = findEachGroupLightsResAll;
+        result = findEachGroupLightsResAll;
       }
     } else {
       let findEachGroupLightsResAloneQuery = 'SELECT * FROM chat.light_response WHERE u_idx = ? AND light_idx = ?';
-      var findEachGroupLightsResAlone = await db.queryParamCnt_Arr(findEachGroupLightsResAloneQuery, [u_idx, findEachGroupLightsRes[0].light_idx]);
+      var findEachGroupLightsResAlone = await db.queryParamCnt_Arr(findEachGroupLightsResAloneQuery, [u_idx, light_idx]);
       if(findEachGroupLightsResAlone.length != 0) {
-        AgendaJson.Q = findEachGroupLightsRes[0];
-        AgendaJson.A = findEachGroupLightsResAlone;
+        result = findEachGroupLightsResAlone;
       }
     }
     if(!findEachGroupLightsRes) {
       return false;
     } else {
-      return AgendaJson;
+      return result;
     }
   },//forEachLightsResponse
   forEachPick : async (...args) => {
@@ -400,43 +394,24 @@ module.exports = {
   forEachVote : async (...args) => {
     let u_idx = args[0];
     let g_idx = args[1];
-    let result = [];
+
     let showAllVoteQuery = 'SELECT * FROM chat.vote WHERE g_idx = ? ORDER BY chat.vote.vote_idx DESC';
     var showAllVote = await db.queryParamCnt_Arr(showAllVoteQuery, [g_idx]);
-    for(let i = 0 ; i < showAllVote.length ; i++) {
-      let agenda = {};
-      agenda.Q = showAllVote[i];
-      //1/8 수정 요함 SELECT chat.vote_response.*, admin.user.name, admin.user.phone, admin.user.bio, admin.user.photo, admin.user.id FROM chat.vote_response JOIN admin.user USING(u_idx) WHERE vote_idx = ?
-      let findEachGroupVoteResAllQuery = 'SELECT * FROM chat.vote_response JOIN admin.user USING(u_idx) WHERE vote_idx = ?';
-      var findEachGroupVoteResAll = await db.queryParamCnt_Arr(findEachGroupVoteResAllQuery, [showAllVote[i].vote_idx]);
-      agenda.A = findEachGroupVoteResAll;
 
-      result.push(agenda);
-    }
     if(!showAllVote) {
       return false;
     } else {
-      return result;
+      return showAllVote;
     }
   },// forEachVote
   forEachVoteResponse : async (...args) => {
     let g_idx = args[0];
     let vote_idx = args[1];
-    let agenda = {};
 
-    let showAllVoteQuery = 'SELECT * FROM chat.vote WHERE g_idx = ? AND vote_idx = ?';
-    var showAllVote = await db.queryParamCnt_Arr(showAllVoteQuery, [g_idx, vote_idx]);
-    agenda.Q = showAllVote[0];
-
-    let findEachGroupVoteResAllQuery = 'SELECT * FROM chat.vote_response JOIN admin.user USING(u_idx) WHERE vote_idx = ?';
+    let findEachGroupVoteResAllQuery = 'SELECT chat.vote_response.*, admin.user.u_idx, admin.user.name, admin.user.phone, admin.user.bio, admin.user.photo, admin.user.id FROM chat.vote_response JOIN admin.user USING(u_idx) WHERE vote_idx = ?';
     var findEachGroupVoteResAll = await db.queryParamCnt_Arr(findEachGroupVoteResAllQuery, [vote_idx]);
-    agenda.A = findEachGroupVoteResAll;
 
-    if(!showAllVote || !findEachGroupVoteResAll) {
-      return false;
-    } else {
-      return agenda;
-    }
+    return findEachGroupVoteResAll;
   },//forEachVoteResponse
   makeNotice : async (...args) => {
     let u_idx = args[0];
@@ -451,8 +426,8 @@ module.exports = {
     let insertNoticeQuery = 'INSERT INTO chat.notice (u_idx, chat_idx, g_idx, write_time, content) VALUES (?, ?, ?, ?, ?)';
     var insertNotice = await db.queryParamCnt_Arr(insertNoticeQuery, [u_idx, chat_idx, g_idx, write_time, content]);
 
-    let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM admin.joined WHERE g_idx = ?';
-    var searchAllUsersInSpecificGroup = await db.queryParamCnt_Arr(searchAllUsersInSpecificGroupQuery, [g_idx]);
+    let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM admin.joined WHERE g_idx = ? AND u_idx != ?';
+    var searchAllUsersInSpecificGroup = await db.queryParamCnt_Arr(searchAllUsersInSpecificGroupQuery, [g_idx, u_idx]);
     for(let i = 0 ; i < searchAllUsersInSpecificGroup.length ; i++) {
       let insertNoticeResponseQuery = 'INSERT INTO chat.notice_response (notice_idx, u_idx, status) VALUES (?, ?, ?)';
       var insertNoticeResponse = await db.queryParamCnt_Arr(insertNoticeResponseQuery, [insertNotice.insertId, searchAllUsersInSpecificGroup[i].u_idx, false]);
@@ -532,11 +507,11 @@ module.exports = {
     let insertVoteQuery = 'INSERT INTO chat.vote (u_idx, chat_idx, g_idx, write_time, content, title) VALUES (?, ?, ?, ?, ?, ?)';
     var insertVote = await db.queryParamCnt_Arr(insertVoteQuery, [u_idx, chat_idx, g_idx, write_time, content, title]);
 
-    let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM admin.joined WHERE g_idx = ?';
-    var searchAllUsersInSpecificGroup = await db.queryParamCnt_Arr(searchAllUsersInSpecificGroupQuery, [g_idx]);
+    let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM admin.joined WHERE g_idx = ? AND u_idx != ?';
+    var searchAllUsersInSpecificGroup = await db.queryParamCnt_Arr(searchAllUsersInSpecificGroupQuery, [g_idx, u_idx]);
     for(let i = 0 ; i < searchAllUsersInSpecificGroup.length ; i++) {
       let insertLightsResponseQuery = 'INSERT INTO chat.vote_response (vote_idx, u_idx, status, value, write_time) VALUES (?, ?, ?, ?, ?)';
-      var insertLightsResponse = await db.queryParamCnt_Arr(insertLightsResponseQuery, [insertVote.insertId, searchAllUsersInSpecificGroup[i].u_idx, "n", null, null]);
+      var insertLightsResponse = await db.queryParamCnt_Arr(insertLightsResponseQuery, [insertVote.insertId, searchAllUsersInSpecificGroup[i].u_idx, 0, null, null]);
     }
     if(!insertVote || !searchAllUsersInSpecificGroup) {
       return false;
@@ -564,8 +539,8 @@ module.exports = {
     let value = args[2];
     let write_time = args[3];
 
-    let updateVoteResQuery = 'UPDATE chat.vote_response SET value = ?, write_time = ? WHERE vote_idx = ? AND u_idx = ?';
-    var updateVoteRes = await db.queryParamCnt_Arr(updateVoteResQuery, [value, write_time, vote_idx, u_idx]);
+    let updateVoteResQuery = 'UPDATE chat.vote_response SET value = ?, write_time = ?, status = ? WHERE vote_idx = ? AND u_idx = ?';
+    var updateVoteRes = await db.queryParamCnt_Arr(updateVoteResQuery, [value, write_time, 1, vote_idx, u_idx]);
     if(!updateVoteRes) {
       return false;
     } else {
@@ -579,7 +554,7 @@ module.exports = {
     var getUsersListInGroup = await db.queryParamCnt_Arr(getUsersListInGroupQuery, [g_idx]);
     let result = [];
     for(let i = 0 ; i < getUsersListInGroup.length ; i++) {
-      let getUsersInfoQuery = 'SELECT u_idx, name, photo, id FROM admin.user WHERE u_idx = ?';
+      let getUsersInfoQuery = 'SELECT u_idx, name, phone, bio, photo, id FROM admin.user WHERE u_idx = ?';
       var getUsersInfo = await db.queryParamCnt_Arr(getUsersInfoQuery, [getUsersListInGroup[i].u_idx]);
       result.push(getUsersInfo[0]);
     }
@@ -598,7 +573,7 @@ module.exports = {
     let result = [];
 
     for(let i = 0 ; i < getUsersListInGroup.length ; i++) {
-      let getUsersInfoQuery = 'SELECT u_idx, name, photo, id FROM admin.user WHERE u_idx = ?';
+      let getUsersInfoQuery = 'SELECT u_idx, name, phone, bio, photo, id FROM admin.user WHERE u_idx = ?';
       var getUsersInfo = await db.queryParamCnt_Arr(getUsersInfoQuery, [getUsersListInGroup[i].u_idx]);
       result.push(getUsersInfo[0]);
     }

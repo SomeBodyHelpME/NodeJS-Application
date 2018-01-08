@@ -96,18 +96,27 @@ router.post('/press', async(req, res, next) => {
 });
 
 router.get('/close/:g_idx/:vote_idx', async(req, res, next) => {
-  let g_idx = req.params.g_idx;
-  let vote_idx = req.params.vote_idx;
-
-  let result = voteClose(g_idx, vote_idx);
-  if(!result) {
-    res.status(500).send({
-      message : "Internal Server Error"
-    });
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if (decoded === -1) {
+      res.status(400).send({
+          message : "Verification Failed"
+      });
   } else {
-    res.status(200).send({
-      message : "Success Close"
-    });
+    let u_idx = decoded.u_idx;
+    let g_idx = req.params.g_idx;
+    let vote_idx = req.params.vote_idx;
+
+    let result = await sql.voteClose(g_idx, vote_idx);
+    if(!result) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    } else {
+      res.status(200).send({
+        message : "Success Close"
+      });
+    }
   }
 });
 

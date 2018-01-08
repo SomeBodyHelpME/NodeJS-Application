@@ -28,9 +28,15 @@ router.post('/lights', async(req, res, next) => {
         let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
 
         let result = await sql.actionLights(u_idx, light_idx, color, content, write_time);
-        res.status(201).send({
-            message : "Success Response Lights"
-        });
+        if(!result) {
+          res.status(500).send({
+            message : "Internal Server Error"
+          });
+        } else {
+          res.status(201).send({
+              message : "Success Response Lights"
+          });
+        }
     }
 });
 
@@ -48,9 +54,15 @@ router.post('/vote', async(req, res, next) => {
 
         let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
         let result = await sql.actionVote(u_idx, vote_idx, value, write_time);
-        res.status(201).send({
-            message : "Success Response Vote"
-        });
+        if(!result) {
+          res.status(500).send({
+            message : "Internal Server Error"
+          });
+        } else {
+          res.status(201).send({
+              message : "Success Response Vote"
+          });
+        }
     }
 });
 
@@ -81,9 +93,22 @@ router.post('/press', async(req, res, next) => {
     });//fcm.send
   }
 
-
-
 });
 
+router.get('/close/:g_idx/:vote_idx', async(req, res, next) => {
+  let g_idx = req.params.g_idx;
+  let vote_idx = req.params.vote_idx;
+
+  let result = voteClose(g_idx, vote_idx);
+  if(!result) {
+    res.status(500).send({
+      message : "Internal Server Error"
+    });
+  } else {
+    res.status(200).send({
+      message : "Success Close"
+    });
+  }
+});
 
 module.exports = router;

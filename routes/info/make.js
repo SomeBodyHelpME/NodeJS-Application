@@ -21,9 +21,15 @@ router.post('/notice', async(req, res, next) => {
         let write_time = req.body.write_time;
         let content = req.body.content;
         let result = await sql.makeNotice(u_idx, chat_idx, g_idx, write_time, content);
-        res.status(201).send({
-            message : "Success Make Notice"
-        });
+        if(!result) {
+          res.status(500).send({
+            message : "Internal Server Error"
+          });
+        } else {
+          res.status(201).send({
+              message : "Success Make Notice"
+          });
+        }
     }
 });
 
@@ -45,10 +51,15 @@ router.post('/lights', async(req, res, next) => {
         let userArray = req.body.userArray;
 
         let result = await sql.makeLights(u_idx, g_idx, open_status, entire_status, content, write_time, chat_idx, userArray);
-
-        res.status(201).send({
-            message : "Success Make Lights"
-        });
+        if(!result) {
+          res.status(500).send({
+            message : "Internal Server Error"
+          });
+        } else {
+          res.status(201).send({
+              message : "Success Make Lights"
+          });
+        }
     }
 });
 
@@ -66,10 +77,15 @@ router.post('/pick', async(req, res, next) => {
         let write_time = req.body.write_time;
         let content = req.body.content;
         let result = await sql.makePick(u_idx, chat_idx, g_idx, write_time, content);
-
-        res.status(201).send({
-            message: "Success Make Pick"
-        });
+        if(!result) {
+          res.status(500).send({
+            message : "Internal Server Error"
+          });
+        } else {
+          res.status(201).send({
+              message: "Success Make Pick"
+          });
+        }
     }
 });
 
@@ -88,10 +104,15 @@ router.post('/vote', async(req, res, next) => {
         let content = req.body.content;
         let title = req.body.title;
         let result = await sql.makeVote(u_idx, chat_idx, g_idx, write_time, content, title);
-
-        res.status(201).send({
-            message: "Success Make Vote"
-        });
+        if(!result) {
+          res.status(500).send({
+            message : "Internal Server Error"
+          });
+        } else {
+          res.status(201).send({
+              message: "Success Make Vote"
+          });
+        }
     }
 });
 

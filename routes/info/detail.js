@@ -9,10 +9,16 @@ const sql = require('../../module/sql.js');
 router.get('/notice', async(req, res, next) => {
     let g_idx = req.query.g_idx;
     let result = await sql.forEachNotice(g_idx);
-    res.status(200).send({
-        message : "Success to Load Notices for the Specific Room",
-        data : result
-    });
+    if(!result) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    } else {
+      res.status(200).send({
+          message : "Success to Load Notices for the Specific Room",
+          data : result
+      });
+    }
 });
 
 router.get('/lights', async(req, res, next) => {
@@ -28,10 +34,16 @@ router.get('/lights', async(req, res, next) => {
         let u_idx = decoded.u_idx;
         let g_idx = req.query.g_idx;
         let result = await sql.forEachLights(u_idx, g_idx);
-        res.status(200).send({
+        if(!result) {
+          res.status(500).send({
+            message : "Internal Server Error"
+          });
+        } else {
+          res.status(200).send({
             message : "Success to Load Lights for the Specific Room",
             data : result
-        });
+          });
+        }
     }
 });
 
@@ -48,10 +60,16 @@ router.get('/lights/res/:g_idx/:light_idx', async(req, res, next) => {
     let light_idx = req.params.light_idx;
 
     let result = await sql.forEachLightsResponse(u_idx, g_idx, light_idx);
-    res.status(200).send({
-      message : "Success to Load Lights Response",
-      data : result
-    });
+    if(!result) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    } else {
+      res.status(200).send({
+        message : "Success to Load Lights Response",
+        data : result
+      });
+    }
   }
 });
 
@@ -63,15 +81,20 @@ router.get('/pick', async(req, res, next) => {
         res.status(400).send({
             message : "Verification Failed"
         });
-    }
-    else{
+    } else {
         let u_idx = decoded.u_idx;
         let g_idx = req.query.g_idx;
         let result = await sql.forEachPick(u_idx, g_idx);
-        res.status(200).send({
-            message : "Success to Load Picks for the Specific Room",
-            data : result
-        });
+        if(!result) {
+          res.status(500).send({
+            message : "Internal Server Error"
+          });
+        } else {
+          res.status(200).send({
+              message : "Success to Load Picks for the Specific Room",
+              data : result
+          });
+        }
     }
 });
 
@@ -83,15 +106,20 @@ router.get('/vote', async(req, res, next) => {
         res.status(400).send({
             message : "Verification Failed"
         });
-    }
-    else{
+    } else {
         let u_idx = decoded.u_idx;
         let g_idx = req.query.g_idx;
         let result = await sql.forEachVote(u_idx, g_idx);
-        res.status(200).send({
-            message : "Success to Load Votes for the Specific Room",
-            data : result
-        });
+        if(!result) {
+          res.status(500).send({
+            message : "Internal Server Error"
+          });
+        } else {
+          res.status(200).send({
+              message : "Success to Load Votes for the Specific Room",
+              data : result
+          });
+        }
     }
 });
 
@@ -108,10 +136,16 @@ router.get('/vote/res/:g_idx/:vote_idx', async(req, res, next) => {
     let vote_idx = req.params.vote_idx;
 
     let result = await sql.forEachVoteResponse(u_idx, g_idx, vote_idx);
-    res.status(200).send({
-      message : "Success to Load Vote Response",
-      data : result
-    });
+    if(!result) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    } else {
+      res.status(200).send({
+        message : "Success to Load Vote Response",
+        data : result
+      });
+    }
   }
 });
 

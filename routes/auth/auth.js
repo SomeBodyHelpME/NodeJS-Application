@@ -19,15 +19,21 @@ router.post('/login', async(req, res, next) => {
             const token = jwt.sign(id, checkResult[0].u_idx);
             let infoQuery = 'SELECT name, u_idx, phone, bio, id FROM admin.user WHERE id = ?';
             let info = await db.queryParamCnt_Arr(infoQuery, id);
-            res.status(201).send({
-                message: "Login Success",
-                name : info[0].name,
-                u_idx : info[0].u_idx,
-                phone : info[0].phone,
-                bio : info[0].bio,
-                id : info[0].id,
-                token: token
-            });
+            if(!checkResult || !info) {
+              res.status(500).send({
+                message : "Internal Server Error"
+              });
+            } else {
+              res.status(201).send({
+                  message: "Login Success",
+                  name : info[0].name,
+                  u_idx : info[0].u_idx,
+                  phone : info[0].phone,
+                  bio : info[0].bio,
+                  id : info[0].id,
+                  token: token
+              });
+            }
         } else {
             res.status(400).send({
                 message: "Login Failed"
@@ -58,9 +64,15 @@ router.post('/register', async(req, res, next) => {
     if (checkID.length === 0) {
         let insertQuery = 'INSERT INTO admin.user (name, salt, pwd, phone, id, token) VALUES (?, ?, ?, ?, ?, ?)';
         let insertResult = await db.queryParamCnt_Arr(insertQuery, [name, salt.toString('base64'), hashedpwd.toString('base64'), phone, id, token]);
-        res.status(201).send({
-            message: "Success Register"
-        });
+        if(!checkID || !insertResult) {
+          res.status(500).send({
+            message : "Internal Server Error"
+          });
+        } else {
+          res.status(201).send({
+              message: "Success Register"
+          });
+        }
     } else {
         res.status(400).send({
             message: "ID Already Exist"
@@ -73,7 +85,11 @@ router.get('/register/check', async(req, res, next) => {
     var id = req.query.id;
     let checkIDQuery = 'SELECT * FROM admin.user WHERE id = ?';
     let checkID = await db.queryParamCnt_Arr(checkIDQuery, [id]);
-    if (checkID.length === 0) {
+    if(!checkID) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    } else if (checkID.length === 0) {
         res.status(200).send({
             message: "No ID in DB"
         });
@@ -92,7 +108,11 @@ router.post('/invite', async(req, res, next) => {
     let findUserQuery = 'SELECT u_idx FROM admin.user WHERE name = ? AND phone = ?';
     let findUser = await db.queryParamCnt_Arr(findUserQuery, [name, phone]);
 
-    if(findUser.length === 1) {
+    if(!findUser) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    } else if(findUser.length === 1) {
       let result = await sql.joinNewPerson(g_idx, findUser[0].u_idx);
       res.status(201).send({
         message: "Success to Invite Person"
@@ -117,17 +137,16 @@ router.delete('/leave', async(req, res, next) => {
     let u_idx = decoded.u_idx;
 
     let result = await sql.leaveRoom(u_idx, g_idx);
-    console.log(result);
-    res.status(201).send({
-      message : "Success Leave Group"
-    });
+    if(!result) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    } else {
+      res.status(201).send({
+        message : "Success Leave Group"
+      });
+    }
   }
-});
-
-router.delete('/test', async(req, res, next) => {
-  let g_idx = req.body.g_idx;
-  console.log(g_idx);
-  console.log(typeof g_idx);
 });
 
 router.put('/profile', upload.single('photo'), async(req, res, next) => {
@@ -150,8 +169,11 @@ router.put('/profile', upload.single('photo'), async(req, res, next) => {
 
     let updateProfileQuery = 'UPDATE admin.user SET name = ?, bio = ?, phone = ?, photo = ? where u_idx = ?';
     let updateProfile = await db.queryParamCnt_Arr(updateProfileQuery, [name, bio, phone, photo, u_idx]);
-
-    if (updateProfile.changedRows === 1) {
+    if(!updateProfile) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    } else if (updateProfile.changedRows === 1) {
       res.status(201).send({
         message: "Success to Change"
       });

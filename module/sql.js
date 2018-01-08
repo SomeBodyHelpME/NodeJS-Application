@@ -660,5 +660,17 @@ module.exports = {
     } else {
       return leaveGroup;
     }
+  },
+  voteClose : async (...args) => {
+    let g_idx = args[0];
+    let vote_idx = args[1];
+
+    let voteCloseQuery = 'UPDATE chat.vote SET status = ? WHERE g_idx = ? AND vote_idx = ?';
+    let voteCloseResult = await db.queryParamCnt_Arr(voteCloseQuery, [1, g_idx, vote_idx]);
+    if(!voteCloseResult) {
+      return false;
+    } else {
+      return true;
+    }
   }
 };

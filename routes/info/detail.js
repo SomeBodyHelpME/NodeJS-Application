@@ -14,6 +14,7 @@ router.get('/notice', async(req, res, next) => {
         data : result
     });
 });
+
 router.get('/lights', async(req, res, next) => {
     let token = req.headers.token;
     let decoded = jwt.verify(token);
@@ -32,6 +33,26 @@ router.get('/lights', async(req, res, next) => {
             data : result
         });
     }
+});
+
+router.get('/lights/res/:g_idx/:light_idx', async(req, res, next) => {
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if(decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+    let g_idx = req.params.g_idx;
+    let light_idx = req.params.light_idx;
+
+    let result = await sql.forEachLightsResponse(u_idx, g_idx, light_idx);
+    res.status(200).send({
+      message : "Success to Load Lights Response",
+      data : result
+    });
+  }
 });
 
 router.get('/pick', async(req, res, next) => {
@@ -73,4 +94,25 @@ router.get('/vote', async(req, res, next) => {
         });
     }
 });
+
+router.get('/vote/res/:g_idx/:vote_idx', async(req, res, next) => {
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if(decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+    let g_idx = req.params.g_idx;
+    let vote_idx = req.params.vote_idx;
+
+    let result = await sql.forEachVoteResponse(u_idx, g_idx, vote_idx);
+    res.status(200).send({
+      message : "Success to Load Vote Response",
+      data : result
+    });
+  }
+});
+
 module.exports = router;

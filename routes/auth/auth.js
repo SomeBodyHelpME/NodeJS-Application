@@ -17,12 +17,15 @@ router.post('/login', async(req, res, next) => {
         const hashedpwd = await crypto.pbkdf2(pwd, checkResult[0].salt, 100000, 32, 'sha512');
         if (hashedpwd.toString('base64') === checkResult[0].pwd) {
             const token = jwt.sign(id, checkResult[0].u_idx);
-            let infoQuery = 'SELECT name, u_idx FROM admin.user WHERE id = ?';
+            let infoQuery = 'SELECT name, u_idx, phone, bio, id FROM admin.user WHERE id = ?';
             let info = await db.queryParamCnt_Arr(infoQuery, id);
             res.status(201).send({
                 message: "Login Success",
                 name : info[0].name,
                 u_idx : info[0].u_idx,
+                phone : info[0].phone,
+                bio : info[0].bio,
+                id : info[0].id,
                 token: token
             });
         } else {
@@ -46,15 +49,15 @@ router.post('/register', async(req, res, next) => {
     var pwd = req.body.pwd;
     var name = req.body.name;
     var phone = req.body.phone;
-
+    var token = req.header.token;
 
     const salt = await crypto.randomBytes(32);
     const hashedpwd = await crypto.pbkdf2(pwd, salt.toString('base64'), 100000, 32, 'sha512');
     let checkIDQuery = 'SELECT * FROM admin.user WHERE id = ?';
     let checkID = await db.queryParamCnt_Arr(checkIDQuery, [id]);
     if (checkID.length === 0) {
-        let insertQuery = 'INSERT INTO admin.user (name, salt, pwd, phone, id) VALUES (?, ?, ?, ?, ?)';
-        let insertResult = await db.queryParamCnt_Arr(insertQuery, [name, salt.toString('base64'), hashedpwd.toString('base64'), phone, id]);
+        let insertQuery = 'INSERT INTO admin.user (name, salt, pwd, phone, id, token) VALUES (?, ?, ?, ?, ?, ?)';
+        let insertResult = await db.queryParamCnt_Arr(insertQuery, [name, salt.toString('base64'), hashedpwd.toString('base64'), phone, id, token]);
         res.status(201).send({
             message: "Success Register"
         });
@@ -80,40 +83,6 @@ router.get('/register/check', async(req, res, next) => {
         });
     }
 });
-
-// router.post('/profile', async(req, res, next) => {
-//     let token = req.headers.token;
-//     let decoded = jwt.verify(token);
-//     if(decoded == -1)
-//     {
-//         res.status(400).send({
-//             message : "verification failed"
-//         })
-//     }
-//     else{
-//     let u_idx = decoded.u_idx;
-//
-//     var name = req.body.name;
-//     var bio = req.body.bio;
-//     var phone = req.body.phone;
-//
-//     let updateProfileQuery = 'UPDATE admin.user SET name=?, bio=?,phone=? where u_idx=? ';
-//     let updateProfile = await db.queryParamCnt_Arr(updateProfileQuery, [name, bio, phone, u_idx]);
-//
-//     if (updateProfile.changedRows === 1) {
-//         res.status(201).send({
-//             message: "Success Change"
-//         });
-//     } else {
-//         //값은 넘어왔는데 바뀐게 없다.오류는 x
-//         res.status(400).send({
-//             message: "No Change"
-//         });
-//     }
-//     console.log("u_idx:", u_idx);
-//     console.log("update결과: ", updateProfile);
-//   }
-// });
 
 router.post('/invite', async(req, res, next) => {
     let name = req.body.name;
@@ -160,9 +129,11 @@ router.delete('/test', async(req, res, next) => {
   console.log(g_idx);
   console.log(typeof g_idx);
 });
-router.put('/profile', upload.single('image'), async(req, res, next) => {
+
+router.put('/profile', upload.single('photo'), async(req, res, next) => {
+  var photo = null;
   if(req.file != undefined) {
-    let photo = req.file.location;
+    photo = req.file.location;
   }
   let token = req.headers.token;
   let decoded = jwt.verify(token);
@@ -190,8 +161,6 @@ router.put('/profile', upload.single('image'), async(req, res, next) => {
         message: "No Change"
       });
     }
-    console.log("u_idx:", u_idx);
-    console.log("update결과: ", updateProfile);
   }
 });
 

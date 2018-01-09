@@ -113,10 +113,18 @@ router.post('/invite', async(req, res, next) => {
         message : "Internal Server Error"
       });
     } else if(findUser.length === 1) {
-      let result = await sql.joinNewPerson(g_idx, findUser[0].u_idx);
-      res.status(201).send({
-        message: "Success to Invite Person"
-      });
+      let statusQuery = 'SELECT * FROM admin.joined WHERE g_idx = ? AND u_idx = ?';
+      let status = await db.queryParamCnt_Arr(statusQuery, [g_idx, findUser[0].u_idx]);
+      if(status.length === 0) {
+        let result = await sql.joinNewPerson(g_idx, findUser[0].u_idx);
+        res.status(201).send({
+          message: "Success to Invite Person"
+        });
+      } else {
+        res.stgatus(400).send({
+          message : "Already Joined"
+        });
+      }
     } else {
       res.status(400).send({
         message : "Fail to Search Person"

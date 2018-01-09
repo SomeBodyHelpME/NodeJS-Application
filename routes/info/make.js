@@ -69,29 +69,22 @@ router.post('/lights', async(req, res, next) => {
 });
 
 router.post('/pick', async(req, res, next) => {
-    let token = req.headers.token;
-    let decoded = jwt.verify(token);
-    if (decoded === -1) {
-        res.status(400).send({
-            message: "Verification Failed"
-        });
+    let u_idx = req.body.u_idx;
+    let chat_idx = req.body.chat_idx;
+    let g_idx = req.body.g_idx;
+    let write_time = req.body.write_time;
+    let content = req.body.content;
+    let result = await sql.makePick(u_idx, chat_idx, g_idx, write_time, content);
+    if(!result) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
     } else {
-        let u_idx = decoded.u_idx;
-        let chat_idx = req.body.chat_idx;
-        let g_idx = req.body.g_idx;
-        let write_time = req.body.write_time;
-        let content = req.body.content;
-        let result = await sql.makePick(u_idx, chat_idx, g_idx, write_time, content);
-        if(!result) {
-          res.status(500).send({
-            message : "Internal Server Error"
-          });
-        } else {
-          res.status(201).send({
-              message: "Success Make Pick"
-          });
-        }
+      res.status(201).send({
+          message: "Success Make Pick"
+      });
     }
+
 });
 
 router.post('/vote', async(req, res, next) => {

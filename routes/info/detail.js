@@ -59,16 +59,25 @@ router.get('/lights/res/:g_idx/:light_idx', async(req, res, next) => {
     let g_idx = req.params.g_idx;
     let light_idx = req.params.light_idx;
 
+    let status = await sql.forEachLightsStatus(u_idx, g_idx, light_idx);
     let result = await sql.forEachLightsResponse(u_idx, g_idx, light_idx);
+
     if(!result) {
       res.status(500).send({
         message : "Internal Server Error"
       });
     } else {
-      res.status(200).send({
-        message : "Success to Load Lights Response",
-        data : result
-      });
+      if(status) {
+        res.status(200).send({
+          message : "Success to Load Lights Detail - Request",
+          data : result
+        });
+      } else {
+        res.status(200).send({
+          message : "Success to Load Lights Detail - Response",
+          data : result
+        });
+      }
     }
   }
 });
@@ -142,7 +151,7 @@ router.get('/vote/res/:g_idx/:vote_idx', async(req, res, next) => {
       });
     } else {
       res.status(200).send({
-        message : "Success to Load Vote Response",
+        message : "Success to Load Vote Detail",
         data : result
       });
     }

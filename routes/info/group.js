@@ -29,7 +29,7 @@ router.get('/notice', async(req, res, next) => {
     }
 });
 
-router.get('/lights', async(req, res, next) => {
+router.get('/lights/res', async(req, res, next) => {
     let token = req.headers.token;
     let decoded = jwt.verify(token);
     if (decoded === -1) {
@@ -38,14 +38,37 @@ router.get('/lights', async(req, res, next) => {
         });
     } else {
         let u_idx = decoded.u_idx;
-        let result = await sql.homeLights(u_idx);
+        let result = await sql.homeLightsResponse(u_idx);
         if(!result) {
           res.status(500).send({
             message : "Internal Server Error"
           });
         } else {
           res.status(200).send({
-              message : "Success to Load All Lights",
+              message : "Success to Load All Lights Response",
+              data : result
+          });
+        }
+    }
+});
+
+router.get('/lights/req', async(req, res, next) => {
+    let token = req.headers.token;
+    let decoded = jwt.verify(token);
+    if (decoded === -1) {
+        res.status(400).send({
+            message : "Verification Failed"
+        });
+    } else {
+        let u_idx = decoded.u_idx;
+        let result = await sql.homeLightsRequest(u_idx);
+        if(!result) {
+          res.status(500).send({
+            message : "Internal Server Error"
+          });
+        } else {
+          res.status(200).send({
+              message : "Success to Load All Lights Request",
               data : result
           });
         }

@@ -171,7 +171,7 @@ module.exports = {
 
       result.push(
         {
-          name : searchGroupInfo,
+          name : searchGroupInfo[0],
           data : findEachGroupNotice
         }
       );
@@ -182,7 +182,7 @@ module.exports = {
       return result;
     }
   },
-  homeLights : async (...args) => {
+  homeLightsResponse : async (...args) => {
     let u_idx = args[0];
     let findUserJoinedQuery = 'SELECT g_idx FROM admin.joined WHERE u_idx = ?';
     var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
@@ -213,10 +213,21 @@ module.exports = {
           }
         }
       }
-      GroupJson.name = searchGroupInfo;
+      GroupJson.name = searchGroupInfo[0];
       GroupJson.data = groupArray;
       resArray.push(GroupJson);
     }
+
+    if(!findUserJoined || !searchGroupInfo || !findEachGroupLights) {
+      return false;
+    } else {
+      return resArray;
+    }
+  },
+  homeLightsRequest : async (...args) => {
+    let u_idx = args[0];
+    let findUserJoinedQuery = 'SELECT g_idx FROM admin.joined WHERE u_idx = ?';
+    var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
 
     // 발신자에 대한 내용
     let reqArray = [];
@@ -228,19 +239,15 @@ module.exports = {
       let findEachGroupLightsQuery = 'SELECT * FROM chat.lights WHERE g_idx = ? AND u_idx = ? ORDER BY chat.lights.light_idx DESC';
       var findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [findUserJoined[i].g_idx, u_idx]);
 
-      GroupJson.name = searchGroupInfo;
+      GroupJson.name = searchGroupInfo[0];
       GroupJson.data = findEachGroupLights;
       reqArray.push(GroupJson);
     }
 
-    let result = {
-      response : resArray,
-      request : reqArray
-    };
     if(!findUserJoined || !searchGroupInfo || !findEachGroupLights) {
       return false;
     } else {
-      return result;
+      return reqArray;
     }
   },
   homePick : async (...args) => {
@@ -256,7 +263,7 @@ module.exports = {
       var findEachGroupPick = await db.queryParamCnt_Arr(findEachGroupPickQuery, [u_idx, findUserJoined[i].g_idx]);
       result.push(
         {
-          name : searchGroupInfo,
+          name : searchGroupInfo[0],
           data : findEachGroupPick
         }
       );
@@ -288,7 +295,7 @@ module.exports = {
 
         groupArray.push(findEachGroupVote[j]);
       }
-      GroupJson.name = searchGroupInfo;
+      GroupJson.name = searchGroupInfo[0];
       GroupJson.data = groupArray;
       resArray.push(GroupJson);
     }
@@ -303,7 +310,7 @@ module.exports = {
       let findEachGroupVoteQuery = 'SELECT * FROM chat.vote WHERE g_idx = ? ORDER BY chat.vote.vote_idx DESC';
       var findEachGroupVote = await db.queryParamCnt_Arr(findEachGroupVoteQuery, [findUserJoined[i].g_idx]);
 
-      GroupJson.name = searchGroupInfo;
+      GroupJson.name = searchGroupInfo[0];
       GroupJson.data = findEachGroupVote;
       reqArray.push(GroupJson);
     }
@@ -333,29 +340,37 @@ module.exports = {
     let u_idx = args[0];
     let g_idx = args[1];
 
-    // 수신자에 대한 내용
-    let findEachGroupLightsResQuery = 'SELECT * FROM chat.lights WHERE g_idx = ? ORDER BY chat.lights.light_idx DESC';
-    var findEachGroupLightsRes = await db.queryParamCnt_Arr(findEachGroupLightsResQuery, [g_idx]);
+    let findEachGroupLightsQuery = 'SELECT * FROM chat.lights WHERE g_idx = ? ORDER BY chat.lights.light_idx DESC';
+    var findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [g_idx]);
 
-    // 발신자에 대한 내용
-    let findEachGroupLightsReqQuery = 'SELECT * FROM chat.lights WHERE g_idx = ? AND u_idx = ? ORDER BY chat.lights.light_idx DESC';
-    var findEachGroupLightsReq = await db.queryParamCnt_Arr(findEachGroupLightsReqQuery, [g_idx, u_idx]);
-
-    let result = {
-      response : findEachGroupLightsRes,
-      request : findEachGroupLightsReq
-    };
-    if(!findEachGroupLightsRes || !findEachGroupLightsReq) {
+    if(!findEachGroupLights) {
       return false;
     } else {
-      return result;
+      return findEachGroupLights;
     }
   },// forEachLights
+  forEachLightsStatus : async (...args) => {
+    let u_idx = args[0];
+    let g_idx = args[1];
+    let light_idx = args[2];
+
+    let findEachGroupLightsStatusQuery = 'SELECT u_idx FROM chat.lights WHERE g_idx = ? AND light_idx = ?';
+    var findEachGroupLightsStatus = await db.queryParamCnt_Arr(findEachGroupLightsStatusQuery, [g_idx, light_idx]);
+
+    if(u_idx === findEachGroupLightsStatus) {
+      return true;
+    } else {
+      return false;
+    }
+  },
   forEachLightsResponse : async (...args) => {
     let u_idx = args[0];
     let g_idx = args[1];
     let light_idx = args[2];
     let result;
+
+    let findEachGroupLightsResQuery = 'SELECT * FROM chat.lights WHERE g_idx = ? AND light_idx = ?';
+    var findEachGroupLightsRes = await db.queryParamCnt_Arr(findEachGroupLightsResQuery, [g_idx, light_idx]);
 
     if(findEachGroupLightsRes[0].open_status === 1) {  //true check
       let findEachGroupLightsResAllQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ?';

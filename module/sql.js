@@ -26,13 +26,7 @@ module.exports = {
     let insertUserInfoQuery = 'INSERT INTO admin.joined (u_idx, g_idx) VALUES (?,?)';
     var insertUserInfo = await db.queryParamCnt_Arr(insertUserInfoQuery, [u_idx, g_idx]);
 
-    let getRecentChatIndexQuery = 'SELECT count(chat_idx) as count FROM chat.' + searchGroupInfo[0].ctrl_name;
-    var getRecentChatIndex = await db.queryParamCnt_None(getRecentChatIndexQuery);
-    console.log(getRecentChatIndex);
-    // 그전에 최근 채팅 index 값을 가져와야 함
-    let setInitialChatEndPointQuery = 'INSERT INTO chat.endpoint (ep_idx, u_idx, g_idx) VALUES (?, ?, ?)';
-    var setInitialChatEndPoint = await db.queryParamCnt_Arr(setInitialChatEndPointQuery, [getRecentChatIndex[0].count, u_idx, g_idx]);
-    if(!searchGroupInfo || !searchUserInfo || !insertUserInfo || !getRecentChatIndex || !setInitialChatEndPoint) {
+    if(!searchGroupInfo || !searchUserInfo || !insertUserInfo) {
       return false;
     } else {
       return true;

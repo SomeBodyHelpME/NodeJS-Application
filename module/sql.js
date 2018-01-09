@@ -274,7 +274,7 @@ module.exports = {
       return result;
     }
   },
-  homeVote : async (...args) => {
+  homeVoteResponse : async (...args) => {
     let u_idx = args[0];
     let findUserJoinedQuery = 'SELECT g_idx FROM admin.joined WHERE u_idx = ?';
     var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
@@ -300,6 +300,18 @@ module.exports = {
       resArray.push(GroupJson);
     }
 
+
+    if(!findUserJoined || !searchGroupInfo || !findEachGroupVote) {
+      return false;
+    } else {
+      return resArray;
+    }
+  },
+  homeVoteRequest : async (...args) => {
+    let u_idx = args[0];
+    let findUserJoinedQuery = 'SELECT g_idx FROM admin.joined WHERE u_idx = ?';
+    var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
+
     //발신자에 대한 내용
     let reqArray = [];
     for(let i = 0 ; i < findUserJoined.length ; i++) {
@@ -315,14 +327,10 @@ module.exports = {
       reqArray.push(GroupJson);
     }
 
-    let result = {
-      response : resArray,
-      request : reqArray
-    };
     if(!findUserJoined || !searchGroupInfo || !findEachGroupVote) {
       return false;
     } else {
-      return result;
+      return reqArray;
     }
   },
   forEachNotice : async (...args) => {

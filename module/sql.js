@@ -617,13 +617,7 @@ module.exports = {
       let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
       var searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].g_idx]);
 
-      let getInfoAboutSpecificGroupQuery = 'SELECT * FROM chat.' + searchGroupInfo[0].ctrl_name;
-      var getInfoAboutSpecificGroup = await db.queryParamCnt_None(getInfoAboutSpecificGroupQuery);
-      let AgendaJson = {
-        name : searchGroupInfo,
-        data : getInfoAboutSpecificGroup
-      };
-      result.push(AgendaJson);
+      result.push(searchGroupInfo[0]);
     }
     if(!findUserJoined) {
       return false;

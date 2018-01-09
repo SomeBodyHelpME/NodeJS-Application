@@ -121,7 +121,7 @@ router.post('/invite', async(req, res, next) => {
           message: "Success to Invite Person"
         });
       } else {
-        res.stgatus(400).send({
+        res.status(400).send({
           message : "Already Joined"
         });
       }

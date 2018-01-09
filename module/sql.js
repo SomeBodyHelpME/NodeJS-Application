@@ -60,11 +60,9 @@ module.exports = {
       };
       result.push(GroupJson);
     }
-    if(!findUserJoined || !findGroupName || !findUserIndex || !findUserDetailInfo) {
-      return false;
-    } else {
-      return result;
-    }
+
+    return result;
+
   },
   // 미처리 항목 보여주는 뷰(그룹별로 보여줄 때)
   findRestGroupThings : async (...args) => {

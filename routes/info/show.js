@@ -44,16 +44,12 @@ router.get('/address', async(req, res, next) => {
     else{
         let u_idx = decoded.u_idx;
         let result = await sql.findAllGroupMemberAddr(u_idx);
-        if(!result) {
-          res.status(500).send({
-            message : "Internal Server Error"
-          });
-        } else {
-          res.status(200).send({
-            	message : "Success to Load Address",
-            	data : result
-          });
-        }
+
+        res.status(200).send({
+          	message : "Success to Load Address",
+          	data : result
+        });
+
     }
 });
 

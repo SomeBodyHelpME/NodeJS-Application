@@ -108,11 +108,8 @@ router.post('/invite', async(req, res, next) => {
     let findUserQuery = 'SELECT u_idx FROM admin.user WHERE name = ? AND phone = ?';
     let findUser = await db.queryParamCnt_Arr(findUserQuery, [name, phone]);
 
-    if(!findUser) {
-      res.status(500).send({
-        message : "Internal Server Error"
-      });
-    } else if(findUser.length === 1) {
+
+    if(findUser.length === 1) {
       let statusQuery = 'SELECT * FROM admin.joined WHERE g_idx = ? AND u_idx = ?';
       let status = await db.queryParamCnt_Arr(statusQuery, [g_idx, findUser[0].u_idx]);
       if(status.length === 0) {

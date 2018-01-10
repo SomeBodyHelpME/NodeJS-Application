@@ -357,7 +357,7 @@ module.exports = {
     let findEachGroupLightsStatusQuery = 'SELECT u_idx FROM chat.lights WHERE g_idx = ? AND light_idx = ?';
     var findEachGroupLightsStatus = await db.queryParamCnt_Arr(findEachGroupLightsStatusQuery, [g_idx, light_idx]);
 
-    if(u_idx === findEachGroupLightsStatus) {
+    if(u_idx === findEachGroupLightsStatus[0].u_idx) {
       return true;
     } else {
       return false;

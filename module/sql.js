@@ -186,7 +186,7 @@ module.exports = {
       let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
       var searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].g_idx]);
 
-      let findEachGroupLightsQuery = 'SELECT * FROM chat.lights WHERE g_idx = ? ORDER BY chat.lights.light_idx DESC';
+      let findEachGroupLightsQuery = 'SELECT chat.lights.*, admin.user.photo, admin.user.name FROM chat.lights JOIN admin.user USING(u_idx) WHERE g_idx = ? ORDER BY chat.lights.light_idx DESC';
       var findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [findUserJoined[i].g_idx]);
       let groupArray = [];
       for(let j = 0 ; j < findEachGroupLights.length ; j++) {
@@ -278,7 +278,7 @@ module.exports = {
       let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
       var searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].g_idx]);
 
-      let findEachGroupVoteQuery = 'SELECT * FROM chat.vote WHERE g_idx = ? ORDER BY chat.vote.vote_idx DESC';
+      let findEachGroupVoteQuery = 'SELECT chat.vote.*, admin.user.photo, admin.user.name FROM chat.vote JOIN admin.user USING(u_idx) WHERE g_idx = ? ORDER BY chat.vote.vote_idx DESC';
       var findEachGroupVote = await db.queryParamCnt_Arr(findEachGroupVoteQuery, [findUserJoined[i].g_idx]);
       let groupArray = [];
       for(let j = 0 ; j < findEachGroupVote.length ; j++) {
@@ -340,7 +340,7 @@ module.exports = {
     let u_idx = args[0];
     let g_idx = args[1];
 
-    let findEachGroupLightsQuery = 'SELECT * FROM chat.lights WHERE g_idx = ? ORDER BY chat.lights.light_idx DESC';
+    let findEachGroupLightsQuery = 'SELECT chat.lights.*, admin.user.photo, admin.user.name FROM chat.lights JOIN admin.user USING(u_idx) WHERE g_idx = ? ORDER BY chat.lights.light_idx DESC';
     var findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [g_idx]);
 
     if(!findEachGroupLights) {
@@ -410,7 +410,7 @@ module.exports = {
     let u_idx = args[0];
     let g_idx = args[1];
 
-    let showAllVoteQuery = 'SELECT * FROM chat.vote WHERE g_idx = ? ORDER BY chat.vote.vote_idx DESC';
+    let showAllVoteQuery = 'SELECT chat.vote.*, admin.user.photo, admin.user.name FROM chat.vote JOIN admin.user USING(u_idx) WHERE g_idx = ? ORDER BY chat.vote.vote_idx DESC';
     var showAllVote = await db.queryParamCnt_Arr(showAllVoteQuery, [g_idx]);
 
     if(!showAllVote) {
@@ -570,7 +570,7 @@ module.exports = {
     var getUsersListInGroup = await db.queryParamCnt_Arr(getUsersListInGroupQuery, [g_idx]);
     let result = [];
     for(let i = 0 ; i < getUsersListInGroup.length ; i++) {
-      let getUsersInfoQuery = 'SELECT u_idx, name, phone, bio, photo, id FROM admin.user WHERE u_idx = ?';
+      let getUsersInfoQuery = 'SELECT u_idx, name, photo, id FROM admin.user WHERE u_idx = ?';
       var getUsersInfo = await db.queryParamCnt_Arr(getUsersInfoQuery, [getUsersListInGroup[i].u_idx]);
       result.push(getUsersInfo[0]);
     }
@@ -589,7 +589,7 @@ module.exports = {
     let result = [];
 
     for(let i = 0 ; i < getUsersListInGroup.length ; i++) {
-      let getUsersInfoQuery = 'SELECT u_idx, name, phone, bio, photo, id FROM admin.user WHERE u_idx = ?';
+      let getUsersInfoQuery = 'SELECT u_idx, name, photo, id FROM admin.user WHERE u_idx = ?';
       var getUsersInfo = await db.queryParamCnt_Arr(getUsersInfoQuery, [getUsersListInGroup[i].u_idx]);
       result.push(getUsersInfo[0]);
     }

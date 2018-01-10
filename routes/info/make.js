@@ -2,12 +2,17 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto-promise');
 const moment = require('moment');
+const upload = require('../../config/multer.js');
 
 const jwt = require('../../module/jwt.js');
 const db = require('../../module/pool.js');
 const sql = require('../../module/sql.js');
 
-router.post('/chatroom', async(req, res, next) => {
+router.post('/chatroom', upload.single('photo'), async(req, res, next) => {
+  var photo = null;
+  if(req.file != undefined) {
+    photo = req.file.location;
+  }
   let token = req.headers.token;
   let decoded = jwt.verify(token);
   if(decoded === -1) {
@@ -19,8 +24,8 @@ router.post('/chatroom', async(req, res, next) => {
     let real_name = req.body.name;
     let ctrl_name = real_name + '_' + moment().format('YYMMDDHHmmss');
 
-    let createChatRoomQuery = 'INSERT INTO chat.group (real_name, ctrl_name) VALUES (?, ?)';
-    let createChatRoom = await db.queryParamCnt_Arr(createChatRoomQuery, [real_name, ctrl_name]);
+    let createChatRoomQuery = 'INSERT INTO chat.group (real_name, ctrl_name, photo) VALUES (?, ?, ?)';
+    let createChatRoom = await db.queryParamCnt_Arr(createChatRoomQuery, [real_name, ctrl_name, photo]);
 
     let insertNewPersonQuery = 'INSERT INTO admin.joined (g_idx, u_idx) VALUES (?, ?)';
     let insertNewPerson = await db.queryParamCnt_Arr(insertNewPersonQuery, [createChatRoom.insertId, u_idx]);

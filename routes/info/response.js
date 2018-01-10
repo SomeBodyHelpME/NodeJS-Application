@@ -13,6 +13,30 @@ const jwt = require('../../module/jwt.js');
 const db = require('../../module/pool.js');
 const sql = require('../../module/sql.js');
 
+router.post('/notice', async(req, res, next) => {
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if (decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+    let notice_idx = req.body.notice_idx;
+
+    let result = await sql.actionNotice(u_idx, notice_idx);
+    if(!result) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    } else {
+      res.status(201).send({
+        message : "Success Response Notice"
+      });
+    }
+  }
+});
+
 router.post('/lights', async(req, res, next) => {
     let token = req.headers.token;
     let decoded = jwt.verify(token);

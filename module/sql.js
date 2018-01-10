@@ -158,7 +158,7 @@ module.exports = {
       let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
       var searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].g_idx]);
 
-      let findEachGroupNoticeQuery = 'SELECT * FROM chat.notice WHERE g_idx = ? ORDER BY chat.notice.notice_idx DESC';
+      let findEachGroupNoticeQuery = 'SELECT chat.notice.*, admin.user.photo, admin.user.name FROM chat.notice JOIN admin.user USING(u_idx) WHERE g_idx = ? ORDER BY chat.notice.notice_idx DESC';
       var findEachGroupNotice = await db.queryParamCnt_Arr(findEachGroupNoticeQuery, [findUserJoined[i].g_idx]);
 
       result.push(
@@ -251,7 +251,7 @@ module.exports = {
       let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
       var searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].g_idx]);
 
-      let findEachGroupPickQuery = 'SELECT * FROM chat.pick WHERE u_idx = ? AND g_idx = ? ORDER BY write_time DESC';
+      let findEachGroupPickQuery = 'SELECT chat.pick.*, admin.user.photo, admin.user.name FROM chat.pick JOIN admin.user USING(u_idx) WHERE u_idx = ? AND g_idx = ? ORDER BY write_time DESC';
       var findEachGroupPick = await db.queryParamCnt_Arr(findEachGroupPickQuery, [u_idx, findUserJoined[i].g_idx]);
       result.push(
         {
@@ -328,7 +328,7 @@ module.exports = {
   forEachNotice : async (...args) => {
     let g_idx = args[0];
     //let showAllNoticeQuery = 'SELECT * FROM chat.group JOIN chat.notice USING(g_idx) WHERE g_idx = ? ORDER BY write_time';  //이름 같이 전송해야 할 때
-    let showAllNoticeQuery = 'SELECT * FROM chat.notice WHERE g_idx = ? ORDER BY notice_idx DESC';
+    let showAllNoticeQuery = 'SELECT chat.notice.*, admin.user.photo, admin.user.name FROM chat.notice JOIN admin.user USING(u_idx) WHERE g_idx = ? ORDER BY notice_idx DESC';
     var showAllNotice = await db.queryParamCnt_Arr(showAllNoticeQuery, [g_idx]);
     if(!showAllNotice) {
       return false;
@@ -394,7 +394,7 @@ module.exports = {
   forEachPick : async (...args) => {
     let u_idx = args[0];
     let g_idx = args[1];
-    let showAllPickQuery = 'SELECT * FROM chat.pick WHERE u_idx = ? AND g_idx = ? ORDER BY write_time DESC';
+    let showAllPickQuery = 'SELECT chat.pick.*, admin.user.photo, admin.user.name FROM chat.pick JOIN admin.user USING(u_idx) WHERE u_idx = ? AND g_idx = ? ORDER BY write_time DESC';
     var showAllPick = await db.queryParamCnt_Arr(showAllPickQuery, [u_idx, g_idx]);
     // res.status(200).send({
     //   message : "success",

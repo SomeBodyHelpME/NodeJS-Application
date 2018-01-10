@@ -375,20 +375,23 @@ module.exports = {
 
     let findEachGroupLightsResQuery = 'SELECT * FROM chat.lights WHERE g_idx = ? AND light_idx = ?';
     var findEachGroupLightsRes = await db.queryParamCnt_Arr(findEachGroupLightsResQuery, [g_idx, light_idx]);
-
+    console.log('findEachGroupLightsRes',findEachGroupLightsRes);
     if(findEachGroupLightsRes[0].open_status === 1) {  //true check
       let findEachGroupLightsResAllQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ? AND color = ?';
       var findEachGroupLightsResAll = await db.queryParamCnt_Arr(findEachGroupLightsResAllQuery, [light_idx, color]);
-      if(findEachGroupLightsResAll.length != 0) {
-        result = findEachGroupLightsResAll;
-      }
+      console.log('findEachGroupLightsResAll',findEachGroupLightsResAll);
+
+      result = findEachGroupLightsResAll;
+
     } else {
       let findEachGroupLightsResAloneQuery = 'SELECT * FROM chat.light_response WHERE u_idx = ? AND light_idx = ? AND color = ?';
       var findEachGroupLightsResAlone = await db.queryParamCnt_Arr(findEachGroupLightsResAloneQuery, [u_idx, light_idx, color]);
-      if(findEachGroupLightsResAlone.length != 0) {
-        result = findEachGroupLightsResAlone;
-      }
+      console.log('findEachGroupLightsResAlone',findEachGroupLightsResAlone);
+
+      result = findEachGroupLightsResAlone;
+
     }
+    console.log('result', result);
     if(!findEachGroupLightsRes) {
       return false;
     } else {

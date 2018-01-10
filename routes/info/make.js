@@ -54,12 +54,8 @@ router.post('/notice', async(req, res, next) => {
         let chat_idx = req.body.chat_idx;
         let g_idx = req.body.g_idx;
         let content = req.body.content;
-        let write_time;
-        if(req.body.write_time === undefined) {
-           write_time = moment().format("YYYY-MM-DD HH:mm:ss");
-        } else {
-          write_time = req.body.write_time;
-        }
+        let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
+
         let result = await sql.makeNotice(u_idx, chat_idx, g_idx, write_time, content);
         if(!result) {
           res.status(500).send({

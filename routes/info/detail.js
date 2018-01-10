@@ -47,7 +47,7 @@ router.get('/lights', async(req, res, next) => {
     }
 });
 
-router.get('/lights/res/:g_idx/:light_idx', async(req, res, next) => {
+router.get('/lights/res/:color/:g_idx/:light_idx', async(req, res, next) => {
   let token = req.headers.token;
   let decoded = jwt.verify(token);
   if(decoded === -1) {
@@ -56,11 +56,12 @@ router.get('/lights/res/:g_idx/:light_idx', async(req, res, next) => {
     });
   } else {
     let u_idx = decoded.u_idx;
+    let color = req.params.color;
     let g_idx = req.params.g_idx;
     let light_idx = req.params.light_idx;
 
     let status = await sql.forEachLightsStatus(u_idx, g_idx, light_idx);
-    let result = await sql.forEachLightsResponse(u_idx, g_idx, light_idx);
+    let result = await sql.forEachLightsResponse(u_idx, g_idx, light_idx, color);
 
     if(!result) {
       res.status(500).send({

@@ -175,20 +175,19 @@ router.put('/profile', upload.single('photo'), async(req, res, next) => {
 
     let selectUserInfoQuery = 'SELECT photo, name, bio, phone FROM admin.user WHERE u_idx = ?';
     let selectUserInfo = await db.queryParamCnt_Arr(selectUserInfoQuery, [u_idx]);
-    console.log('photo', photo);
-    console.log('name', name);
-    console.log('bio', bio);
-    console.log('phone', phone);
-    // if(photo === null) {
-    //   photo = selectUserInfo[0].photo;
-    // }
-    // if(name === null) {
-    //   name = selectUserInfo[0].name;
-    // }
-    // if(bio === null) {
-    //
-    // }
 
+    if(photo === null) {
+      photo = selectUserInfo[0].photo;
+    }
+    if(name === undefined) {
+      name = selectUserInfo[0].name;
+    }
+    if(bio === undefined) {
+      bio = selectUserInfo[0].bio;
+    }
+    if(phone === undefined) {
+      phone = selectUserInfo[0].phone;
+    }
     let updateProfileQuery = 'UPDATE admin.user SET name = ?, bio = ?, phone = ?, photo = ? where u_idx = ?';
     let updateProfile = await db.queryParamCnt_Arr(updateProfileQuery, [name, bio, phone, photo, u_idx]);
     if(!selectUserInfo || !updateProfile) {

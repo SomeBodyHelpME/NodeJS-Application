@@ -366,7 +366,7 @@ module.exports = {
       return false;
     }
   },
-  forEachLightsResponseAbout : async (...args) => {
+  forEachLightsResponse : async (...args) => {
     let u_idx = args[0];
     let g_idx = args[1];
     let light_idx = args[2];

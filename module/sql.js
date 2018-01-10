@@ -76,7 +76,7 @@ module.exports = {
       var findNoticeIndex = await db.queryParamCnt_Arr(findNoticeIndexQuery, [findUserJoined[i].g_idx]);
       for(let j = 0 ; j < findNoticeIndex.length ; j++) {
         let findNoticeQuery = 'SELECT * FROM chat.notice_response WHERE notice_idx = ? AND status = ? AND u_idx';
-        var findNotice = await db.queryParamCnt_Arr(findNoticeQuery, [findNoticeIndex[j].notice_idx, false, u_idx]);
+        var findNotice = await db.queryParamCnt_Arr(findNoticeQuery, [findNoticeIndex[j].notice_idx, 0, u_idx]);
         if(findNotice.length != 0) {
           let AgendaJson = findNoticeIndex[j];
           GroupArray1.push(AgendaJson);
@@ -448,7 +448,7 @@ module.exports = {
     var searchAllUsersInSpecificGroup = await db.queryParamCnt_Arr(searchAllUsersInSpecificGroupQuery, [g_idx, u_idx]);
     for(let i = 0 ; i < searchAllUsersInSpecificGroup.length ; i++) {
       let insertNoticeResponseQuery = 'INSERT INTO chat.notice_response (notice_idx, u_idx, status) VALUES (?, ?, ?)';
-      var insertNoticeResponse = await db.queryParamCnt_Arr(insertNoticeResponseQuery, [insertNotice.insertId, searchAllUsersInSpecificGroup[i].u_idx, false]);
+      var insertNoticeResponse = await db.queryParamCnt_Arr(insertNoticeResponseQuery, [insertNotice.insertId, searchAllUsersInSpecificGroup[i].u_idx, 0]);
     }
     if(!insertNotice || !searchAllUsersInSpecificGroup) {
       return false;
@@ -484,7 +484,7 @@ module.exports = {
     } else {
       for(let i = 0 ; i < userArray.length ; i++) {
         let insertLightsResponseQuery = 'INSERT INTO chat.light_response (light_idx, u_idx, color, content, write_time) VALUES (?, ?, ?, ?, ?)';
-        var insertLightsResponse = await db.queryParamCnt_Arr(insertLightsResponseQuery, [insertLights.insertId, userArray[i].u_idx, "r", null, null]);
+        var insertLightsResponse = await db.queryParamCnt_Arr(insertLightsResponseQuery, [insertLights.insertId, userArray[i], "r", null, null]);
       }
     }
     if(!insertLights) {

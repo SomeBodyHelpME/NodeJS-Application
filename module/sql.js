@@ -331,7 +331,7 @@ module.exports = {
   forEachNotice : async (...args) => {
     let g_idx = args[0];
     //let showAllNoticeQuery = 'SELECT * FROM chat.group JOIN chat.notice USING(g_idx) WHERE g_idx = ? ORDER BY write_time';  //이름 같이 전송해야 할 때
-    let showAllNoticeQuery = 'SELECT chat.notice.*, admin.user.photo, admin.user.name admin.user.id FROM chat.notice JOIN admin.user USING(u_idx) WHERE g_idx = ? ORDER BY notice_idx DESC';
+    let showAllNoticeQuery = 'SELECT chat.notice.*, admin.user.photo, admin.user.name, admin.user.id FROM chat.notice JOIN admin.user USING(u_idx) WHERE g_idx = ? ORDER BY notice_idx DESC';
     var showAllNotice = await db.queryParamCnt_Arr(showAllNoticeQuery, [g_idx]);
     if(!showAllNotice) {
       return false;

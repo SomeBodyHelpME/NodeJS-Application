@@ -186,7 +186,7 @@ module.exports = {
       let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
       var searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].g_idx]);
 
-      let findEachGroupLightsQuery = 'SELECT admin.user.photo, admin.user.name, admin.user.id, chat.lights.*, chat.light_response.color FROM admin.user JOIN (chat.lights JOIN chat.light_response USING(u_idx)) USING(u_idx) WHERE g_idx = ? ORDER BY chat.lights.light_idx DESC';
+      let findEachGroupLightsQuery = 'SELECT admin.user.photo, admin.user.name, admin.user.id, chat.lights.*, chat.light_response.color FROM admin.user JOIN (chat.lights JOIN chat.light_response USING(u_idx,light_idx)) USING(u_idx) WHERE g_idx = ? ORDER BY chat.lights.light_idx DESC';
       var findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [findUserJoined[i].g_idx]);
 
       let groupArray = [];
@@ -343,7 +343,7 @@ module.exports = {
     let u_idx = args[0];
     let g_idx = args[1];
 
-    let findEachGroupLightsQuery = 'SELECT admin.user.photo, admin.user.name, admin.user.id, chat.lights.*, chat.light_response.color FROM admin.user JOIN (chat.lights JOIN chat.light_response USING(u_idx)) USING(u_idx) WHERE g_idx = ? ORDER BY chat.lights.light_idx DESC';
+    let findEachGroupLightsQuery = 'SELECT admin.user.photo, admin.user.name, admin.user.id, chat.lights.*, chat.light_response.color FROM admin.user JOIN (chat.lights JOIN chat.light_response USING(u_idx,light_idx)) USING(u_idx) WHERE g_idx = ? ORDER BY chat.lights.light_idx DESC';
     var findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [g_idx]);
 
     if(!findEachGroupLights) {

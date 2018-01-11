@@ -530,8 +530,8 @@ module.exports = {
     let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM admin.joined WHERE g_idx = ? AND u_idx != ?';
     var searchAllUsersInSpecificGroup = await db.queryParamCnt_Arr(searchAllUsersInSpecificGroupQuery, [g_idx, u_idx]);
     for(let i = 0 ; i < searchAllUsersInSpecificGroup.length ; i++) {
-      let insertLightsResponseQuery = 'INSERT INTO chat.vote_response (vote_idx, u_idx, status, value, write_time) VALUES (?, ?, ?, ?, ?)';
-      var insertLightsResponse = await db.queryParamCnt_Arr(insertLightsResponseQuery, [insertVote.insertId, searchAllUsersInSpecificGroup[i].u_idx, 0, null, null]);
+      let insertLightsResponseQuery = 'INSERT INTO chat.vote_response (vote_idx, u_idx, status, value, write_time, g_idx) VALUES (?, ?, ?, ?, ?, ?)';
+      var insertLightsResponse = await db.queryParamCnt_Arr(insertLightsResponseQuery, [insertVote.insertId, searchAllUsersInSpecificGroup[i].u_idx, 0, null, null, g_idx]);
     }
     if(!insertVote || !searchAllUsersInSpecificGroup) {
       return false;

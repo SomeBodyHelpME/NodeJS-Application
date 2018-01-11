@@ -191,18 +191,18 @@ module.exports = {
 
       let groupArray = [];
       for(let j = 0 ; j < findEachGroupLights.length ; j++) {
-        console.log(findEachGroupLights.length);
+
         if(findEachGroupLights[j].open_status === 1) {  //true check
           let findEachGroupLightsResAllQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ?';
           let findEachGroupLightsResAll = await db.queryParamCnt_Arr(findEachGroupLightsResAllQuery, [findEachGroupLights[j].light_idx]);
-          console.log('findEachGroupLightsResAll',findEachGroupLightsResAll);
+
           if(findEachGroupLightsResAll.length != 0) {
             groupArray.push(findEachGroupLights[j]);
           }
         } else {
           let findEachGroupLightsResAloneQuery = 'SELECT * FROM chat.light_response WHERE u_idx = ? AND light_idx = ?';
           let findEachGroupLightsResAlone = await db.queryParamCnt_Arr(findEachGroupLightsResAloneQuery, [u_idx, findEachGroupLights[j].light_idx]);
-          console.log('findEachGroupLightsResAlone',findEachGroupLightsResAlone);
+
           if(findEachGroupLightsResAlone.length != 0) {
             groupArray.push(findEachGroupLights[j]);
           }
@@ -375,23 +375,19 @@ module.exports = {
 
     let findEachGroupLightsResQuery = 'SELECT * FROM chat.lights WHERE g_idx = ? AND light_idx = ?';
     var findEachGroupLightsRes = await db.queryParamCnt_Arr(findEachGroupLightsResQuery, [g_idx, light_idx]);
-    console.log('findEachGroupLightsRes',findEachGroupLightsRes);
+
     if(findEachGroupLightsRes[0].open_status === 1) {  //true check
       let findEachGroupLightsResAllQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ? AND color = ?';
       var findEachGroupLightsResAll = await db.queryParamCnt_Arr(findEachGroupLightsResAllQuery, [light_idx, color]);
-      console.log('findEachGroupLightsResAll',findEachGroupLightsResAll);
 
       result = findEachGroupLightsResAll;
-
     } else {
       let findEachGroupLightsResAloneQuery = 'SELECT * FROM chat.light_response WHERE u_idx = ? AND light_idx = ? AND color = ?';
       var findEachGroupLightsResAlone = await db.queryParamCnt_Arr(findEachGroupLightsResAloneQuery, [u_idx, light_idx, color]);
-      console.log('findEachGroupLightsResAlone',findEachGroupLightsResAlone);
 
       result = findEachGroupLightsResAlone;
-
     }
-    console.log('result', result);
+
     if(!findEachGroupLightsRes) {
       return false;
     } else {
@@ -476,21 +472,17 @@ module.exports = {
 
     let insertLightsQuery = 'INSERT INTO chat.lights (u_idx, g_idx, open_status, entire_status, content, write_time, chat_idx) VALUES (?, ?, ?, ?, ?, ?, ?)';
     var insertLights = await db.queryParamCnt_Arr(insertLightsQuery, [u_idx, g_idx, open_status, entire_status, content, write_time, chat_idx]);
-    console.log('insertLights', insertLights);
-    console.log('userArray',userArray);
+
     if(entire_status === '1') {
       let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM admin.joined WHERE g_idx = ? AND u_idx != ?';
       var searchAllUsersInSpecificGroup = await db.queryParamCnt_Arr(searchAllUsersInSpecificGroupQuery, [g_idx, u_idx]);
-      console.log('searchAllUsersInSpecificGroup',searchAllUsersInSpecificGroup);
+
       for(let i = 0 ; i < searchAllUsersInSpecificGroup.length ; i++) {
         let insertLightsResponseQuery = 'INSERT INTO chat.light_response (light_idx, u_idx, color, content, write_time) VALUES (?, ?, ?, ?, ?)';
         var insertLightsResponse = await db.queryParamCnt_Arr(insertLightsResponseQuery, [insertLights.insertId, searchAllUsersInSpecificGroup[i].u_idx, "r", null, null]);
-        console.log('insertLightsResponse',insertLightsResponse);
       }
     } else {
-      console.log(userArray.length);
       for(let j = 1 ; j < userArray.length ; j = j + 2) {
-        console.log("here");
         let insertLightsResponseQuery = 'INSERT INTO chat.light_response (light_idx, u_idx, color, content, write_time) VALUES (?, ?, ?, ?, ?)';
         var insertLightsResponse = await db.queryParamCnt_Arr(insertLightsResponseQuery, [insertLights.insertId, userArray[j], "r", null, null]);
       }

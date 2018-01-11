@@ -10,31 +10,35 @@ const sql = require('../../module/sql.js');
 router.post('/login', async(req, res, next) => {
     var id = req.body.id;
     var pwd = req.body.pwd;
+    var client_token = req.body.token;
 
     let checkQuery = 'SELECT * FROM admin.user WHERE id = ?';
     let checkResult = await db.queryParamCnt_Arr(checkQuery, [id]);
     if (checkResult.length === 1) {
         const hashedpwd = await crypto.pbkdf2(pwd, checkResult[0].salt, 100000, 32, 'sha512');
         if (hashedpwd.toString('base64') === checkResult[0].pwd) {
-            const token = jwt.sign(id, checkResult[0].u_idx);
-            let infoQuery = 'SELECT * FROM admin.user WHERE id = ?';
-            let info = await db.queryParamCnt_Arr(infoQuery, id);
-            if(!checkResult || !info) {
-              res.status(500).send({
-                message : "Internal Server Error"
-              });
-            } else {
-              res.status(201).send({
-                  message: "Login Success",
-                  name : info[0].name,
-                  u_idx : info[0].u_idx,
-                  phone : info[0].phone,
-                  bio : info[0].bio,
-                  id : info[0].id,
-                  photo : info[0].photo,
-                  token: token
-              });
-            }
+          let updateTokenQuery = 'UPDATE admin.user SET token = ? WHERE id = ?';
+          let updateToken = await queryParamCnt_Arr(updateTokenQuery, [client_token, id]);
+          
+          const token = jwt.sign(id, checkResult[0].u_idx);
+          let infoQuery = 'SELECT * FROM admin.user WHERE id = ?';
+          let info = await db.queryParamCnt_Arr(infoQuery, id);
+          if(!checkResult || !info) {
+            res.status(500).send({
+              message : "Internal Server Error"
+            });
+          } else {
+            res.status(201).send({
+              message: "Login Success",
+              name : info[0].name,
+              u_idx : info[0].u_idx,
+              phone : info[0].phone,
+              bio : info[0].bio,
+              id : info[0].id,
+              photo : info[0].photo,
+              token: token
+            });
+          }
         } else {
             res.status(400).send({
                 message: "Login Failed"

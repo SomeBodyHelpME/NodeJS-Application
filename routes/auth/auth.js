@@ -31,6 +31,7 @@ router.post('/login', async(req, res, next) => {
                   phone : info[0].phone,
                   bio : info[0].bio,
                   id : info[0].id,
+                  photo : info[0].photo,
                   token: token
               });
             }

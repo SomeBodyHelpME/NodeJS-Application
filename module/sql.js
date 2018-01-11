@@ -476,22 +476,21 @@ module.exports = {
 
     let insertLightsQuery = 'INSERT INTO chat.lights (u_idx, g_idx, open_status, entire_status, content, write_time, chat_idx) VALUES (?, ?, ?, ?, ?, ?, ?)';
     var insertLights = await db.queryParamCnt_Arr(insertLightsQuery, [u_idx, g_idx, open_status, entire_status, content, write_time, chat_idx]);
-    console.log(userArray);
+    console.log('insertLights', insertLights);
+    console.log('userArray',userArray);
     if(entire_status === '1') {
       let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM admin.joined WHERE g_idx = ? AND u_idx != ?';
       var searchAllUsersInSpecificGroup = await db.queryParamCnt_Arr(searchAllUsersInSpecificGroupQuery, [g_idx, u_idx]);
-      console.log(searchAllUsersInSpecificGroup);
+      console.log('searchAllUsersInSpecificGroup',searchAllUsersInSpecificGroup);
       for(let i = 0 ; i < searchAllUsersInSpecificGroup.length ; i++) {
         let insertLightsResponseQuery = 'INSERT INTO chat.light_response (light_idx, u_idx, color, content, write_time) VALUES (?, ?, ?, ?, ?)';
         var insertLightsResponse = await db.queryParamCnt_Arr(insertLightsResponseQuery, [insertLights.insertId, searchAllUsersInSpecificGroup[i].u_idx, "r", null, null]);
+        console.log('insertLightsResponse',insertLightsResponse);
       }
     } else {
       console.log(userArray.length);
       for(let j = 1 ; j < userArray.length ; j = j + 2) {
         console.log("here");
-        if(userArray[j]==0) {
-          console.log("hi");
-        }
         let insertLightsResponseQuery = 'INSERT INTO chat.light_response (light_idx, u_idx, color, content, write_time) VALUES (?, ?, ?, ?, ?)';
         var insertLightsResponse = await db.queryParamCnt_Arr(insertLightsResponseQuery, [insertLights.insertId, userArray[j], "r", null, null]);
       }

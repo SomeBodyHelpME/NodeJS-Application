@@ -490,7 +490,8 @@ module.exports = {
         }
       }
     } else {
-      for(let j = 1 ; j < userArray.length ; j = j + 2) {
+      for(let j = 0 ; j < userArray.length ; j++) {
+        console.log(userArray[j]);
         let insertLightsResponseQuery = 'INSERT INTO chat.light_response (light_idx, u_idx, color, content, write_time) VALUES (?, ?, ?, ?, ?)';
         var insertLightsResponse = await db.queryParamCnt_Arr(insertLightsResponseQuery, [insertLights.insertId, userArray[j], "r", null, null]);
         console.log('insertLightsResponse',insertLightsResponse);

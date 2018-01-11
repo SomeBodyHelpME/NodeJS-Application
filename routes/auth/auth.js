@@ -18,8 +18,8 @@ router.post('/login', async(req, res, next) => {
         const hashedpwd = await crypto.pbkdf2(pwd, checkResult[0].salt, 100000, 32, 'sha512');
         if (hashedpwd.toString('base64') === checkResult[0].pwd) {
           let updateTokenQuery = 'UPDATE admin.user SET token = ? WHERE id = ?';
-          let updateToken = await queryParamCnt_Arr(updateTokenQuery, [client_token, id]);
-          
+          let updateToken = await db.queryParamCnt_Arr(updateTokenQuery, [client_token, id]);
+
           const token = jwt.sign(id, checkResult[0].u_idx);
           let infoQuery = 'SELECT * FROM admin.user WHERE id = ?';
           let info = await db.queryParamCnt_Arr(infoQuery, id);

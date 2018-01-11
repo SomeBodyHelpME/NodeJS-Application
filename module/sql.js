@@ -83,7 +83,7 @@ module.exports = {
         }
       }
       if(GroupArray1.length != 0) {
-        GroupJson.name = searchGroupInfo;
+        GroupJson.name = searchGroupInfo[0];
         GroupJson.data = GroupArray1;
         NoticeArray.push(GroupJson);
       }
@@ -107,7 +107,7 @@ module.exports = {
         }
       }// for(let j = 0)
       if(GroupArray2.length != 0) {
-        GroupJson.name = searchGroupInfo;
+        GroupJson.name = searchGroupInfo[0];
         GroupJson.data = GroupArray2;
         LightsArray.push(GroupJson);
       }
@@ -132,7 +132,7 @@ module.exports = {
         }
       }// for(let j = 0)
       if(GroupArray3.length != 0) {
-        GroupJson.name = searchGroupInfo;
+        GroupJson.name = searchGroupInfo[0];
         GroupJson.data = GroupArray3;
         VotesArray.push(GroupJson);
       }

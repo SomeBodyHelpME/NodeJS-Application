@@ -143,11 +143,9 @@ module.exports = {
       lights : LightsArray,
       votes : VotesArray
     };
-    if(!findUserJoined || !searchGroupInfo || !findNoticeIndex || !findNotice || !findLightsIndex || !findLights || !findVotesIndex || !findVotes) {
-      return false;
-    } else {
-      return result;
-    }
+
+    return result;
+
   },// findRestGroupThings(그룹별로 보여줄 때)
   homeNotice : async (...args) => {
     let u_idx = args[0];
@@ -255,7 +253,7 @@ module.exports = {
 
       let findEachGroupPickQuery =
       `SELECT chat.pick.* , admin.user.photo, admin.user.name, admin.user.id
-      FROM chat.pick, admin.user WHERE chat.pick.write_id = admin.user.id 
+      FROM chat.pick, admin.user WHERE chat.pick.write_id = admin.user.id
       AND chat.pick.u_idx = 4 AND chat.pick.g_idx= 1
       ORDER BY write_time DESC`;
       var findEachGroupPick = await db.queryParamCnt_Arr(findEachGroupPickQuery, [u_idx, findUserJoined[i].g_idx]);
@@ -349,11 +347,11 @@ module.exports = {
     let findEachGroupLightsQuery = 'SELECT admin.user.photo, admin.user.name, admin.user.id, chat.lights.*, chat.light_response.color FROM chat.light_response JOIN (admin.user JOIN chat.lights USING(u_idx)) USING(light_idx) WHERE g_idx = ? AND chat.light_response.u_idx = ? ORDER BY chat.lights.light_idx DESCchat.lights.light_idx DESC';
     var findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [g_idx]);
 
-    if(!findEachGroupLights) {
-      return false;
-    } else {
+    // if(!findEachGroupLights) {
+    //   return false;
+    // } else {
       return findEachGroupLights;
-    }
+    // }
   },// forEachLights
   forEachLightsStatus : async (...args) => {
     let u_idx = args[0];

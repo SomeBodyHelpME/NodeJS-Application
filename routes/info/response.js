@@ -94,6 +94,8 @@ router.post('/press', async(req, res, next) => {
   let g_idx = req.body.g_idx;
   let vote_idx = req.body.vote_idx;
 
+  let flag = 0;
+
   let findUnvotedUserQuery = 'SELECT u_idx FROM chat.vote_response WHERE vote_idx = ? AND g_idx = ? AND status = ?';
   let findUnvotedUser = await db.queryParamCnt_Arr(findUnvotedUserQuery, [vote_idx, g_idx, 0]);
   console.log('findUnvotedUser', findUnvotedUser);
@@ -111,17 +113,22 @@ router.post('/press', async(req, res, next) => {
     console.log(findUnvotedUser[i]);
     fcm.send(message, function(err, response) {
       if(err) {
-        res.status(500).send({
-          message : "Internal Server Error"
-        });
         console.log("Something has gone wrong!", err);
+        flag = 1;
+        break;
       } else {
-        res.status(201).send({
-          message : "Success to Send Message"
-        });
         console.log("Successfully sent with response: ", response);
       }
     });//fcm.send
+  }
+  if(flag === 1) {
+    res.status(500).send({
+      message : "Internal Server Error"
+    });
+  } else {
+    res.status(201).send({
+      message : "Success to Send Message"
+    });
   }
 
 });

@@ -75,7 +75,7 @@ module.exports = {
       let findNoticeIndexQuery = 'SELECT * FROM chat.notice WHERE g_idx = ?';
       var findNoticeIndex = await db.queryParamCnt_Arr(findNoticeIndexQuery, [findUserJoined[i].g_idx]);
       for(let j = 0 ; j < findNoticeIndex.length ; j++) {
-        let findNoticeQuery = 'SELECT * FROM chat.notice_response WHERE notice_idx = ? AND status = ? AND u_idx';
+        let findNoticeQuery = 'SELECT * FROM chat.notice_response WHERE notice_idx = ? AND status = ? AND u_idx = ?';
         var findNotice = await db.queryParamCnt_Arr(findNoticeQuery, [findNoticeIndex[j].notice_idx, 0, u_idx]);
         if(findNotice.length != 0) {
           let AgendaJson = findNoticeIndex[j];

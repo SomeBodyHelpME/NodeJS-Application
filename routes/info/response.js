@@ -96,7 +96,7 @@ router.post('/press', async(req, res, next) => {
 
   let flag = 0;
 
-  let findUnvotedUserQuery = 'SELECT u_idx FROM chat.vote_response WHERE vote_idx = ? AND g_idx = ? AND status = ?';
+  let findUnvotedUserQuery = 'SELECT u_idx, token FROM chat.vote_response WHERE vote_idx = ? AND g_idx = ? AND status = ?';
   let findUnvotedUser = await db.queryParamCnt_Arr(findUnvotedUserQuery, [vote_idx, g_idx, 0]);
   console.log('findUnvotedUser', findUnvotedUser);
   for(let i = 0 ; i < findUnvotedUser.length ; i++) {

@@ -253,7 +253,11 @@ module.exports = {
       let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
       var searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].g_idx]);
 
-      let findEachGroupPickQuery = 'SELECT chat.pick.*, admin.user.photo, admin.user.name, admin.user.id FROM chat.pick JOIN admin.user USING(u_idx) WHERE u_idx = ? AND g_idx = ? ORDER BY write_time DESC';
+      let findEachGroupPickQuery =
+      `SELECT chat.pick.* , admin.user.photo, admin.user.name, admin.user.id
+      FROM chat.pick, admin.user WHERE chat.pick.write_id = admin.user.id 
+      AND chat.pick.u_idx = 4 AND chat.pick.g_idx= 1
+      ORDER BY write_time DESC`;
       var findEachGroupPick = await db.queryParamCnt_Arr(findEachGroupPickQuery, [u_idx, findUserJoined[i].g_idx]);
       result.push(
         {

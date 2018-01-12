@@ -195,17 +195,13 @@ module.exports = {
         if(findEachGroupLights[j].open_status === 1) {  //true check
           let findEachGroupLightsResAllQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ?';
           let findEachGroupLightsResAll = await db.queryParamCnt_Arr(findEachGroupLightsResAllQuery, [findEachGroupLights[j].light_idx]);
-
-          if(findEachGroupLightsResAll.length != 0) {
-            groupArray.push(findEachGroupLights[j]);
-          }
+      
+          groupArray.push(findEachGroupLights[j]);
         } else {
           let findEachGroupLightsResAloneQuery = 'SELECT * FROM chat.light_response WHERE u_idx = ? AND light_idx = ?';
           let findEachGroupLightsResAlone = await db.queryParamCnt_Arr(findEachGroupLightsResAloneQuery, [u_idx, findEachGroupLights[j].light_idx]);
 
-          if(findEachGroupLightsResAlone.length != 0) {
-            groupArray.push(findEachGroupLights[j]);
-          }
+          groupArray.push(findEachGroupLights[j]);
         }
       }
       GroupJson.name = searchGroupInfo[0];

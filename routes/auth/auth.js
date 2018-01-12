@@ -10,7 +10,7 @@ const sql = require('../../module/sql.js');
 router.post('/login', async(req, res, next) => {
     var id = req.body.id;
     var pwd = req.body.pwd;
-    var client_token = req.body.token;
+    var client_token = req.body.client_token;
 
     let checkQuery = 'SELECT * FROM admin.user WHERE id = ?';
     let checkResult = await db.queryParamCnt_Arr(checkQuery, [id]);

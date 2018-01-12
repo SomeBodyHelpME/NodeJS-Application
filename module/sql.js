@@ -254,7 +254,7 @@ module.exports = {
       let findEachGroupPickQuery =
       `SELECT chat.pick.* , admin.user.photo, admin.user.name, admin.user.id
       FROM chat.pick, admin.user WHERE chat.pick.write_id = admin.user.id
-      AND chat.pick.u_idx = 4 AND chat.pick.g_idx= 1
+      AND chat.pick.u_idx = ? AND chat.pick.g_idx= ?
       ORDER BY write_time DESC`;
       var findEachGroupPick = await db.queryParamCnt_Arr(findEachGroupPickQuery, [u_idx, findUserJoined[i].g_idx]);
       result.push(
@@ -398,7 +398,11 @@ module.exports = {
   forEachPick : async (...args) => {
     let u_idx = args[0];
     let g_idx = args[1];
-    let showAllPickQuery = 'SELECT chat.pick.*, admin.user.photo, admin.user.name, admin.user.id FROM chat.pick JOIN admin.user USING(u_idx) WHERE u_idx = ? AND g_idx = ? ORDER BY write_time DESC';
+    let showAllPickQuery =
+    `SELECT chat.pick.*, admin.user.photo, admin.user.name, admin.user.id
+    FROM chat.pick, admin.user WHERE chat.pick.write_id = admin.user.id
+    AND chat.pick.u_idx = ? AND chat.pick.g_idx = ?
+    ORDER BY write_time DESC`;
     var showAllPick = await db.queryParamCnt_Arr(showAllPickQuery, [u_idx, g_idx]);
     // res.status(200).send({
     //   message : "success",

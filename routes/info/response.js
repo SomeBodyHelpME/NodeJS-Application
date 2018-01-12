@@ -96,13 +96,14 @@ router.post('/press', async(req, res, next) => {
 
   let flag = 0;
 
-  let findUnvotedUserQuery = 'SELECT u_idx, token FROM chat.vote_response WHERE vote_idx = ? AND g_idx = ? AND status = ?';
+  let findUnvotedUserQuery = 'SELECT u_idx FROM chat.vote_response WHERE vote_idx = ? AND g_idx = ? AND status = ?';
   let findUnvotedUser = await db.queryParamCnt_Arr(findUnvotedUserQuery, [vote_idx, g_idx, 0]);
   console.log('findUnvotedUser', findUnvotedUser);
   for(let i = 0 ; i < findUnvotedUser.length ; i++) {
     let findUserTokenQuery = 'SELECT token FROM admin.user WHERE u_idx = ?';
     let findUserToken = await db.queryParamCnt_Arr(findUserTokenQuery, [findUnvotedUser[i].u_idx]);
     let client_token = findUserToken[0].token;
+    console.log(client_token);
     var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
         to: client_token,
         notification: {

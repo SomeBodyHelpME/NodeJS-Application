@@ -115,7 +115,6 @@ router.post('/press', async(req, res, next) => {
       if(err) {
         console.log("Something has gone wrong!", err);
         flag = 1;
-        break;
       } else {
         console.log("Successfully sent with response: ", response);
       }

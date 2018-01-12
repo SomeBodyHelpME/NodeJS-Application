@@ -108,10 +108,17 @@ router.post('/press', async(req, res, next) => {
             body: '투표 해주세요!!'  //보낼메시지
         }
     };
+    console.log(findUnvotedUser[i]);
     fcm.send(message, function(err, response) {
       if(err) {
+        res.status(500).send({
+          message : "Internal Server Error"
+        });
         console.log("Something has gone wrong!", err);
       } else {
+        res.status(201).send({
+          message : "Success to Send Message"
+        });
         console.log("Successfully sent with response: ", response);
       }
     });//fcm.send

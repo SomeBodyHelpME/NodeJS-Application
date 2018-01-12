@@ -106,7 +106,7 @@ router.post('/press', async(req, res, next) => {
     console.log(client_token);
     var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
         to: client_token,
-        notification: {
+        data: {
             title: '팀플의 요정',   //제목
             body: '투표 해주세요!!'  //보낼메시지
         }

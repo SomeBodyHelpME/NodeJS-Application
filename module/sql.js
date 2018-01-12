@@ -186,8 +186,8 @@ module.exports = {
       let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
       var searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].g_idx]);
 
-      let findEachGroupLightsQuery = 'SELECT admin.user.photo, admin.user.name, admin.user.id, chat.lights.*, chat.light_response.color FROM admin.user JOIN (chat.lights JOIN chat.light_response USING(u_idx,light_idx)) USING(u_idx) WHERE g_idx = ? AND u_idx != ? ORDER BY chat.lights.light_idx DESC';
-      var findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [findUserJoined[i].g_idx, u_idx]);
+      let findEachGroupLightsQuery = 'SELECT admin.user.photo, admin.user.name, admin.user.id, chat.lights.*, chat.light_response.color FROM chat.light_response JOIN (admin.user JOIN chat.lights USING(u_idx)) USING(light_idx) WHERE g_idx = ? AND chat.light_response.u_idx = ? AND chat.lights.u_idx != ? ORDER BY chat.lights.light_idx DESCchat.lights.light_idx DESC';
+      var findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [findUserJoined[i].g_idx, u_idx, u_idx]);
 
       let groupArray = [];
       for(let j = 0 ; j < findEachGroupLights.length ; j++) {
@@ -343,7 +343,7 @@ module.exports = {
     let u_idx = args[0];
     let g_idx = args[1];
 
-    let findEachGroupLightsQuery = 'SELECT admin.user.photo, admin.user.name, admin.user.id, chat.lights.*, chat.light_response.color FROM admin.user JOIN (chat.lights JOIN chat.light_response USING(u_idx,light_idx)) USING(u_idx) WHERE g_idx = ? ORDER BY chat.lights.light_idx DESC';
+    let findEachGroupLightsQuery = 'SELECT admin.user.photo, admin.user.name, admin.user.id, chat.lights.*, chat.light_response.color FROM chat.light_response JOIN (admin.user JOIN chat.lights USING(u_idx)) USING(light_idx) WHERE g_idx = ? AND chat.light_response.u_idx = ? ORDER BY chat.lights.light_idx DESCchat.lights.light_idx DESC';
     var findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [g_idx]);
 
     if(!findEachGroupLights) {

@@ -148,7 +148,7 @@ router.get('/close/:g_idx/:vote_idx', async(req, res, next) => {
     let g_idx = req.params.g_idx;
     let vote_idx = req.params.vote_idx;
 
-    let result = await sql.voteClose(g_idx, vote_idx);
+    let result = await sql.closeVote(u_idx, g_idx, vote_idx);
     if(!result) {
       res.status(500).send({
         message : "Internal Server Error"

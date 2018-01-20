@@ -61,14 +61,14 @@ router.post('/register', async(req, res, next) => {
     var name = req.body.name;
     var phone = req.body.phone;
     var token = req.header.token;
-
+    var photo = ' ';
     const salt = await crypto.randomBytes(32);
     const hashedpwd = await crypto.pbkdf2(pwd, salt.toString('base64'), 100000, 32, 'sha512');
     let checkIDQuery = 'SELECT * FROM admin.user WHERE id = ?';
     let checkID = await db.queryParamCnt_Arr(checkIDQuery, [id]);
     if (checkID.length === 0) {
-        let insertQuery = 'INSERT INTO admin.user (name, salt, pwd, phone, id, token) VALUES (?, ?, ?, ?, ?, ?)';
-        let insertResult = await db.queryParamCnt_Arr(insertQuery, [name, salt.toString('base64'), hashedpwd.toString('base64'), phone, id, token]);
+        let insertQuery = 'INSERT INTO admin.user (name, salt, pwd, phone, id, token, photo) VALUES (?, ?, ?, ?, ?, ?, ?)';
+        let insertResult = await db.queryParamCnt_Arr(insertQuery, [name, salt.toString('base64'), hashedpwd.toString('base64'), phone, id, token, photo]);
         if(!checkID || !insertResult) {
           res.status(500).send({
             message : "Internal Server Error"

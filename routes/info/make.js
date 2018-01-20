@@ -9,7 +9,7 @@ const db = require('../../module/pool.js');
 const sql = require('../../module/sql.js');
 
 router.post('/chatroom', upload.single('photo'), async(req, res, next) => {
-  var photo = null;
+  var photo = ' ';
   if(req.file != undefined) {
     photo = req.file.location;
   }

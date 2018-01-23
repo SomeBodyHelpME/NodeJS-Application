@@ -27,7 +27,7 @@ router.post('/chatroom', upload.single('photo'), async(req, res, next) => {
     let createChatRoomQuery = 'INSERT INTO chat.group (real_name, ctrl_name, photo) VALUES (?, ?, ?)';
     let createChatRoom = await db.queryParamCnt_Arr(createChatRoomQuery, [real_name, ctrl_name, photo]);
 
-    let insertNewPersonQuery = 'INSERT INTO admin.joined (g_idx, u_idx) VALUES (?, ?)';
+    let insertNewPersonQuery = 'INSERT INTO chat.joined (g_idx, u_idx) VALUES (?, ?)';
     let insertNewPerson = await db.queryParamCnt_Arr(insertNewPersonQuery, [createChatRoom.insertId, u_idx]);
 
     if(!createChatRoom || !insertNewPerson) {

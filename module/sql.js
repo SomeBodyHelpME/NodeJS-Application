@@ -3,7 +3,7 @@ const moment = require('moment');
 
 const pool = require('../config/dbPool.js');
 const db = require('./pool.js');
-const statuscode = require('./statuscode.js');
+//const statuscode = require('./statuscode.js');
 /* groupName get */
 // let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
 // let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [g_idx]);

@@ -122,6 +122,7 @@ router.post('/invite', async(req, res, next) => {
         res.status(201).send({
           message: "Success to Invite Person"
         });
+        let sendFCM = await sql.sendFCMData(1, g_idx);
       } else {
         res.status(400).send({
           message : "Already Joined"
@@ -155,6 +156,7 @@ router.delete('/leave', async(req, res, next) => {
       res.status(201).send({
         message : "Success Leave Group"
       });
+      let sendFCM = await sql.sendFCMData(1, g_idx);
     }
   }
 });
@@ -201,8 +203,10 @@ router.put('/profile', upload.single('photo'), async(req, res, next) => {
       });
     } else if (updateProfile.changedRows === 1) {
       res.status(201).send({
-        message: "Success to Change"
+        message: "Success to Change",
+        data : photo
       });
+      let sendFCM = await sql.sendFCMData(2, u_idx);
     } else {
       //값은 넘어왔는데 바뀐게 없다.오류는 x
       res.status(400).send({

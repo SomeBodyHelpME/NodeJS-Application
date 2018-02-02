@@ -711,6 +711,12 @@ module.exports = {
     if(!leaveGroup) {
       return false;
     } else {
+      let leftPersonCountQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
+      var leftPersonCount = await db.queryParamCnt_Arr(leftPersonCountQuery, [g_idx]);
+      if(leftPersonCount.length === 0) {
+        let deleteGroupInfoQuery = 'DELETE FROM chat.group WHERE g_idx = ?';
+        var deleteGroupInfo = await db.queryParamCnt_Arr(deleteGroupInfoQuery, [g_idx]);
+      }
       return leaveGroup;
     }
   },
@@ -720,7 +726,7 @@ module.exports = {
     let vote_idx = args[2];
 
     let voteCloseQuery = 'UPDATE chat.vote SET status = ? WHERE u_idx = ? AND g_idx = ? AND vote_idx = ?';
-    let voteCloseResult = await db.queryParamCnt_Arr(voteCloseQuery, [1, u_idx, g_idx, vote_idx]);
+    var voteCloseResult = await db.queryParamCnt_Arr(voteCloseQuery, [1, u_idx, g_idx, vote_idx]);
     if(!voteCloseResult) {
       return false;
     } else {
@@ -728,61 +734,128 @@ module.exports = {
     }
   },
   sendFCMData : async (...args) => {
+    /*
+      나의 정보가 변경되었을 때에는 데이터베이스에서 변화가 있을까?
+      i) status === 0 : 그룹 수정, 삭제    그룹 삭제??? 이거 어떻게 할거지???(그룹 삭제를 모든 사람이 나갔을 때 라고 한다면, 따로 작업할 필요는 없다)
+         그룹 수정시에 group_index만 넘어오도록 하여 그 그룹에 속한 유저들의 정보만 바뀌게 한다.
+         ===> showAllGroupsJoined 이것 사용
+      ii) status === 1 : joined 추가, 삭제
+         누가 초대되었을 때(joined 추가) : joined table도 수정되어야 하고, user table도 수정되어야 한다. group_index만 넘어오도록 하여 그룹에 속한 유저들의 정보만 바뀌게 한다.
+         누가 나갔을 때(joined 삭제) : joined table만 수정되면 된다. group_index만 넘어오도록 하여 그 그룹에 속한 유저들의 정보만 바뀌게 한다.
+         ===> getJoinedInfo 이것 사용
+      iii) status === 2 : user 정보 변경??? 이거 얘기 한번 해보자
+         유저 정보 변경 시 : 내가 속한 모든 그룹의 사람들에게 내 정보가 바뀌었음을 알려야 한다. 이때는 user_index가 넘어와야 한다.
+         유저 삭제 시 : 아직 고려하지 않았으니 제낌 => 유저 삭제를 넣는다면 delete cascade 걸어줘야함
+         ===> getUserInfo 이것 사용
+
+      문제점) 그룹의 사진, 이름을 바꾸는 라우터가 없기 때문에 i)번을 작업할 필요가 없다.
+    */
     let status = args[0];
-    let u_idx = args[1];
+    let idx = args[1];
 
-    let getUserTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
-    let getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [u_idx]);
-    let client_token = getUserToken[0].token;
+    if(status === 0 || status === 1) {
+      let getAllUserQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
+      var getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [idx]);
+      //getAllUserQuery 하고 getUserTokenQuery 하고 JOIN 할 수 있을 것 같은데
+      for(let j = 0 ; j < getAllUser.length ; j++) {
+        let getUserTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
+        var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [getAllUser[j].u_idx]);
+        let client_token = getUserToken[0].token;
 
-    if(status === 0) {
-      let Query = '';
-      let Result = await db.queryParamCnt_Arr(Query, []);
-      var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
-          to: client_token,
-          data: {
-            data : statuscode.groupChange
-          }
-      };
-      fcm.send(message, function(err, response) {
-        if(err) {
-          console.log("Something has gone wrong!", err);
+        if(status === 0) {
+          var message_data = statuscode.groupChange;
         } else {
-          console.log("Successfully sent with response: ", response);
+          var message_data = statuscode.joinedChange;
         }
-      });//fcm.send
-    } else if(status === 1) {
-      let Query = '';
-      let Result = await db.queryParamCnt_Arr(Query, []);
-      var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
-          to: client_token,
-          data: {
-            data : statuscode.joinedChange
+
+        var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+            to: client_token,
+            data: {
+              data : message_data
+            }
+        };
+
+        fcm.send(message, function(err, response) {
+          if(err) {
+            console.log("Something has gone wrong!", err);
+          } else {
+            console.log("Successfully sent with response: ", response);
           }
-      };
-      fcm.send(message, function(err, response) {
-        if(err) {
-          console.log("Something has gone wrong!", err);
-        } else {
-          console.log("Successfully sent with response: ", response);
-        }
-      });//fcm.send
+        });//fcm.send
+      }//for(j=0)
     } else {  //status === 2
-      let Query = '';
-      let Result = await db.queryParamCnt_Arr(Query, []);
-      var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
-          to: client_token,
-          data: {
-            data : statuscode.userChange
-          }
-      };
-      fcm.send(message, function(err, response) {
-        if(err) {
-          console.log("Something has gone wrong!", err);
-        } else {
-          console.log("Successfully sent with response: ", response);
-        }
-      });//fcm.send
+      let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
+      var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [idx]);
+
+      for(let i = 0 ; i < findUserJoined.length ; i++) {
+        let getAllUserQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
+        var getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [findUserJoined[i].g_idx]);
+        //getAllUserQuery 하고 getUserTokenQuery 하고 JOIN 할 수 있을 것 같은데
+        for(let j = 0 ; j < getAllUser.length ; j++) {
+          let getUserTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
+          var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [getAllUser[j].u_idx]);
+          let client_token = getUserToken[0].token;
+
+          var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+              to: client_token,
+              data: {
+                data : statuscode.userChange
+              }
+          };
+          fcm.send(message, function(err, response) {
+            if(err) {
+              console.log("Something has gone wrong!", err);
+            } else {
+              console.log("Successfully sent with response: ", response);
+            }
+          });//fcm.send
+        }// for(j=0)
+      }// for(i=0)
     }//else
-  }//sendFCMData
+  },//sendFCMData
+  getJoinedInfo : async (...args) => {
+    let u_idx = args[0];
+    let resultArray = [];
+    let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
+    var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
+
+    for(let i = 0 ; i < findUserJoined.length ; i++) {
+      let findAllUserJoinedQuery = 'SELECT * FROM chat.joined WHERE g_idx = ?';
+      var findAllUserJoined = await db.queryParamCnt_Arr(findAllUserJoinedQuery, [findUserJoined[i].g_idx]);
+      for(let j = 0 ; j < findAllUserJoined.length ; j++) {
+        resultArray.push(findAllUserJoined[j]);
+      }//for(j=0)
+    }//for(i=0)
+    if(!findUserJoined) {
+      return false;
+    } else {
+      return resultArray;
+    }
+  },//getJoinedInfo
+  getUserInfo : async (...args) => {
+    let u_idx = args[0];
+
+    let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
+    var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
+
+    let userArray = [];
+    for(let i = 0 ; i < findUserJoined.length ; i++) {
+      let findAllUserQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
+      var findAllUser = await db.queryParamCnt_Arr(findAllUserQuery, [g_idx]);
+      console.log(findAllUser);
+      for(let j = 0 ; j < findAllUser.length ; j++) {
+        userArray.push(findAllUser[j].u_idx);
+      }
+      console.log(userArray);
+    }
+    //userArray_without_duplicate
+    let userArray_wo_dup = Array.from(new Set(userArray));
+    let result = [];
+    for(let i = 0 ; i < userArray_wo_dup.length ; i++) {
+      let findUserDetailInfoQuery = 'SELECT u_idx, name, phone, bio, photo, id FROM chat.user WHERE u_idx = ?';
+      var findUserDetailInfo = await db.queryParamCnt_Arr(findUserDetailInfoQuery, [userArray_wo_dup[i].u_idx]);
+      result.push(findUserDetailInfo[0]);
+    }
+    return result;
+  }
 };

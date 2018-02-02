@@ -141,4 +141,50 @@ router.get('/grouplist', async(req, res, next) => {
   }
 });
 
+router.get('/joined', async(req, res, next) => {
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if(decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+    let result = await sql.getJoinedInfo(u_idx);
+    if(!result) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    } else {
+      res.status(200).send({
+        message : "Success to Load Joined Information",
+        data : result
+      });
+    }
+  }
+});
+
+router.get('/user', async(req, res, next) => {
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if(decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+    let result = await sql.getUserInfo(u_idx);
+    if(!result) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    } else {
+      res.status(200).send({
+        message : "Success to Load User Information",
+        data : result
+      });
+    }
+  }
+});
+
 module.exports = router;

@@ -214,7 +214,7 @@ module.exports = {
     }
 
 
-    if(!findUserJoined || !searchGroupInfo || !findEachGroupLightsNotFinished || !findEachGroupLightsFinished) {
+    if(!findUserJoined || !searchGroupInfo || !findEachGroupLightsQuery) {
       return false;
     } else {
       return resArray;
@@ -861,7 +861,7 @@ module.exports = {
     for(let i = 0 ; i < userArray_wo_dup.length ; i++) {
       let findUserDetailInfoQuery = 'SELECT u_idx, name, phone, bio, photo, id FROM chat.user WHERE u_idx = ?';
       var findUserDetailInfo = await db.queryParamCnt_Arr(findUserDetailInfoQuery, [userArray_wo_dup[i]]);
-    
+
       result.push(findUserDetailInfo[0]);
     }
     return result;

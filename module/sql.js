@@ -848,7 +848,7 @@ module.exports = {
     for(let i = 0 ; i < findUserJoined.length ; i++) {
       let findAllUserQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
       var findAllUser = await db.queryParamCnt_Arr(findAllUserQuery, [findUserJoined[i].g_idx]);
-      console.log(findAllUser);
+
       for(let j = 0 ; j < findAllUser.length ; j++) {
         userArray.push(findAllUser[j].u_idx);
       }
@@ -856,10 +856,12 @@ module.exports = {
     }
     //userArray_without_duplicate
     let userArray_wo_dup = Array.from(new Set(userArray));
+
     let result = [];
     for(let i = 0 ; i < userArray_wo_dup.length ; i++) {
       let findUserDetailInfoQuery = 'SELECT u_idx, name, phone, bio, photo, id FROM chat.user WHERE u_idx = ?';
-      var findUserDetailInfo = await db.queryParamCnt_Arr(findUserDetailInfoQuery, [userArray_wo_dup[i].u_idx]);
+      var findUserDetailInfo = await db.queryParamCnt_Arr(findUserDetailInfoQuery, [userArray_wo_dup[i]]);
+    
       result.push(findUserDetailInfo[0]);
     }
     return result;

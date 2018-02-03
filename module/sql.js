@@ -776,9 +776,7 @@ module.exports = {
 
         var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
             to: client_token,
-            data: {
-              data : message_data
-            }
+            data: message_data
         };
 
         fcm.send(message, function(err, response) {
@@ -804,9 +802,7 @@ module.exports = {
 
           var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
               to: client_token,
-              data: {
-                data : statuscode.userChange
-              }
+              data: statuscode.userChange
           };
           fcm.send(message, function(err, response) {
             if(err) {
@@ -914,11 +910,10 @@ module.exports = {
       return result;
     }
   },
-
   pushCalender : async (...args) => {
-
+    return true;
   },
   deleteCalender : async (...args) => {
-
+    return true;
   }
 };

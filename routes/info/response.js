@@ -8,7 +8,7 @@ const FCM = require('fcm-node');
 const serverKey = require('../../config/serverKey').key;
 const fcm = new FCM(serverKey);
 
-
+const statuscode = require('../../module/statuscode.js');
 const jwt = require('../../module/jwt.js');
 const db = require('../../module/pool.js');
 const sql = require('../../module/sql.js');
@@ -110,9 +110,7 @@ router.post('/press', async(req, res, next) => {
         //     title: '팀플의 요정',   //제목
         //     body: '투표 해주세요!!'  //보낼메시지
         // },
-        data: {
-          data : 'vote'
-        }
+        data: statuscode.votePush
     };
     console.log(findUnvotedUser[i]);
     fcm.send(message, function(err, response) {

@@ -7,7 +7,7 @@ const statuscode = require('./statuscode.js');
 
 // FCM
 const FCM = require('fcm-node');
-const serverKey = require('../../config/serverKey').key;
+const serverKey = require('../config/serverKey').key;
 const fcm = new FCM(serverKey);
 
 /* groupName get */

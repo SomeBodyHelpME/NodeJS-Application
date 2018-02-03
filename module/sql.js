@@ -776,7 +776,9 @@ module.exports = {
 
         var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
             to: client_token,
-            data: message_data
+            data: {
+              data : message_data
+            }
         };
 
         fcm.send(message, function(err, response) {
@@ -802,7 +804,9 @@ module.exports = {
 
           var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
               to: client_token,
-              data: statuscode.userChange
+              data: {
+                data : statuscode.userChange
+              }
           };
           fcm.send(message, function(err, response) {
             if(err) {
@@ -843,7 +847,7 @@ module.exports = {
     let userArray = [];
     for(let i = 0 ; i < findUserJoined.length ; i++) {
       let findAllUserQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
-      var findAllUser = await db.queryParamCnt_Arr(findAllUserQuery, [g_idx]);
+      var findAllUser = await db.queryParamCnt_Arr(findAllUserQuery, [findUserJoined[i].g_idx]);
       console.log(findAllUser);
       for(let j = 0 ; j < findAllUser.length ; j++) {
         userArray.push(findAllUser[j].u_idx);
@@ -913,7 +917,30 @@ module.exports = {
   pushCalender : async (...args) => {
     return true;
   },
+  modifyCalender : async (...args) => {
+    let cal_idx = args[0];
+    let title = args[1];
+    let location = args[2];
+    let memo = args[3];
+    let starttime = args[4];
+    let endtime = args[5];
+
+    //이거는 라우터에서 실행하자
+    // let getCalenderQuery = 'SELECT * FROM chat.calender WHERE cal_idx = ?';
+    // var getCalender = await db.queryParamCnt_Arr(getCalenderQuery, [cal_idx]);
+    let updateCalenderQuery = 'UPDATE chat.calender SET title = ? AND location = ? AND memo = ? AND starttime = ? AND endtime = ? WHERE cal_idx = ?';
+    var updateCalender = await db.queryParamCnt_Arr(updateCalenderQuery, [title, location, memo, starttime, endtime, cal_idx]);
+
+    if(!updateCalender) {
+      return false;
+    } else {
+      return true;
+    }
+  },
   deleteCalender : async (...args) => {
+    let cal_idx = args[0];
+
+    let deleteCalenderQuery = 'DELETE FROM chat.calender ';
     return true;
   }
 };

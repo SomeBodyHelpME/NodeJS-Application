@@ -94,8 +94,6 @@ router.post('/press', async(req, res, next) => {
   let g_idx = req.body.g_idx;
   let vote_idx = req.body.vote_idx;
 
-  let flag = 0;
-
   let findUnvotedUserQuery = 'SELECT u_idx FROM chat.vote_response WHERE vote_idx = ? AND g_idx = ? AND status = ?';
   let findUnvotedUser = await db.queryParamCnt_Arr(findUnvotedUserQuery, [vote_idx, g_idx, 0]);
   console.log('findUnvotedUser', findUnvotedUser);
@@ -110,28 +108,25 @@ router.post('/press', async(req, res, next) => {
         //     title: '팀플의 요정',   //제목
         //     body: '투표 해주세요!!'  //보낼메시지
         // },
-        data: statuscode.votePush
+        data: {
+          data : statuscode.votePush
+        }
     };
     console.log(findUnvotedUser[i]);
     fcm.send(message, function(err, response) {
       if(err) {
         console.log("Something has gone wrong!", err);
-        flag = 1;
+        res.status(500).send({
+          message : "Internal Server Error"
+        });
       } else {
         console.log("Successfully sent with response: ", response);
+        res.status(201).send({
+          message : "Success to Send Message"
+        });
       }
     });//fcm.send
   }
-  if(flag === 1) {
-    res.status(500).send({
-      message : "Internal Server Error"
-    });
-  } else {
-    res.status(201).send({
-      message : "Success to Send Message"
-    });
-  }
-
 });
 
 router.get('/close/:g_idx/:vote_idx', async(req, res, next) => {

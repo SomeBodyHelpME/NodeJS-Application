@@ -3,7 +3,13 @@ const moment = require('moment');
 
 const pool = require('../config/dbPool.js');
 const db = require('./pool.js');
-//const statuscode = require('./statuscode.js');
+const statuscode = require('./statuscode.js');
+
+// FCM
+const FCM = require('fcm-node');
+const serverKey = require('../../config/serverKey').key;
+const fcm = new FCM(serverKey);
+
 /* groupName get */
 // let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
 // let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [g_idx]);
@@ -857,5 +863,62 @@ module.exports = {
       result.push(findUserDetailInfo[0]);
     }
     return result;
+  },
+  addCalender : async (...args) => {
+    let g_idx = args[0];
+    let title = args[1];
+    let location = args[2];
+    let memo = args[3];
+    let starttime = args[4];
+    let endtime = args[5];
+
+    let insertCalenderQuery = 'INSERT INTO chat.calender (g_idx, title, location, memo, starttime, endtime) VALUES (?, ?, ?, ?, ?, ?)';
+    var insertCalender = await db.queryParamCnt_Arr(insertCalenderQuery, [g_idx, title, location, memo, starttime, endtime]);
+
+    if(!insertCalender) {
+      return false;
+    } else {
+      return true;
+    }
+  },
+  showCalender : async (...args) => {
+    //일정에 색깔 어떻게 표현할거냐?
+    let u_idx = args[0];
+    let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
+    var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
+    let result = [];
+    for(let i = 0 ; i < findUserJoined.length ; i++) {
+      let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
+      var searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].g_idx]);
+
+      let searchCalenderInfoQuery =
+      `
+      SELECT * FROM chat calender WHERE g_idx = ?
+      AND ( starttime > ? AND starttime < ? ) OR ( endtime > ? AND endtime < ? )
+      `;
+      var searchCalenderInfo = await db.queryParamCnt_Arr(searchCalenderInfoQuery, [findUserJoined[i].g_idx]);
+
+      if(searchGroupInfo === undefined || searchCalenderInfo === undefined) {
+        break;
+      }
+      result.push(
+        {
+          name : searchGroupInfo[0],
+          data : searchCalenderInfo
+        }
+      );
+    }//for
+    if(!findUserJoined || !searchGroupInfo || !searchCalenderInfo) {
+      return false;
+    } else {
+      return result;
+    }
+  },
+
+  pushCalender : async (...args) => {
+
+  },
+  deleteCalender : async (...args) => {
+
   }
 };

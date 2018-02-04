@@ -798,7 +798,7 @@ module.exports = {
       let userArray = [];
       for(let i = 0 ; i < findUserJoined.length ; i++) {
         let getAllUserQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
-        var getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [findUserJoined[i].g_idx, idx]);
+        var getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [findUserJoined[i].g_idx]);
 
         //getAllUserQuery 하고 getUserTokenQuery 하고 JOIN 할 수 있을 것 같은데
         for(let j = 0 ; j < getAllUser.length ; j++) {

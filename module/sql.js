@@ -793,30 +793,38 @@ module.exports = {
       let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
       var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [idx]);
 
+      let userArray = [];
       for(let i = 0 ; i < findUserJoined.length ; i++) {
         let getAllUserQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
         var getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [findUserJoined[i].g_idx]);
+
         //getAllUserQuery 하고 getUserTokenQuery 하고 JOIN 할 수 있을 것 같은데
         for(let j = 0 ; j < getAllUser.length ; j++) {
-          let getUserTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
-          var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [getAllUser[j].u_idx]);
-          let client_token = getUserToken[0].token;
+          userArray.push(getAllUser[j].u_idx);
+        }
+        console.log(userArray);
+      }
+      let userArray_wo_dup = Array.from(new Set(userArray));
 
-          var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
-              to: client_token,
-              data: {
-                data : statuscode.userChange
-              }
-          };
-          fcm.send(message, function(err, response) {
-            if(err) {
-              console.log("Something has gone wrong!", err);
-            } else {
-              console.log("Successfully sent with response: ", response);
+      for(let i = 0 ; i < userArray_wo_dup.length ; i++) {
+        let getUserTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
+        var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [userArray_wo_dup[i].u_idx]);
+        let client_token = getUserToken[0].token;
+
+        var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+            to: client_token,
+            data: {
+              data : statuscode.userChange
             }
-          });//fcm.send
-        }// for(j=0)
-      }// for(i=0)
+        };
+        fcm.send(message, function(err, response) {
+          if(err) {
+            console.log("Something has gone wrong!", err);
+          } else {
+            console.log("Successfully sent with response: ", response);
+          }
+        });//fcm.send
+      }
     }//else
   },//sendFCMData
   getJoinedInfo : async (...args) => {
@@ -942,7 +950,13 @@ module.exports = {
   deleteCalender : async (...args) => {
     let cal_idx = args[0];
 
-    let deleteCalenderQuery = 'DELETE FROM chat.calender ';
-    return true;
+    let deleteCalenderQuery = 'DELETE FROM chat.calender WHERE cal_idx = ?';
+    var deleteCalender = await db.queryParamCnt_Arr(deleteCalenderQuery, [cal_idx]);
+
+    if(!deleteCalender) {
+      return false;
+    } else {
+      return true;
+    }
   }
 };

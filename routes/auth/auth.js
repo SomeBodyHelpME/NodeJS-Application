@@ -124,7 +124,7 @@ router.post('/invite', async(req, res, next) => {
           message: "Success to Invite Person"
         });
         let sendFCM_AllUserJoined = await sql.sendFCMData(statuscode.joinedChange, g_idx);
-        let sendFCM_OneUserRefresh = await sql.sendFCMData(statuscode.groupNewJoin, u_idx);
+        let sendFCM_OneUserRefresh = await sql.sendFCMData(statuscode.groupNewJoin, findUser[0].u_idx);
       } else {
         res.status(400).send({
           message : "Already Joined"

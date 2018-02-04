@@ -759,13 +759,13 @@ module.exports = {
     let status = args[0];
     let idx = args[1];
 
-    if(status === 0 || status === 1) {
+    if(status === statuscode.groupChange || status === statuscode.joinedChange) {
       let getAllUserQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
       var getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [idx]);
       //getAllUserQuery 하고 getUserTokenQuery 하고 JOIN 할 수 있을 것 같은데
-      for(let j = 0 ; j < getAllUser.length ; j++) {
+      for(let i = 0 ; i < getAllUser.length ; i++) {
         let getUserTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
-        var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [getAllUser[j].u_idx]);
+        var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [getAllUser[i].u_idx]);
         let client_token = getUserToken[0].token;
 
         if(status === 0) {
@@ -784,19 +784,21 @@ module.exports = {
         fcm.send(message, function(err, response) {
           if(err) {
             console.log("Something has gone wrong!", err);
+            return false;
           } else {
             console.log("Successfully sent with response: ", response);
+            return true;
           }
         });//fcm.send
       }//for(j=0)
-    } else {  //status === 2
+    } else if(statuscode === statuscode.userChange) {  //status === 2
       let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
       var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [idx]);
 
       let userArray = [];
       for(let i = 0 ; i < findUserJoined.length ; i++) {
-        let getAllUserQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
-        var getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [findUserJoined[i].g_idx]);
+        let getAllUserQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ? AND u_idx != ?';
+        var getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [findUserJoined[i].g_idx, idx]);
 
         //getAllUserQuery 하고 getUserTokenQuery 하고 JOIN 할 수 있을 것 같은데
         for(let j = 0 ; j < getAllUser.length ; j++) {
@@ -820,12 +822,38 @@ module.exports = {
         fcm.send(message, function(err, response) {
           if(err) {
             console.log("Something has gone wrong!", err);
+            return false;
           } else {
             console.log("Successfully sent with response: ", response);
+            return true;
           }
         });//fcm.send
       }
-    }//else
+    } else if(status === statuscode.groupNewJoin) {
+        let getUserTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
+        var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [idx]);
+        let client_token = getUserToken[0].token;
+
+        var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+            to: client_token,
+            data: {
+              data : statuscode.groupChange
+            }
+        };
+
+        fcm.send(message, function(err, response) {
+          if(err) {
+            console.log("Something has gone wrong!", err);
+            return false;
+          } else {
+            console.log("Successfully sent with response: ", response);
+            return true;
+          }
+        });//fcm.send
+
+    } else {
+      return false;
+    }
   },//sendFCMData
   getJoinedInfo : async (...args) => {
     let u_idx = args[0];

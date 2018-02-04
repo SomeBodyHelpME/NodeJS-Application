@@ -797,7 +797,7 @@ module.exports = {
 
       let userArray = [];
       for(let i = 0 ; i < findUserJoined.length ; i++) {
-        let getAllUserQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ? AND u_idx != ?';
+        let getAllUserQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
         var getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [findUserJoined[i].g_idx, idx]);
 
         //getAllUserQuery 하고 getUserTokenQuery 하고 JOIN 할 수 있을 것 같은데
@@ -809,6 +809,9 @@ module.exports = {
       let userArray_wo_dup = Array.from(new Set(userArray));
 
       for(let i = 0 ; i < userArray_wo_dup.length ; i++) {
+        if(userArray_wo_dup[i] === idx) {
+          continue;
+        }
         let getUserTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
         var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [userArray_wo_dup[i].u_idx]);
         let client_token = getUserToken[0].token;
@@ -830,26 +833,26 @@ module.exports = {
         });//fcm.send
       }
     } else if(status === statuscode.groupNewJoin) {
-        let getUserTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
-        var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [idx]);
-        let client_token = getUserToken[0].token;
+      let getUserTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
+      var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [idx]);
+      let client_token = getUserToken[0].token;
 
-        var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
-            to: client_token,
-            data: {
-              data : statuscode.groupChange
-            }
-        };
-
-        fcm.send(message, function(err, response) {
-          if(err) {
-            console.log("Something has gone wrong!", err);
-            return false;
-          } else {
-            console.log("Successfully sent with response: ", response);
-            return true;
+      var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+          to: client_token,
+          data: {
+            data : statuscode.groupNewJoin
           }
-        });//fcm.send
+      };
+
+      fcm.send(message, function(err, response) {
+        if(err) {
+          console.log("Something has gone wrong!", err);
+          return false;
+        } else {
+          console.log("Successfully sent with response: ", response);
+          return true;
+        }
+      });//fcm.send
 
     } else {
       return false;

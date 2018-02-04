@@ -214,7 +214,7 @@ module.exports = {
     }
 
 
-    if(!findUserJoined || !searchGroupInfo || !findEachGroupLightsQuery) {
+    if(!findUserJoined || !searchGroupInfo || !findEachGroupLights) {
       return false;
     } else {
       return resArray;

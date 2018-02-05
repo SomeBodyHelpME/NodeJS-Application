@@ -785,7 +785,7 @@ module.exports = {
           }
         });//fcm.send
       }//for(j=0)
-    } else if(statuscode === statuscode.userChange) {  //status === 2
+    } else if(status === statuscode.userChange) {  //status === 2
       let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
       var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [idx]);
 
@@ -801,7 +801,7 @@ module.exports = {
         console.log(userArray);
       }
       let userArray_wo_dup = Array.from(new Set(userArray));
-
+      console.log(userArray_wo_dup);
       for(let i = 0 ; i < userArray_wo_dup.length ; i++) {
         if(userArray_wo_dup[i] === idx) {
           continue;

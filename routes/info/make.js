@@ -30,13 +30,20 @@ router.post('/chatroom', upload.single('photo'), async(req, res, next) => {
     let insertNewPersonQuery = 'INSERT INTO chat.joined (g_idx, u_idx) VALUES (?, ?)';
     let insertNewPerson = await db.queryParamCnt_Arr(insertNewPersonQuery, [createChatRoom.insertId, u_idx]);
 
+    let result = {
+      "g_idx" : createChatRoom.insertId,
+      "real_name" : real_name,
+      "ctrl_name" : ctrl_name,
+      "photo" : photo
+    };
     if(!createChatRoom || !insertNewPerson) {
       res.status(500).send({
         message : "Internal Server Error"
       });
     } else {
       res.status(201).send({
-        message : "Success to Make New Room"
+        message : "Success to Make New Room",
+        data : result
       });
     }
   }

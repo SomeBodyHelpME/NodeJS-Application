@@ -840,7 +840,7 @@ module.exports = {
       var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
           to: client_token,
           data: {
-            data : statuscode.groupNewJoin
+            data : statuscode.groupChange
           }
       };
 

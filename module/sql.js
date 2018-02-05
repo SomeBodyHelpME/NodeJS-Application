@@ -807,7 +807,7 @@ module.exports = {
           continue;
         }
         let getUserTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
-        var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [userArray_wo_dup[i].u_idx]);
+        var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [userArray_wo_dup[i]]);
         let client_token = getUserToken[0].token;
 
         var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)

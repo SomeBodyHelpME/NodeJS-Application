@@ -768,16 +768,10 @@ module.exports = {
         var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [getAllUser[i].u_idx]);
         let client_token = getUserToken[0].token;
 
-        if(status === 0) {
-          var message_data = statuscode.groupChange;
-        } else {
-          var message_data = statuscode.joinedChange;
-        }
-
         var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
             to: client_token,
             data: {
-              data : message_data
+              data : status
             }
         };
 

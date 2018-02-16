@@ -598,6 +598,50 @@ module.exports = {
       return true;
     }
   },
+  fcmSendWhenMakeThings : async (...args) => {
+    let u_idx = args[0];
+    let g_idx = args[1];
+    let status = args[2];
+
+    if(status === statuscode.makeNotice) {
+      var notifyMsg = {
+          title: '팀플의 요정',   //제목
+          body: '공지가 등록되었습니다!!'  //보낼메시지
+      };
+    } else if(status === statuscode.makeLights) {
+      var notifyMsg = {
+        title: '팀플의 요정',   //제목
+        body: '신호등이 등록되었습니다!!'  //보낼메시지
+      };
+    }
+
+    let getUsersListInGroupQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ? AND u_idx != ?';
+    var getUsersListInGroup = await db.queryParamCnt_Arr(getUsersListInGroupQuery, [g_idx, u_idx]);
+
+    for(let i = 0 ; i < getUsersListInGroup.length ; i++) {
+      let getUsersTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
+      var getUsersToken = await db.queryParamCnt_Arr(getUsersTokenQuery, [getUsersListInGroup[i].u_idx]);
+      let client_token = getUsersToken[0].token;
+
+
+      var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+          to: client_token,
+          notification: notifyMsg
+      };
+
+      fcm.send(message, function(err, response) {
+        if(err) {
+          console.log("Something has gone wrong!", err);
+          return false;
+        } else {
+          console.log("Successfully sent with response: ", response);
+          return true;
+        }
+      });//fcm.send
+
+    }
+
+  },
   actionNotice : async (...args) => {
     let u_idx = args[0];
     let notice_idx = args[1];

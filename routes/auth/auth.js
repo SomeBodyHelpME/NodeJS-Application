@@ -107,35 +107,40 @@ router.get('/register/check', async(req, res, next) => {
 });
 
 router.post('/invite', async(req, res, next) => {
-    let name = req.body.name;
-    let phone = req.body.phone;
-    let g_idx =req.body.g_idx;
+  let name = req.body.name;
+  let phone = req.body.phone;
+  let g_idx =req.body.g_idx;
 
-    let findUserQuery = 'SELECT u_idx FROM chat.user WHERE name = ? AND phone = ?';
-    let findUser = await db.queryParamCnt_Arr(findUserQuery, [name, phone]);
+  let findUserQuery = 'SELECT u_idx FROM chat.user WHERE name = ? AND phone = ?';
+  let findUser = await db.queryParamCnt_Arr(findUserQuery, [name, phone]);
 
 
-    if(findUser.length === 1) {
-      let statusQuery = 'SELECT * FROM chat.joined WHERE g_idx = ? AND u_idx = ?';
-      let status = await db.queryParamCnt_Arr(statusQuery, [g_idx, findUser[0].u_idx]);
-      if(status.length === 0) {
-        let result = await sql.joinNewPerson(g_idx, findUser[0].u_idx);
-        res.status(201).send({
-          message: "Success to Invite Person"
-        });
-        let sendFCM_AllUserJoined = await sql.sendFCMData(statuscode.joinedChange, g_idx);
-        let sendFCM_OneUserRefresh = await sql.sendFCMData(statuscode.groupNewJoin, findUser[0].u_idx);
-      } else {
-        res.status(400).send({
-          message : "Already Joined"
+  if(findUser.length === 1) {
+    let statusQuery = 'SELECT * FROM chat.joined WHERE g_idx = ? AND u_idx = ?';
+    let status = await db.queryParamCnt_Arr(statusQuery, [g_idx, findUser[0].u_idx]);
+    if(status.length === 0) {
+      let result = await sql.joinNewPerson(g_idx, findUser[0].u_idx);
+      res.status(201).send({
+        message: "Success to Invite Person"
+      });
+      let sendFCM_AllUserJoined = await sql.sendFCMData(statuscode.joinedChange, g_idx);
+      let sendFCM_OneUserRefresh = await sql.sendFCMData(statuscode.groupNewJoin, findUser[0].u_idx);
+      let sendFCM_AllUserProfile = await sql.sendFCMData(statuscode.groupNewJoinProfile, g_idx);
+      if(!sendFCM_AllUserJoined || !sendFCM_OneUserRefresh || !sendFCM_AllUserProfile) {
+        res.status(500).send({
+          message : "Internal Server Error"
         });
       }
     } else {
       res.status(400).send({
-        message : "Fail to Search Person"
+        message : "Already Joined"
       });
     }
-
+  } else {
+    res.status(400).send({
+      message : "Fail to Search Person"
+    });
+  }
 });
 
 router.delete('/leave', async(req, res, next) => {

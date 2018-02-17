@@ -805,6 +805,8 @@ module.exports = {
     let idx = args[1];
 
     if(status === statuscode.groupChange || status === statuscode.joinedChange) {
+      let flag = true;
+
       let getAllUserQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
       var getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [idx]);
       //getAllUserQuery 하고 getUserTokenQuery 하고 JOIN 할 수 있을 것 같은데
@@ -823,14 +825,17 @@ module.exports = {
         fcm.send(message, function(err, response) {
           if(err) {
             console.log("Something has gone wrong!", err);
-            return false;
+            flag = false;
           } else {
             console.log("Successfully sent with response: ", response);
-            return true;
           }
         });//fcm.send
+        if(!flag) break;
       }//for(j=0)
+      return flag;
     } else if(status === statuscode.userChange) {  //status === 2
+      let flag = true;
+
       let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
       var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [idx]);
 
@@ -864,13 +869,14 @@ module.exports = {
         fcm.send(message, function(err, response) {
           if(err) {
             console.log("Something has gone wrong!", err);
-            return false;
+            flag = false;
           } else {
             console.log("Successfully sent with response: ", response);
-            return true;
           }
         });//fcm.send
+        if(!flag) break;
       }
+      return flag;
     } else if(status === statuscode.groupNewJoin) {
       let getUserTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
       var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [idx]);
@@ -892,7 +898,35 @@ module.exports = {
           return true;
         }
       });//fcm.send
+    } else if(status === statuscode.groupNewJoinProfile) {
+      let flag = true;
 
+      let getAllUserQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
+      var getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [idx]);
+
+      for(let i = 0 ; i < getAllUser.length ; i++) {
+        let getUserTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
+        var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [getAllUser[i].u_idx]);
+        let client_token = getUserToken[0].token;
+
+        var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+            to: client_token,
+            data: {
+              data : statuscode.userChange
+            }
+        };
+
+        fcm.send(message, function(err, response) {
+          if(err) {
+            console.log("Something has gone wrong!", err);
+            flag = false;
+          } else {
+            console.log("Successfully sent with response: ", response);
+          }
+        });//fcm.send
+        if(!flag) break;
+      }// for
+      return flag;
     } else {
       return false;
     }

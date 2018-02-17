@@ -123,10 +123,8 @@ router.post('/invite', async(req, res, next) => {
       res.status(201).send({
         message: "Success to Invite Person"
       });
-      let sendFCM_AllUserJoined = await sql.sendFCMData(statuscode.joinedChange, g_idx);
-      let sendFCM_OneUserRefresh = await sql.sendFCMData(statuscode.groupNewJoin, findUser[0].u_idx);
-      let sendFCM_AllUserProfile = await sql.sendFCMData(statuscode.groupNewJoinProfile, g_idx);
-      if(!sendFCM_AllUserJoined || !sendFCM_OneUserRefresh || !sendFCM_AllUserProfile) {
+      let sendFCM_AllUser = await sql.sendFCMData(statuscode.groupjoineduserChange, g_idx);
+      if(!sendFCM_AllUser) {
         res.status(500).send({
           message : "Internal Server Error"
         });

@@ -877,28 +877,7 @@ module.exports = {
         if(!flag) break;
       }
       return flag;
-    } else if(status === statuscode.groupNewJoin) {
-      let getUserTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
-      var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [idx]);
-      let client_token = getUserToken[0].token;
-
-      var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
-          to: client_token,
-          data: {
-            data : statuscode.groupChange
-          }
-      };
-
-      fcm.send(message, function(err, response) {
-        if(err) {
-          console.log("Something has gone wrong!", err);
-          return false;
-        } else {
-          console.log("Successfully sent with response: ", response);
-          return true;
-        }
-      });//fcm.send
-    } else if(status === statuscode.groupNewJoinProfile) {
+    } else if(status === statuscode.groupjoineduserChange) {
       let flag = true;
 
       let getAllUserQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
@@ -912,7 +891,7 @@ module.exports = {
         var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
             to: client_token,
             data: {
-              data : statuscode.userChange
+              data : statuscode.groupjoineduserChange
             }
         };
 

@@ -635,12 +635,11 @@ module.exports = {
         if(err) {
           console.log("Something has gone wrong!", err);
           flag = false;
-          break;
         } else {
           console.log("Successfully sent with response: ", response);
         }
       });//fcm.send
-
+      if(!flag) break;
     }
     return flag;
   },

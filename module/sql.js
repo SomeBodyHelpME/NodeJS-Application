@@ -603,6 +603,8 @@ module.exports = {
     let g_idx = args[1];
     let status = args[2];
 
+    var flag = true;
+
     if(status === statuscode.makeNotice) {
       var notifyMsg = {
           title: '팀플의 요정',   //제목
@@ -632,15 +634,15 @@ module.exports = {
       fcm.send(message, function(err, response) {
         if(err) {
           console.log("Something has gone wrong!", err);
-          return false;
+          flag = false;
+          break;
         } else {
           console.log("Successfully sent with response: ", response);
-          return true;
         }
       });//fcm.send
 
     }
-
+    return flag;
   },
   actionNotice : async (...args) => {
     let u_idx = args[0];

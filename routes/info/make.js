@@ -164,7 +164,7 @@ router.post('/vote', async(req, res, next) => {
         let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
         let content = req.body.content;
         let title = req.body.title;
-        let result = await sql.makeVote(u_idx, chat_idx, g_idx, write_time, content, title);
+        let result = await sql.makeVote(u_idx, chat_idx, g_idx, write_time, title, content);
         if(!result) {
           res.status(500).send({
             message : "Internal Server Error"

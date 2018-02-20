@@ -577,14 +577,19 @@ module.exports = {
     let g_idx = args[2];
 
     let write_time = args[3];
-    let content = args[4];
-    let title = args[5];
+    let title = args[4];
+    let content = args[5];  //배열의 형태로 넘어옴 ex) ['신촌', '이대', '시청']
 
     // let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
     // let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [g_idx]);
 
-    let insertVoteQuery = 'INSERT INTO chat.vote (u_idx, chat_idx, g_idx, write_time, content, title) VALUES (?, ?, ?, ?, ?, ?)';
-    var insertVote = await db.queryParamCnt_Arr(insertVoteQuery, [u_idx, chat_idx, g_idx, write_time, content, title]);
+    let insertVoteQuery = 'INSERT INTO chat.vote (u_idx, chat_idx, g_idx, write_time, title) VALUES (?, ?, ?, ?, ?)';
+    var insertVote = await db.queryParamCnt_Arr(insertVoteQuery, [u_idx, chat_idx, g_idx, write_time, title]);
+
+    for(let i = 0 ; i < content.length ; i++) {
+      let insertVoteContentQuery = 'INSERT INTO chat.vote_content (vote_idx, vote_content_idx, content) VALUES (?, ?, ?)';
+      var insertVoteContent = await db.queryParamCnt_Arr(insertVoteContentQuery, [insertVote.insertId, i, content[i]]);
+    }
 
     let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ? AND u_idx != ?';
     var searchAllUsersInSpecificGroup = await db.queryParamCnt_Arr(searchAllUsersInSpecificGroupQuery, [g_idx, u_idx]);

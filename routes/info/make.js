@@ -151,30 +151,55 @@ router.post('/pick', async(req, res, next) => {
 });
 
 router.post('/vote', async(req, res, next) => {
-    let token = req.headers.token;
-    let decoded = jwt.verify(token);
-    if (decoded === -1) {
-        res.status(400).send({
-            message: "Verification Failed"
-        });
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if (decoded === -1) {
+    res.status(400).send({
+      message: "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+    let chat_idx = req.body.chat_idx;
+    let g_idx = req.body.g_idx;
+    let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
+    let content = req.body.content;
+    let title = req.body.title;
+    let result = await sql.makeVote(u_idx, chat_idx, g_idx, write_time, title, content);
+    if(!result) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
     } else {
-        let u_idx = decoded.u_idx;
-        let chat_idx = req.body.chat_idx;
-        let g_idx = req.body.g_idx;
-        let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
-        let content = req.body.content;
-        let title = req.body.title;
-        let result = await sql.makeVote(u_idx, chat_idx, g_idx, write_time, title, content);
-        if(!result) {
-          res.status(500).send({
-            message : "Internal Server Error"
-          });
-        } else {
-          res.status(201).send({
-              message: "Success Make Vote"
-          });
-        }
+      res.status(201).send({
+        message: "Success Make Vote"
+      });
     }
+  }
+});
+
+router.put('/vote', async(req, res, next) => {
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if (decoded === -1) {
+    res.status(400).send({
+      message: "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+    let vote_idx = req.body.vote_idx;
+    let content = req.body.content;
+
+    let result = await sql.modifyVote(u_idx, vote_idx, content);
+    if(!result) {
+      res.status(400).send({
+        message : "Wrong Person"
+      });
+    } else {
+      res.status(201).send({
+        message: "Success Modify Vote"
+      });
+    }
+  }
 });
 
 module.exports = router;

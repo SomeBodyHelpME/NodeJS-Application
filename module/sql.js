@@ -603,6 +603,27 @@ module.exports = {
       return true;
     }
   },
+  modifyVote : async (...args) => {
+    let u_idx = args[0];
+    let vote_idx = args[1];
+    let content = args[2];
+
+    let checkWriterQuery = 'SELECT u_idx FROM chat.vote WHERE vote_idx = ? AND u_idx = ?';
+    var checkWriter = await db.queryParamCnt_Arr(checkWriterQuery, [vote_idx, u_idx]);
+
+    if(checkWriter.length === 1) {
+      let deleteAllContentQuery = 'DELETE FROM chat.vote_content WHERE vote_idx = ?';
+      var deleteAllContent = await db.queryParamCnt_Arr(deleteAllContentQuery, [vote_idx]);
+
+      for(let i = 0 ; i < content.length ; i++) {
+        let insertVoteContentQuery = 'INSERT INTO chat.vote_content(vote_idx, vote_content_idx, content) VALUES (?, ?, ?)';
+        var insertVoteContent = await db.queryParamCnt_Arr(insertVoteContentQuery, [vote_idx, i, content[i]]);
+      }
+      return true;
+    } else {
+      return false;
+    }
+  },
   fcmSendWhenMakeThings : async (...args) => {
     let u_idx = args[0];
     let g_idx = args[1];

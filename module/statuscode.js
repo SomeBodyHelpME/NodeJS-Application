@@ -2,7 +2,7 @@ module.exports = {
   groupChange : 101,
   joinedChange : 102,
   userChange : 103,
-  groupjoinedchange : 104,
+  groupjoinedChange : 104,
   groupuserChange : 105,
   joineduserChange : 106,
   groupjoineduserChange : 107,

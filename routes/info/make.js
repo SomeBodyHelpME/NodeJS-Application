@@ -77,7 +77,8 @@ router.post('/notice', async(req, res, next) => {
         });
       } else {
         res.status(201).send({
-            message : "Success Make Notice"
+            message : "Success Make Notice",
+            data : result
         });
       }//else
     }//else
@@ -114,7 +115,8 @@ router.post('/lights', async(req, res, next) => {
         });
       } else {
         res.status(201).send({
-            message : "Success Make Lights"
+            message : "Success Make Lights",
+            data : result
         });
       }//else
     }//else
@@ -172,7 +174,8 @@ router.post('/vote', async(req, res, next) => {
       });
     } else {
       res.status(201).send({
-        message: "Success Make Vote"
+        message : "Success Make Vote",
+        data : result
       });
     }
   }

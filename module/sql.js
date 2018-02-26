@@ -500,7 +500,7 @@ module.exports = {
     if(!insertNotice || !searchAllUsersInSpecificGroup) {
       return false;
     } else {
-      return true;
+      return insertNotice.insertId;
     }
   },
   makeLights : async (...args) => {
@@ -549,7 +549,7 @@ module.exports = {
     if(!insertLights) {
       return false;
     } else {
-      return true;
+      return insertLights.insertId;
     }
   },
   makePick : async (...args) => {
@@ -601,7 +601,7 @@ module.exports = {
     if(!insertVote || !searchAllUsersInSpecificGroup) {
       return false;
     } else {
-      return true;
+      return insertVote.insertId;
     }
   },
   modifyVote : async (...args) => {

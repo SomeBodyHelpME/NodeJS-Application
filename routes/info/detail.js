@@ -145,15 +145,17 @@ router.get('/vote/res/:g_idx/:vote_idx', async(req, res, next) => {
     let g_idx = req.params.g_idx;
     let vote_idx = req.params.vote_idx;
 
-    let result = await sql.forEachVoteResponse(g_idx, vote_idx);
-    if(!result) {
+    let exampleresult = await sql.forEachVoteExample(vote_idx);
+    let responseresult = await sql.forEachVoteResponse(g_idx, vote_idx);
+    if(!exampleresult || !responseresult) {
       res.status(500).send({
         message : "Internal Server Error"
       });
     } else {
       res.status(200).send({
         message : "Success to Load Vote Detail",
-        data : result
+        example : exampleresult,
+        response : responseresult
       });
     }
   }

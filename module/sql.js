@@ -613,19 +613,19 @@ module.exports = {
       var insertLightsResponse = await db.queryParamCnt_Arr(insertLightsResponseQuery, [insertVote.insertId, searchAllUsersInSpecificGroup[i].u_idx, 0, null, null, g_idx]);
     }
 
-    // time modification 2018-01-01 01:01:01
-    let year = endtime.substring(0, 4);
-    let month = endtime.substring(5, 7);
-    let day = endtime.substring(8, 10);
-    let hour = endtime.substring(11, 13);
-    let minute = endtime.substring(14, 16);
-    let second = endtime.substring(17);
-    let date = new Date(year, month-1, day, hour, minute, second);
-    var j = schedule.scheduleJob(date, function() {
+    // // time modification 2018-01-01 01:01:01
+    // let year = endtime.substring(0, 4);
+    // let month = endtime.substring(5, 7);
+    // let day = endtime.substring(8, 10);
+    // let hour = endtime.substring(11, 13);
+    // let minute = endtime.substring(14, 16);
+    // let second = endtime.substring(17);
+    // let date = new Date(year, month-1, day, hour, minute, second);
+    // var j = schedule.scheduleJob(date, function() {
 
-      let voteCloseQuery = 'UPDATE chat.vote SET status = ? WHERE vote_idx = ?';
-      var voteCloseResult = await db.queryParamCnt_Arr(voteCloseQuery, [1, insertVote.insertId]);
-    });
+    //   let voteCloseQuery = 'UPDATE chat.vote SET status = ? WHERE vote_idx = ?';
+    //   var voteCloseResult = await db.queryParamCnt_Arr(voteCloseQuery, [1, insertVote.insertId]);
+    // });
 
 
     if(!insertVote || !searchAllUsersInSpecificGroup) {

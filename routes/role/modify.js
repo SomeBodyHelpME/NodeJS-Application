@@ -1,0 +1,99 @@
+const express = require('express');
+const router = express.Router();
+const crypto = require('crypto-promise');
+const moment = require('moment');
+const upload = require('../../config/multer.js');
+
+const jwt = require('../../module/jwt.js');
+const db = require('../../module/pool.js');
+const sql = require('../../module/sql.js');
+const statuscode = require('../../module/statuscode.js');
+
+router.put('/', async(req, res, next) => { //역할 등록
+	let role_idx = req.body.role_idx;
+	let title = req.body.title;
+
+	let result = await sql.updateRoleProject(role_idx, title);
+	if (!result) {
+		res.status(500).send({
+			message : "Internal Server Error"
+		});
+	} else {
+		res.status(201).send({
+			message : "Success to Modify Project"
+		});
+	}
+});
+
+router.put('/task', async(req, res, next) => {
+	let data = req.body.data;
+	let role_idx = req.body.role_idx;
+
+	let result = await sql.updateRoleTask(data, role_idx);
+	if (!result) {
+		res.status(500).send({
+			message : "Internal Server Error"
+		});
+	} else {
+		res.status(201).send({
+			message : "Success to Modify Task"
+		});
+	}
+});
+
+router.put('/user', async(req, res, next) => {
+	let role_task_idx = req.body.role_task_idx;
+	let u_idx = req.body.u_idx;
+
+	let result = await sql.updateRoleUser(role_task_idx, u_idx);
+	if (!result) {
+		res.status(500).send({
+			message : "Internal Server Error"
+		});
+	} else {
+		res.status(201).send({
+			message : "Success to Modify User"
+		});
+	}
+});
+
+router.put('/response', async(req, res, next) => {
+	let u_idx = req.body.u_idx;
+	let role_task_idx = req.body.role_task_idx;
+	let role_response_idx = req.body.role_response_idx;
+	let content = req.body.content;
+
+	let result = await sql.updateRoleResponse(u_idx, role_task_idx, role_response_idx, content);
+	if (result === 0) {
+		res.status(500).send({
+			message : "Internal Server Error"
+		});
+	} else if (result === -1) {
+		res.status(400).send({
+			message : "Wrong User"
+		});
+	} else {
+		res.status(201).send({
+			message : "Success to Modify Response"
+		});
+	}
+});
+
+router.put('/feedback', async(req, res, next) => {
+	let u_idx = req.body.u_idx;
+	let role_response_idx = req.body.role_response_idx;
+	let content = req.body.content;
+
+	let result = await sql.updateRoleUser(data, role_response_idx, content);
+	if (!result) {
+		res.status(500).send({
+			message : "Internal Server Error"
+		});
+	} else {
+		res.status(201).send({
+			message : "Success to Modify Feedback"
+		});
+	}
+});
+
+module.exports = router;

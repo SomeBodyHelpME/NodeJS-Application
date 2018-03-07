@@ -1,5 +1,6 @@
 const async = require('async');
 const moment = require('moment');
+const schedule = require('node-schedule');
 
 const pool = require('../config/dbPool.js');
 const db = require('./pool.js');
@@ -467,6 +468,18 @@ module.exports = {
       };
     }
   },// forEachVote
+  forEachVoteExample : async (...args) => {
+    let vote_idx = args[0];
+
+    let getAllExampleforEachVoteQuery = 'SELECT * FROM chat.vote_content WHERE chat.vote_content.vote_idx = ? ORDER BY chat.vote_content.vote_content_idx';
+    var getAllExampleforEachVote = await db.queryParamCnt_Arr(getAllExampleforEachVoteQuery, [vote_idx]);
+
+    if(!getAllExampleforEachVote) {
+      return false;
+    } else {
+      return getAllExampleforEachVote;
+    }
+  },// forEachVoteExample
   forEachVoteResponse : async (...args) => {
     let g_idx = args[0];
     let vote_idx = args[1];
@@ -477,7 +490,7 @@ module.exports = {
     var findEachGroupVoteResAll = await db.queryParamCnt_Arr(findEachGroupVoteResAllQuery, [vote_idx]);
 
     return findEachGroupVoteResAll;
-  },//forEachVoteResponse
+  },// forEachVoteResponse
   makeNotice : async (...args) => {
     let u_idx = args[0];
     let chat_idx = args[1];
@@ -580,6 +593,7 @@ module.exports = {
     let title = args[4];
     let content = args[5];
     let example = args[6];  //배열의 형태로 넘어옴 ex) ['신촌', '이대', '시청']
+    let endtime = args[7];
 
     // let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
     // let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [g_idx]);
@@ -598,6 +612,22 @@ module.exports = {
       let insertLightsResponseQuery = 'INSERT INTO chat.vote_response (vote_idx, u_idx, status, value, write_time, g_idx) VALUES (?, ?, ?, ?, ?, ?)';
       var insertLightsResponse = await db.queryParamCnt_Arr(insertLightsResponseQuery, [insertVote.insertId, searchAllUsersInSpecificGroup[i].u_idx, 0, null, null, g_idx]);
     }
+
+    // time modification 2018-01-01 01:01:01
+    let year = endtime.substring(0, 4);
+    let month = endtime.substring(5, 7);
+    let day = endtime.substring(8, 10);
+    let hour = endtime.substring(11, 13);
+    let minute = endtime.substring(14, 16);
+    let second = endtime.substring(17);
+    let date = new Date(year, month-1, day, hour, minute, second);
+    var j = schedule.scheduleJob(date, function() {
+
+      let voteCloseQuery = 'UPDATE chat.vote SET status = ? WHERE vote_idx = ?';
+      var voteCloseResult = await db.queryParamCnt_Arr(voteCloseQuery, [1, insertVote.insertId]);
+    });
+
+
     if(!insertVote || !searchAllUsersInSpecificGroup) {
       return false;
     } else {
@@ -984,7 +1014,344 @@ module.exports = {
     }
     return result;
   },
-  addCalender : async (...args) => {
+  createRoleProject : async (...args) => {
+    let g_idx = args[0];
+    let title = args[1];
+
+    let insertProjectQuery = 'INSERT INTO chat.role (g_idx, title, last_idx) VALUES (?, ?, ?)';
+    let insertProject = await db.queryParamCnt_Arr(insertProjectQuery, [g_idx, title, 0]);
+
+    if(!insertProject) {
+      return false;
+    } else {
+      return true;
+    }
+  },
+  createRoleTask : async (...args) => {
+    let role_idx = args[0];
+    let content = args[1];
+
+    let flag = true;
+    for (let i = 0 ; i < content.length ; i++) {
+      let insertRoleTaskQuery = 'INSERT INTO chat.role_task (role_idx, content) VALUES (?, ?)';
+      let insertRoleTask = await db.queryParamCnt_Arr(insertRoleTaskQuery, role_idx, content[i]);
+      if (!insertRoleTask) {
+        flag = false;
+        break;
+      }
+    }
+    if (!flag) {
+      return false;
+    } else {
+      return true;
+    }
+  },
+  createRoleUser : async (...args) => {
+    let role_task_idx = args[0];
+    let u_idx = args[1];
+
+    let insertRoleUserQuery = 'INSERT INTO chat.role_user (role_task_idx, u_idx) VALUES (?, ?)';
+    let insertRoleUser = await db.queryParamCnt_Arr(insertRoleUserQuery, [role_task_idx, u_idx]);
+
+    if (!insertRoleUser) {
+      return false;
+    } else {
+      return insertRoleUser;
+    }
+  },
+  createRoleResponse : async (...args) => {
+    let role_idx = args[0];
+    let role_task_idx = args[1];
+    let u_idx = args[2];
+    let response_content = args[3];
+    let files = args[4];
+
+    let checkWriterQuery = 'SELECT u_idx FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
+    var checkWriter = await db.queryParamCnt_Arr(checkWriterQuery, [role_task_idx, u_idx]);
+    if(checkWriter.length === 1) {
+      let insertResponseQuery = 'INSERT INTO chat.role_response (role_idx, role_task_idx, content) VALUES (?, ?, ?)';
+      var insertResponse = await db.queryParamCnt_Arr(insertResponseQuery, [role_idx, role_task_idx, response_content]);
+
+      for(let i = 0 ; i < files.length ; i++) {
+        let insertFileQuery = 'INSERT INTO chat.role_file (role_response_idx, file) VALUES (?, ?)';
+        var insertFile = await db.queryParamCnt_Arr(insertFileQuery, [insertResponse.insertId, file[i]]);
+      }
+      if(!insertResponse) {
+        return 0;
+      } else {
+        return insertResponse;
+      }
+    } else {
+      return -1;
+    }
+  },
+  createRoleFeedback : async (...args) => {
+    let u_idx = args[0];
+    let role_response_idx = args[1];
+    let content = args[2];
+
+    let insertFeedbackQuery = 'INSERT INTO chat.role_feedback (u_idx, role_response_idx, content) VALUES (?, ?, ?)';
+    let insertFeedback = await db.queryParamCnt_Arr(insertFeedbackQuery, [u_idx, role_response_idx, content]);
+
+    if(!insertFeedback) {
+      return false;
+    } else {
+      return insertFeedback;
+    }
+  },
+  readRoleProject : async (...args) => {
+    let g_idx = args[0];
+
+    let getRoleProjectQuery = 'SELECT * FROM chat.role WHERE g_idx = ?';
+    let getRoleProject = await db.queryParamCnt_Arr(getRoleProjectQuery, [g_idx]);
+
+    if (!getRoleProject) {
+      return false;
+    } else {
+      return getRoleProject;
+    }
+  },
+  readRoleTask : async (...args) => {
+    let role_idx = args[0];
+
+    let getRoleTaskQuery = 'SELECT * FROM chat.role_task WHERE role_idx = ?';
+    let getRoleTask = await db.queryParamCnt_Arr(getRoleTaskQuery, [role_idx]);
+
+    if (!getRoleTask) {
+      return false;
+    } else {
+      return getRoleTask;
+    }
+  },
+  readRoleUser : async (...args) => {
+    let role_task_idx = args[0];
+
+    let getRoleUserQuery = 'SELECT * FROM chat.role_user WHERE role_task_idx = ?';
+    let getRoleUser = await db.queryParamCnt_Arr(getRoleUserQuery, [role_task_idx]);
+
+    if (!getRoleUser) {
+      return false;
+    } else {
+      return getRoleUser;
+    }
+  },
+  readRoleResponse : async (...args) => {
+    let role_task_idx = args[0];
+
+    let getRoleResponseQuery = 'SELECT * FROM chat.role_response WHERE role_task_idx = ?';
+    let getRoleResponse = await db.queryParamCnt_Arr(getRoleResponseQuery, [role_task_idx]);
+
+    let getRoleResponseFileQuery = 'SELECT * FROM chat.role_file WHERE role_task_idx = ?';
+    let getRoleResponseFile = await db.queryParamCnt_Arr(getRoleResponseFileQuery, [role_task_idx]);
+
+    if (!getRoleResponse || !getRoleResponseFile) {
+      return false;
+    } else {
+      return {
+        response : getRoleResponse,
+        file : getRoleResponseFile
+      };
+    }
+  },
+  readRoleFeedback : async (...args) => {
+    let role_response_idx = args[0];
+
+    let getRoleFeedbackQuery = 'SELECT * FROM chat.role_feedback WHERE role_response_idx = ?';
+    let getRoleFeedback = await db.queryParamCnt_Arr(getRoleFeedbackQuery, [role_response_idx]);
+
+    if (!getRoleFeedback) {
+      return false;
+    } else {
+      return getRoleFeedback;
+    }
+  },
+  updateRoleProject : async (...args) => {
+    let role_idx = args[0];
+    let title = args[1];
+
+    let updateRoleProjectQuery = 'UPDATE chat.role SET title = ? WHERE role_idx = ?';
+    let updateRoleProject = await db.queryParamCnt_Arr(updateRoleProjectQuery, [title, role_idx]);
+
+    if (!updateRoleProject) {
+      return false;
+    } else {
+      return updateRoleProject;
+    }
+  },
+  updateRoleTask : async (...args) => {
+    let data = args[0];
+    let minusArray = data.minus;
+    let plusArray = data.plus;
+    let changeArray = data.change;
+    let role_idx = args[1];
+
+    let flag = true;
+
+    for (let i = 0 ; i < minusArray.length ; i++) {
+      let deleteRoleTaskQuery = 'DELETE FROM chat.role_task WHERE role_task_idx = ?';
+      let deleteRoleTask = await db.queryParamCnt_Arr(deleteRoleTaskQuery, [minusArray[i]]);
+      if (!deleteRoleTask) {
+        flag = false;
+        break;
+      }
+    }
+    if (!flag) {
+      return false;
+    }
+
+    for (let i = 0 ; i < plusArray.length ; i++) {
+      let insertRoleTaskQuery = 'INSERT INTO chat.role_task (role_idx, content) VALUES (?, ?)';
+      let insertRoleTask = await db.queryParamCnt_Arr(insertRoleTaskQuery, [role_idx, plusArray[i]]);
+      if (!insertRoleTask) {
+        flag = false;
+        break;
+      }
+    }
+    if (!flag) {
+      return false;
+    }
+    return true;
+  },
+  ////////////유저 수정해야함 => 수정하긴 했는데 다시한번 생각해볼것////////////////
+  updateRoleUser : async (...args) => {
+    let data = args[0];
+    let role_task_idx = args[1];
+
+    let minusArray = data.minus;
+    let plusArray = data.plus;
+
+    let flag = true;
+
+    for (let i = 0 ; i < minusArray.length ; i++) {
+      let deleteRoleUserQuery = 'DELETE FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
+      var deleteRoleUser = await db.queryParamCnt_Arr(deleteRoleUserQuery, [role_task_idx, u_idx]);
+      if (!deleteRoleUser) {
+        flag = false;
+        break;
+      }
+    }
+    if (flag === false) {
+      return false;
+    }
+    for (let i = 0 ; i < plusArray.length ; i++) {
+      let insertRoleUserQuery = 'INSERT INTO chat.role_user (role_task_idx, u_idx) VALUES (?, ?)';
+      var insertRoleUser = await db.queryParamCnt_Arr(insertRoleUserQuery, [role_task_idx, u_idx]);
+      if (!insertRoleUser) {
+        flag = false;
+        break;
+      }
+    }
+    if (flag === false) {
+      return false;
+    }
+    
+    return true;
+  },
+  updateRoleResponse : async (...args) => {
+    let u_idx = args[0];
+    let role_task_idx = args[1];
+    let role_response_idx = args[2];
+    let content = args[3];
+
+    let checkWriterQuery = 'SELECT u_idx FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
+    var checkWriter = await db.queryParamCnt_Arr(checkWriterQuery, [role_task_idx, u_idx]);
+
+    if(checkWriter.length === 1) {
+      let updateRoleResponseQuery = 'UPDATE chat.role_response SET content = ? WHERE role_response_idx = ?';
+      let updateRoleResponse = await db.queryParamCnt_Arr(updateRoleResponseQuery, [content, role_response_idx]);
+
+      if (!updateRoleResponse) {
+        return 0;
+      } else {
+        return updateRoleResponse;
+      }
+    } else {
+      return -1;
+    }
+  },
+  updateRoleFeedback : async (...args) => {
+    let u_idx = args[0];
+    let role_response_idx = args[1];
+    let content = args[2];
+
+    let updateRoleFeedbackQuery = 'UPDATE chat.role_feedback SET content = ? WHERE u_idx = ? AND role_response_idx = ?';
+    let updateRoleFeedback = await db.queryParamCnt_Arr(updateRoleFeedbackQuery, [content, u_idx, role_response_idx]);
+
+    if (!updateRoleFeedback) {
+      return false;
+    } else {
+      return updateRoleFeedback;
+    }
+  },
+  deleteRoleProject : async (...args) => {
+    let role_idx = args[0];
+
+    let deleteRoleProjectQuery = 'DELETE FROM chat.role WHERE role_idx = ?';
+    let deleteRoleProject = await db.queryParamCnt_Arr(deleteRoleProjectQuery, [role_idx]);
+
+    if (!deleteRoleProject) {
+      return false;
+    } else {
+      return deleteRoleProject;
+    }
+  },
+  deleteRoleTask : async (...args) => {
+    let role_task_idx = args[0];
+
+    let deleteRoleTaskQuery = 'DELETE FROM chat.role_task WHERE role_task_idx = ?';
+    let deleteRoleTask = await db.queryParamCnt_Arr(deleteRoleTaskQuery, [role_task_idx]);
+
+    if (!deleteRoleTask) {
+      return false;
+    } else {
+      return deleteRoleTask;
+    }
+  },
+  deleteRoleUser : async (...args) => {
+    let role_task_idx = args[0];
+    let u_idx = args[1];
+
+    let deleteRoleUserQuery = 'DELETE FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
+    let deleteRoleUser = await db.queryParamCnt_Arr(deleteRoleUserQuery, [role_task_idx, u_idx]);
+
+    if (!deleteRoleUser) {
+      return false;
+    } else {
+      return deleteRoleUser;
+    }
+  },
+  deleteRoleResponse : async (...args) => {
+    let role_response_idx = args[0];
+
+    let deleteRoleResponseQuery = 'DELETE FROM chat.role_response WHERE role_response_idx = ?';
+    let deleteRoleResponse = await db.queryParamCnt_Arr(deleteRoleResponseQuery, [role_response_idx]);
+
+    if (!deleteRoleResponse) {
+      return false;
+    } else {
+      return deleteRoleResponse;
+    }
+  },
+  deleteRoleFeedback : async (...args) => {
+    let role_response_idx = args[0];
+    let u_idx = args[1];
+
+    let deleteRoleFeedbackQuery = 'DELETE FROM chat.role_feedback WHERE role_response_idx = ? AND u_idx = ?';
+    let deleteRoleFeedback = await db.queryParamCnt_Arr(deleteRoleFeedbackQuery, [role_response_idx, u_idx]);
+
+    if (!deleteRoleFeedback) {
+      return false;
+    } else {
+      return deleteRoleFeedback;
+    }
+  },
+
+
+
+/*
+    CALENDAR
+*/
+  addCalendar : async (...args) => {
     let g_idx = args[0];
     let title = args[1];
     let location = args[2];
@@ -992,16 +1359,16 @@ module.exports = {
     let starttime = args[4];
     let endtime = args[5];
 
-    let insertCalenderQuery = 'INSERT INTO chat.calender (g_idx, title, location, memo, starttime, endtime) VALUES (?, ?, ?, ?, ?, ?)';
-    var insertCalender = await db.queryParamCnt_Arr(insertCalenderQuery, [g_idx, title, location, memo, starttime, endtime]);
+    let insertCalendarQuery = 'INSERT INTO chat.calendar (g_idx, title, location, memo, starttime, endtime) VALUES (?, ?, ?, ?, ?, ?)';
+    var insertCalendar = await db.queryParamCnt_Arr(insertCalendarQuery, [g_idx, title, location, memo, starttime, endtime]);
 
-    if(!insertCalender) {
+    if(!insertCalendar) {
       return false;
     } else {
       return true;
     }
   },
-  showCalender : async (...args) => {
+  showCalendar : async (...args) => {
     //일정에 색깔 어떻게 표현할거냐?
     let u_idx = args[0];
     let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
@@ -1011,33 +1378,33 @@ module.exports = {
       let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
       var searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].g_idx]);
 
-      let searchCalenderInfoQuery =
+      let searchCalendarInfoQuery =
       `
-      SELECT * FROM chat calender WHERE g_idx = ?
+      SELECT * FROM chat calendar WHERE g_idx = ?
       AND ( starttime > ? AND starttime < ? ) OR ( endtime > ? AND endtime < ? )
       `;
-      var searchCalenderInfo = await db.queryParamCnt_Arr(searchCalenderInfoQuery, [findUserJoined[i].g_idx]);
+      var searchCalendarInfo = await db.queryParamCnt_Arr(searchCalendarInfoQuery, [findUserJoined[i].g_idx]);
 
-      if(searchGroupInfo === undefined || searchCalenderInfo === undefined) {
+      if(searchGroupInfo === undefined || searchCalendarInfo === undefined) {
         break;
       }
       result.push(
         {
           name : searchGroupInfo[0],
-          data : searchCalenderInfo
+          data : searchCalendarInfo
         }
       );
     }//for
-    if(!findUserJoined || !searchGroupInfo || !searchCalenderInfo) {
+    if(!findUserJoined || !searchGroupInfo || !searchCalendarInfo) {
       return false;
     } else {
       return result;
     }
   },
-  pushCalender : async (...args) => {
+  pushCalendar : async (...args) => {
     return true;
   },
-  modifyCalender : async (...args) => {
+  modifyCalendar : async (...args) => {
     let cal_idx = args[0];
     let title = args[1];
     let location = args[2];
@@ -1046,27 +1413,28 @@ module.exports = {
     let endtime = args[5];
 
     //이거는 라우터에서 실행하자
-    // let getCalenderQuery = 'SELECT * FROM chat.calender WHERE cal_idx = ?';
-    // var getCalender = await db.queryParamCnt_Arr(getCalenderQuery, [cal_idx]);
-    let updateCalenderQuery = 'UPDATE chat.calender SET title = ? AND location = ? AND memo = ? AND starttime = ? AND endtime = ? WHERE cal_idx = ?';
-    var updateCalender = await db.queryParamCnt_Arr(updateCalenderQuery, [title, location, memo, starttime, endtime, cal_idx]);
+    // let getCalendarQuery = 'SELECT * FROM chat.calendar WHERE cal_idx = ?';
+    // var getCalendar = await db.queryParamCnt_Arr(getCalendarQuery, [cal_idx]);
+    let updateCalendarQuery = 'UPDATE chat.calendar SET title = ? AND location = ? AND memo = ? AND starttime = ? AND endtime = ? WHERE cal_idx = ?';
+    var updateCalendar = await db.queryParamCnt_Arr(updateCalendarQuery, [title, location, memo, starttime, endtime, cal_idx]);
 
-    if(!updateCalender) {
+    if(!updateCalendar) {
       return false;
     } else {
       return true;
     }
   },
-  deleteCalender : async (...args) => {
+  deleteCalendar : async (...args) => {
     let cal_idx = args[0];
 
-    let deleteCalenderQuery = 'DELETE FROM chat.calender WHERE cal_idx = ?';
-    var deleteCalender = await db.queryParamCnt_Arr(deleteCalenderQuery, [cal_idx]);
+    let deleteCalendarQuery = 'DELETE FROM chat.calendar WHERE cal_idx = ?';
+    var deleteCalendar = await db.queryParamCnt_Arr(deleteCalendarQuery, [cal_idx]);
 
-    if(!deleteCalender) {
+    if(!deleteCalendar) {
       return false;
     } else {
       return true;
     }
   }
+
 };

@@ -64,7 +64,7 @@ router.post('/lights', async(req, res, next) => {
     }
 });
 
-router.post('/vote', async(req, res, next) => {
+router.put('/vote', async(req, res, next) => {
     let token = req.headers.token;
     let decoded = jwt.verify(token);
     if (decoded === -1) {

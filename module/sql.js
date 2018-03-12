@@ -468,6 +468,18 @@ module.exports = {
       };
     }
   },// forEachVote
+  forEachVoteOne : async (...args) => {
+    let vote_idx = args[0];
+
+    let getOneVoteInformationQuery = 'SELECT * FROM chat.vote WHERE vote_idx = ?';
+    var getOneVoteInformation = await db.queryParamCnt_Arr(getOneVoteInformationQuery, [vote_idx]);
+
+    if(!getOneVoteInformation) {
+      return false;
+    } else {
+      return getOneVoteInformation;
+    }
+  },
   forEachVoteExample : async (...args) => {
     let vote_idx = args[0];
 
@@ -477,7 +489,7 @@ module.exports = {
     if(!getAllExampleforEachVote) {
       return false;
     } else {
-      return getAllExampleforEachVote;
+      return getAllExampleforEachVote[0];
     }
   },// forEachVoteExample
   forEachVoteResponse : async (...args) => {
@@ -485,8 +497,7 @@ module.exports = {
     let vote_idx = args[1];
 
     let findEachGroupVoteResAllQuery =
-    `SELECT chat.vote_response.*, chat.user.u_idx, chat.user.name, chat.user.phone, chat.user.bio, chat.user.photo, chat.user.id
-    FROM chat.vote_response JOIN chat.user USING(u_idx) WHERE vote_idx = ?`;
+    `SELECT chat.vote_response.*, chat.user.u_idx, FROM chat.vote_response JOIN chat.user USING(u_idx) WHERE vote_idx = ?`;
     var findEachGroupVoteResAll = await db.queryParamCnt_Arr(findEachGroupVoteResAllQuery, [vote_idx]);
 
     return findEachGroupVoteResAll;
@@ -604,7 +615,6 @@ module.exports = {
     for(let i = 0 ; i < example.length ; i++) {
       let insertVoteContentQuery = 'INSERT INTO chat.vote_content (vote_idx, example) VALUES (?, ?)';
       var insertVoteContent = await db.queryParamCnt_Arr(insertVoteContentQuery, [insertVote.insertId, example[i]]);
-      console.log(insertVoteContent);
     }
 
     let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ? AND u_idx != ?';

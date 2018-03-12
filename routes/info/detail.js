@@ -144,7 +144,7 @@ router.get('/vote/res/:g_idx/:vote_idx', async(req, res, next) => {
     let u_idx = decoded.u_idx;
     let g_idx = req.params.g_idx;
     let vote_idx = req.params.vote_idx;
-
+    let voteresult = await sql.forEachVoteOne(vote_idx);
     let exampleresult = await sql.forEachVoteExample(vote_idx);
     let responseresult = await sql.forEachVoteResponse(g_idx, vote_idx);
     if(!exampleresult || !responseresult) {
@@ -154,6 +154,7 @@ router.get('/vote/res/:g_idx/:vote_idx', async(req, res, next) => {
     } else {
       res.status(200).send({
         message : "Success to Load Vote Detail",
+        vote : voteresult,
         example : exampleresult,
         response : responseresult
       });

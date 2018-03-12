@@ -147,7 +147,7 @@ router.get('/vote/res/:g_idx/:vote_idx', async(req, res, next) => {
     let voteresult = await sql.forEachVoteOne(vote_idx);
     let exampleresult = await sql.forEachVoteExample(vote_idx);
     let responseresult = await sql.forEachVoteResponse(g_idx, vote_idx);
-    if(!exampleresult || !responseresult) {
+    if(!voteresult || !exampleresult || !responseresult) {
       res.status(500).send({
         message : "Internal Server Error"
       });

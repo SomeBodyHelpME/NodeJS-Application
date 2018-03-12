@@ -477,7 +477,7 @@ module.exports = {
     if(!getOneVoteInformation) {
       return false;
     } else {
-      return getOneVoteInformation;
+      return getOneVoteInformation[0];
     }
   },
   forEachVoteExample : async (...args) => {
@@ -489,7 +489,7 @@ module.exports = {
     if(!getAllExampleforEachVote) {
       return false;
     } else {
-      return getAllExampleforEachVote[0];
+      return getAllExampleforEachVote;
     }
   },// forEachVoteExample
   forEachVoteResponse : async (...args) => {

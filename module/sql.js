@@ -497,7 +497,7 @@ module.exports = {
     let vote_idx = args[1];
 
     let findEachGroupVoteResAllQuery =
-    `SELECT chat.vote_response.*, chat.user.u_idx, FROM chat.vote_response JOIN chat.user USING(u_idx) WHERE vote_idx = ?`;
+    `SELECT chat.vote_response.*, chat.user.u_idx FROM chat.vote_response JOIN chat.user USING(u_idx) WHERE vote_idx = ?`;
     var findEachGroupVoteResAll = await db.queryParamCnt_Arr(findEachGroupVoteResAllQuery, [vote_idx]);
 
     return findEachGroupVoteResAll;

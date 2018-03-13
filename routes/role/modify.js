@@ -26,10 +26,11 @@ router.put('/', async(req, res, next) => { //역할 등록
 });
 
 router.put('/task', async(req, res, next) => {
-	let data = req.body.data;
 	let role_idx = req.body.role_idx;
+	let minusArray = req.body.minusArray;
+	let plusArray = req.body.plusArray;
 
-	let result = await sql.updateRoleTask(data, role_idx);
+	let result = await sql.updateRoleTask(role_idx, minusArray, plusArray);
 	if (!result) {
 		res.status(500).send({
 			message : "Internal Server Error"
@@ -42,57 +43,85 @@ router.put('/task', async(req, res, next) => {
 });
 
 router.put('/user', async(req, res, next) => {
-	let role_task_idx = req.body.role_task_idx;
-	let u_idx = req.body.u_idx;
+	let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if (decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+		let role_idx = req.body.role_idx;
+		let role_task_idx = req.body.role_task_idx;
+		let minusArray = req.body.minusArray;
+		let plusArray = req.body.plusArray;
+		let status = req.body.status;
 
-	let result = await sql.updateRoleUser(role_task_idx, u_idx);
-	if (!result) {
-		res.status(500).send({
-			message : "Internal Server Error"
-		});
-	} else {
-		res.status(201).send({
-			message : "Success to Modify User"
-		});
+		let result = await sql.updateRoleUser(role_idx, u_idx, role_task_idx, minusArray, plusArray, status);
+		if (!result) {
+			res.status(500).send({
+				message : "Internal Server Error"
+			});
+		} else {
+			res.status(201).send({
+				message : "Success to Modify User"
+			});
+		}
 	}
 });
 
 router.put('/response', async(req, res, next) => {
-	let u_idx = req.body.u_idx;
-	let role_task_idx = req.body.role_task_idx;
-	let role_response_idx = req.body.role_response_idx;
-	let content = req.body.content;
+	let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if (decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+		let role_task_idx = req.body.role_task_idx;
+		let role_response_idx = req.body.role_response_idx;
+		let content = req.body.content;
 
-	let result = await sql.updateRoleResponse(u_idx, role_task_idx, role_response_idx, content);
-	if (result === 0) {
-		res.status(500).send({
-			message : "Internal Server Error"
-		});
-	} else if (result === -1) {
-		res.status(400).send({
-			message : "Wrong User"
-		});
-	} else {
-		res.status(201).send({
-			message : "Success to Modify Response"
-		});
+		let result = await sql.updateRoleResponse(u_idx, role_task_idx, role_response_idx, content);
+		if (result === 0) {
+			res.status(500).send({
+				message : "Internal Server Error"
+			});
+		} else if (result === -1) {
+			res.status(400).send({
+				message : "Wrong User"
+			});
+		} else {
+			res.status(201).send({
+				message : "Success to Modify Response"
+			});
+		}
 	}
 });
 
 router.put('/feedback', async(req, res, next) => {
-	let u_idx = req.body.u_idx;
-	let role_response_idx = req.body.role_response_idx;
-	let content = req.body.content;
+	let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if (decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+		let role_response_idx = req.body.role_response_idx;
+		let content = req.body.content;
 
-	let result = await sql.updateRoleUser(data, role_response_idx, content);
-	if (!result) {
-		res.status(500).send({
-			message : "Internal Server Error"
-		});
-	} else {
-		res.status(201).send({
-			message : "Success to Modify Feedback"
-		});
+		let result = await sql.updateRoleUser(u_idx, role_response_idx, content);
+		if (!result) {
+			res.status(500).send({
+				message : "Internal Server Error"
+			});
+		} else {
+			res.status(201).send({
+				message : "Success to Modify Feedback"
+			});
+		}
 	}
 });
 

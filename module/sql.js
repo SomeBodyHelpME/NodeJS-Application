@@ -1028,48 +1028,60 @@ module.exports = {
   createRoleProject : async (...args) => {
     let g_idx = args[0];
     let title = args[1];
-
-    let insertProjectQuery = 'INSERT INTO chat.role (g_idx, title, last_idx) VALUES (?, ?, ?)';
-    let insertProject = await db.queryParamCnt_Arr(insertProjectQuery, [g_idx, title, 0]);
-
-    if(!insertProject) {
-      return false;
-    } else {
-      return true;
-    }
-  },
-  createRoleTask : async (...args) => {
-    let role_idx = args[0];
-    let content = args[1];
+    let master_idx = args[2];
+    let taskArray = args[3];
 
     let flag = true;
-    for (let i = 0 ; i < content.length ; i++) {
-      let insertRoleTaskQuery = 'INSERT INTO chat.role_task (role_idx, content) VALUES (?, ?)';
-      let insertRoleTask = await db.queryParamCnt_Arr(insertRoleTaskQuery, role_idx, content[i]);
-      if (!insertRoleTask) {
+
+    let insertProjectQuery = 'INSERT INTO chat.role (g_idx, title, last_idx, master_idx) VALUES (?, ?, ?, ?)';
+    let insertProject = await db.queryParamCnt_Arr(insertProjectQuery, [g_idx, title, 0, master_idx]);
+
+    for (let i = 0 ; i < taskArray.length ; i++) {
+      let insertTaskQuery = 'INSERT INTO chat.role_task (role_idx, content) VALUES (?, ?)';
+      var insertTask = await db.queryParamCnt_Arr(insertTaskQuery, [insertProject.insertId, taskArray[i]]);
+      if (!insertTask) {
         flag = false;
         break;
       }
     }
-    if (!flag) {
+    if(!flag || !insertProject) {
       return false;
     } else {
       return true;
     }
   },
-  createRoleUser : async (...args) => {
-    let role_task_idx = args[0];
-    let u_idx = args[1];
+  // createRoleTask : async (...args) => {
+  //   let role_idx = args[0];
+  //   let content = args[1];
 
-    let insertRoleUserQuery = 'INSERT INTO chat.role_user (role_task_idx, u_idx) VALUES (?, ?)';
-    let insertRoleUser = await db.queryParamCnt_Arr(insertRoleUserQuery, [role_task_idx, u_idx]);
+  //   let flag = true;
+  //   for (let i = 0 ; i < content.length ; i++) {
+  //     let insertRoleTaskQuery = 'INSERT INTO chat.role_task (role_idx, content) VALUES (?, ?)';
+  //     let insertRoleTask = await db.queryParamCnt_Arr(insertRoleTaskQuery, role_idx, content[i]);
+  //     if (!insertRoleTask) {
+  //       flag = false;
+  //       break;
+  //     }
+  //   }
+  //   if (!flag) {
+  //     return false;
+  //   } else {
+  //     return true;
+  //   }
+  // },
+  // createRoleUser : async (...args) => {
+  //   let role_task_idx = args[0];
+  //   let u_idx = args[1];
 
-    if (!insertRoleUser) {
-      return false;
-    } else {
-      return insertRoleUser;
-    }
-  },
+  //   let insertRoleUserQuery = 'INSERT INTO chat.role_user (role_task_idx, u_idx) VALUES (?, ?)';
+  //   let insertRoleUser = await db.queryParamCnt_Arr(insertRoleUserQuery, [role_task_idx, u_idx]);
+
+  //   if (!insertRoleUser) {
+  //     return false;
+  //   } else {
+  //     return insertRoleUser;
+  //   }
+  // },
   createRoleResponse : async (...args) => {
     let role_idx = args[0];
     let role_task_idx = args[1];
@@ -1128,24 +1140,30 @@ module.exports = {
     let getRoleTaskQuery = 'SELECT * FROM chat.role_task WHERE role_idx = ?';
     let getRoleTask = await db.queryParamCnt_Arr(getRoleTaskQuery, [role_idx]);
 
+    for (let i = 0 ; i < getRoleTask.length ; i++) {
+      let getRoleUserQuery = 'SELECT u_idx FROM chat.role_user WHERE role_task_idx = ?';
+      var getRoleUser = await db.queryParamCnt_Arr(getRoleUserQuery, [getRoleTask[i].role_task_idx]);
+
+      getRoleTask[i].userArray = getRoleUser;
+    }
     if (!getRoleTask) {
       return false;
     } else {
       return getRoleTask;
     }
   },
-  readRoleUser : async (...args) => {
-    let role_task_idx = args[0];
+  // readRoleUser : async (...args) => {
+  //   let role_task_idx = args[0];
 
-    let getRoleUserQuery = 'SELECT * FROM chat.role_user WHERE role_task_idx = ?';
-    let getRoleUser = await db.queryParamCnt_Arr(getRoleUserQuery, [role_task_idx]);
+  //   let getRoleUserQuery = 'SELECT * FROM chat.role_user WHERE role_task_idx = ?';
+  //   let getRoleUser = await db.queryParamCnt_Arr(getRoleUserQuery, [role_task_idx]);
 
-    if (!getRoleUser) {
-      return false;
-    } else {
-      return getRoleUser;
-    }
-  },
+  //   if (!getRoleUser) {
+  //     return false;
+  //   } else {
+  //     return getRoleUser;
+  //   }
+  // },
   readRoleResponse : async (...args) => {
     let role_task_idx = args[0];
 
@@ -1190,12 +1208,10 @@ module.exports = {
     }
   },
   updateRoleTask : async (...args) => {
-    let data = args[0];
-    let minusArray = data.minus;
-    let plusArray = data.plus;
-    let changeArray = data.change;
-    let role_idx = args[1];
-
+    let role_idx = args[0];
+    let minusArray = args[1];
+    let plusArray = args[2];
+    
     let flag = true;
 
     for (let i = 0 ; i < minusArray.length ; i++) {
@@ -1225,37 +1241,58 @@ module.exports = {
   },
   ////////////유저 수정해야함 => 수정하긴 했는데 다시한번 생각해볼것////////////////
   updateRoleUser : async (...args) => {
-    let data = args[0];
-    let role_task_idx = args[1];
-
-    let minusArray = data.minus;
-    let plusArray = data.plus;
+    let role_idx = args[0];
+    let u_idx = args[1]; 
+    let minusArray = args[2];
+    let plusArray = args[3];
+    let role_task_idx = args[4];
+    let status = args[5];
 
     let flag = true;
 
-    for (let i = 0 ; i < minusArray.length ; i++) {
-      let deleteRoleUserQuery = 'DELETE FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
-      var deleteRoleUser = await db.queryParamCnt_Arr(deleteRoleUserQuery, [role_task_idx, u_idx]);
-      if (!deleteRoleUser) {
-        flag = false;
-        break;
+    let getMasterIdxQuery = 'SELECT master_idx FROM chat.role WHERE role_idx = ?';
+    let getMasterIdx = await db.queryParamCnt_Arr(getMasterIdxQuery, [role_idx]);
+
+    if (u_idx === getMasterIdx[0].master_idx) {   // master가 추가, 삭제 할 경우
+      for (let i = 0 ; i < minusArray.length ; i++) {
+        let deleteRoleUserQuery = 'DELETE FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
+        var deleteRoleUser = await db.queryParamCnt_Arr(deleteRoleUserQuery, [minusArray[i], u_idx]);
+        if (!deleteRoleUser) {
+          flag = false;
+          break;
+        }
+      }
+      if (flag === false) {
+        return false;
+      }
+      for (let i = 0 ; i < plusArray.length ; i++) {
+        let insertRoleUserQuery = 'INSERT INTO chat.role_user (role_task_idx, u_idx) VALUES (?, ?)';
+        var insertRoleUser = await db.queryParamCnt_Arr(insertRoleUserQuery, [plusArray[i], u_idx]);
+        if (!insertRoleUser) {
+          flag = false;
+          break;
+        }
+      }
+    } else {    // user가 자신의 것을 추가(flag =)
+      if (status === 1) {
+        var insertRoleUserQuery = 'INSERT INTO chat.role_user (role_task_idx, u_idx) VALUES (?, ?)';
+        var insertRoleUser = await db.queryParamCnt_Arr(insertRoleUserQuery, [role_task_idx, u_idx]);
+        if (!insertRoleUser) {
+          flag = false;
+        }
+      } else if (status === -1) {
+        var deleteRoleUserQuery = 'DELETE FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
+        var deleteRoleUser = await db.queryParamCnt_Arr(deleteRoleUserQuery, [role_task_idx, u_idx]);
+        if (!deleteRoleUser) {
+          flag = false;
+        }
       }
     }
+
     if (flag === false) {
       return false;
     }
-    for (let i = 0 ; i < plusArray.length ; i++) {
-      let insertRoleUserQuery = 'INSERT INTO chat.role_user (role_task_idx, u_idx) VALUES (?, ?)';
-      var insertRoleUser = await db.queryParamCnt_Arr(insertRoleUserQuery, [role_task_idx, u_idx]);
-      if (!insertRoleUser) {
-        flag = false;
-        break;
-      }
-    }
-    if (flag === false) {
-      return false;
-    }
-    
+
     return true;
   },
   updateRoleResponse : async (...args) => {
@@ -1306,31 +1343,31 @@ module.exports = {
       return deleteRoleProject;
     }
   },
-  deleteRoleTask : async (...args) => {
-    let role_task_idx = args[0];
+  // deleteRoleTask : async (...args) => {
+  //   let role_task_idx = args[0];
 
-    let deleteRoleTaskQuery = 'DELETE FROM chat.role_task WHERE role_task_idx = ?';
-    let deleteRoleTask = await db.queryParamCnt_Arr(deleteRoleTaskQuery, [role_task_idx]);
+  //   let deleteRoleTaskQuery = 'DELETE FROM chat.role_task WHERE role_task_idx = ?';
+  //   let deleteRoleTask = await db.queryParamCnt_Arr(deleteRoleTaskQuery, [role_task_idx]);
 
-    if (!deleteRoleTask) {
-      return false;
-    } else {
-      return deleteRoleTask;
-    }
-  },
-  deleteRoleUser : async (...args) => {
-    let role_task_idx = args[0];
-    let u_idx = args[1];
+  //   if (!deleteRoleTask) {
+  //     return false;
+  //   } else {
+  //     return deleteRoleTask;
+  //   }
+  // },
+  // deleteRoleUser : async (...args) => {
+  //   let role_task_idx = args[0];
+  //   let u_idx = args[1];
 
-    let deleteRoleUserQuery = 'DELETE FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
-    let deleteRoleUser = await db.queryParamCnt_Arr(deleteRoleUserQuery, [role_task_idx, u_idx]);
+  //   let deleteRoleUserQuery = 'DELETE FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
+  //   let deleteRoleUser = await db.queryParamCnt_Arr(deleteRoleUserQuery, [role_task_idx, u_idx]);
 
-    if (!deleteRoleUser) {
-      return false;
-    } else {
-      return deleteRoleUser;
-    }
-  },
+  //   if (!deleteRoleUser) {
+  //     return false;
+  //   } else {
+  //     return deleteRoleUser;
+  //   }
+  // },
   deleteRoleResponse : async (...args) => {
     let role_response_idx = args[0];
 

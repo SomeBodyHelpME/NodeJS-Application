@@ -8,18 +8,28 @@ const sql = require('../../module/sql.js');
 const statuscode = require('../../module/statuscode.js');
 
 router.post('/', async(req, res, next) => { //역할 등록
-	let g_idx = req.body.g_idx;
-	let title = req.body.title;
+	let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if (decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+		let g_idx = req.body.g_idx;
+		let title = req.body.title;
+		let taskArray = req.body.taskArray;
 
-	let result = await sql.createRoleProject(g_idx, title);
-	if (!result) {
-		res.status(500).send({
-			message : "Internal Server Error"
-		});
-	} else {
-		res.status(201).send({
-			message : "Success to Register Project"
-		});
+		let result = await sql.createRoleProject(g_idx, title, u_idx, taskArray);
+		if (!result) {
+			res.status(500).send({
+				message : "Internal Server Error"
+			});
+		} else {
+			res.status(201).send({
+				message : "Success to Register Project"
+			});
+		}
 	}
 });
 

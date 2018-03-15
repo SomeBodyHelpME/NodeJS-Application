@@ -9,19 +9,28 @@ const db = require('../../module/pool.js');
 const sql = require('../../module/sql.js');
 const statuscode = require('../../module/statuscode.js');
 
-router.get('/:g_idx', async(req, res, next) => {
-	let g_idx = req.params.g_idx;
-
-	let result = await sql.readRoleProject(g_idx);
-	if (!result) {
-		res.status(500).send({
-			message : "Internal Server Error"
-		});
-	} else {
-		res.status(200).send({
-			message : "Success to Get Project",
-			data : result
-		});
+router.get(['/', '/:g_idx'], async(req, res, next) => {
+	let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if (decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+		let g_idx = req.params.g_idx;
+		
+		let result = await sql.readRoleProject(u_idx, g_idx);
+		if (!result) {
+			res.status(500).send({
+				message : "Internal Server Error"
+			});
+		} else {
+			res.status(200).send({
+				message : "Success to Get Project",
+				data : result
+			});
+		}
 	}
 });
 

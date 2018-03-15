@@ -60,7 +60,7 @@ router.post('/user', async(req, res, next) => {
     let u_idx = decoded.u_idx;
     let role_task_idx = req.body.role_task_idx;
 
-    let result = await.sql.createRoleUser(role_task_idx, u_idx);
+    let result = await sql.createRoleUser(role_task_idx, u_idx);
     if (!result) {
 			res.status(500).send({
 				message : "Internal Server Error"

@@ -1179,15 +1179,6 @@ module.exports = {
     let g_idx = args[1];
 
     if (!g_idx) {
-      var getRoleProjectQuery = 'SELECT * FROM chat.role WHERE g_idx = ?';
-      var getRoleProject = await db.queryParamCnt_Arr(getRoleProjectQuery, [g_idx]);
-
-      if (!getRoleProject) {
-        return false;
-      } else {
-        return getRoleProject;
-      }
-    } else {
       let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
       let findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
 
@@ -1201,6 +1192,15 @@ module.exports = {
         }
       }
       return result;
+    } else {
+      var getRoleProjectQuery = 'SELECT * FROM chat.role WHERE g_idx = ?';
+      var getRoleProject = await db.queryParamCnt_Arr(getRoleProjectQuery, [g_idx]);
+
+      if (!getRoleProject) {
+        return false;
+      } else {
+        return getRoleProject;
+      }
     }
   },
   readRoleTask : async (...args) => {

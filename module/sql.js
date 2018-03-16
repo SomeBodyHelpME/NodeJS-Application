@@ -750,6 +750,58 @@ module.exports = {
       return true;
     }
   },
+  deleteNotice : async (...args) => {
+    let u_idx = args[0];
+    let notice_idx = args[1];
+
+    let deleteNoticeQuery = 'DELETE chat.notice WHERE u_idx = ? AND notice_idx = ?';
+    let deleteNotice = await db.queryParamCnt_Arr(deleteNoticeQuery, [u_idx, notice_idx]);
+
+    if (!deleteNotice) {
+      return false;
+    } else {
+      return deleteNotice;
+    }
+  },
+  deleteLights : async (...args) => {
+    let u_idx = args[0];
+    let light_idx = args[1];
+
+    let deleteLightsQuery = 'DELETE chat.lights WHERE u_idx = ? AND light_idx = ?';
+    let deleteLights = await db.queryParamCnt_Arr(deleteLightsQuery, [u_idx, light_idx]);
+
+    if (!deleteLights) {
+      return false;
+    } else {
+      return deleteLights;
+    }
+  },
+  deletePick : async (...args) => {
+    let u_idx = args[0];
+    let pick_idx = args[1];
+
+    let deletePickQuery = 'DELETE chat.pick WHERE u_idx = ? AND pick_idx = ?';
+    let deletePick = await db.queryParamCnt_Arr(deletePickQuery, [u_idx, pick_idx]);
+
+    if (!deletePick) {
+      return false;
+    } else {
+      return deletePick;
+    }
+  },
+  deleteVote : async (...args) => {
+    let u_idx = args[0];
+    let vote_idx = args[1];
+
+    let deleteVoteQuery = 'DELETE chat.vote WHERE u_idx = ? AND vote_idx = ?';
+    let deleteVote = await db.queryParamCnt_Arr(deleteVoteQuery, [u_idx, vote_idx]);
+
+    if (!deleteVote) {
+      return false;
+    } else {
+      return deleteVote;
+    }
+  },
   showSpecificMemberInChat : async (...args) => {
     let g_idx = args[0];
 

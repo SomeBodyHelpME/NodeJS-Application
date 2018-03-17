@@ -1,4 +1,5 @@
 const express = require('express');
+const moment = require('moment');
 const router = express.Router();
 const upload = require('../../config/multer.js');
 
@@ -19,8 +20,9 @@ router.post('/', async(req, res, next) => { //역할 등록
 		let g_idx = req.body.g_idx;
 		let title = req.body.title;
 		let taskArray = req.body.taskArray;
+		let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
 
-		let result = await sql.createRoleProject(g_idx, title, u_idx, taskArray);
+		let result = await sql.createRoleProject(g_idx, title, u_idx, taskArray, write_time);
 		if (!result) {
 			res.status(500).send({
 				message : "Internal Server Error"

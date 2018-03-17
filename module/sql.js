@@ -604,7 +604,7 @@ module.exports = {
     let title = args[4];
     let content = args[5];
     let example = args[6];  //배열의 형태로 넘어옴 ex) ['신촌', '이대', '시청']
-//    let endtime = args[7];
+    let endtime = args[7];
 
     // let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
     // let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [g_idx]);
@@ -624,19 +624,19 @@ module.exports = {
       var insertLightsResponse = await db.queryParamCnt_Arr(insertLightsResponseQuery, [insertVote.insertId, searchAllUsersInSpecificGroup[i].u_idx, 0, null, null, g_idx]);
     }
 
-    // // time modification 2018-01-01 01:01:01
-    // let year = endtime.substring(0, 4);
-    // let month = endtime.substring(5, 7);
-    // let day = endtime.substring(8, 10);
-    // let hour = endtime.substring(11, 13);
-    // let minute = endtime.substring(14, 16);
-    // let second = endtime.substring(17);
-    // let date = new Date(year, month-1, day, hour, minute, second);
-    // var j = schedule.scheduleJob(date, function() {
-
-    //   let voteCloseQuery = 'UPDATE chat.vote SET status = ? WHERE vote_idx = ?';
-    //   var voteCloseResult = await db.queryParamCnt_Arr(voteCloseQuery, [1, insertVote.insertId]);
-    // });
+    // time modification 2018-01-01 01:01:01
+    let year = endtime.substring(0, 4);
+    let month = endtime.substring(5, 7);
+    let day = endtime.substring(8, 10);
+    let hour = endtime.substring(11, 13);
+    let minute = endtime.substring(14, 16);
+    let second = endtime.substring(17);
+    let date = new Date(year, month-1, day, hour, minute, second);
+    console.log(date);
+    var j = schedule.scheduleJob(date, async function() {
+      var voteCloseQuery = 'UPDATE chat.vote SET status = ? WHERE vote_idx = ?';
+      var voteCloseResult = await db.queryParamCnt_Arr(voteCloseQuery, [1, insertVote.insertId]);
+    });
 
 
     if(!insertVote || !searchAllUsersInSpecificGroup) {
@@ -1082,11 +1082,11 @@ module.exports = {
     let title = args[1];
     let master_idx = args[2];
     let taskArray = args[3];
-
+    let write_time = args[4];
     let flag = true;
 
-    let insertProjectQuery = 'INSERT INTO chat.role (g_idx, title, last_idx, master_idx) VALUES (?, ?, ?, ?)';
-    let insertProject = await db.queryParamCnt_Arr(insertProjectQuery, [g_idx, title, 0, master_idx]);
+    let insertProjectQuery = 'INSERT INTO chat.role (g_idx, title, master_idx, write_time) VALUES (?, ?, ?, ?)';
+    let insertProject = await db.queryParamCnt_Arr(insertProjectQuery, [g_idx, title, master_idx, write_time]);
 
     for (let i = 0 ; i < taskArray.length ; i++) {
       let insertTaskQuery = 'INSERT INTO chat.role_task (role_idx, content) VALUES (?, ?)';
@@ -1188,7 +1188,7 @@ module.exports = {
         var getRoleProject = await db.queryParamCnt_Arr(getRoleProjectQuery, [findUserJoined[i].g_idx]);
         
         for (let j = 0 ; j < getRoleProject.length ; j++) {
-          result.push(getRoleProject[i]);
+          result.push(getRoleProject[j]);
         }
       }
       return result;
@@ -1282,29 +1282,33 @@ module.exports = {
     let plusArray = args[2];
     
     let flag = true;
-
-    for (let i = 0 ; i < minusArray.length ; i++) {
-      let deleteRoleTaskQuery = 'DELETE FROM chat.role_task WHERE role_task_idx = ?';
-      let deleteRoleTask = await db.queryParamCnt_Arr(deleteRoleTaskQuery, [minusArray[i]]);
-      if (!deleteRoleTask) {
-        flag = false;
-        break;
+    
+    if (minusArray) {
+      for (let i = 0 ; i < minusArray.length ; i++) {
+        let deleteRoleTaskQuery = 'DELETE FROM chat.role_task WHERE role_task_idx = ?';
+        let deleteRoleTask = await db.queryParamCnt_Arr(deleteRoleTaskQuery, [minusArray[i]]);
+        if (!deleteRoleTask) {
+          flag = false;
+          break;
+        }
+      }
+      if (!flag) {
+        return false;
       }
     }
-    if (!flag) {
-      return false;
-    }
-
-    for (let i = 0 ; i < plusArray.length ; i++) {
-      let insertRoleTaskQuery = 'INSERT INTO chat.role_task (role_idx, content) VALUES (?, ?)';
-      let insertRoleTask = await db.queryParamCnt_Arr(insertRoleTaskQuery, [role_idx, plusArray[i]]);
-      if (!insertRoleTask) {
-        flag = false;
-        break;
+    
+    if (plusArray) {
+      for (let i = 0 ; i < plusArray.length ; i++) {
+        let insertRoleTaskQuery = 'INSERT INTO chat.role_task (role_idx, content) VALUES (?, ?)';
+        let insertRoleTask = await db.queryParamCnt_Arr(insertRoleTaskQuery, [role_idx, plusArray[i]]);
+        if (!insertRoleTask) {
+          flag = false;
+          break;
+        }
       }
-    }
-    if (!flag) {
-      return false;
+      if (!flag) {
+        return false;
+      }  
     }
     return true;
   },

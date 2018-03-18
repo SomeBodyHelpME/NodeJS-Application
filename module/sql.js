@@ -1222,18 +1222,18 @@ module.exports = {
       return getRoleTask;
     }
   },
-  // readRoleUser : async (...args) => {
-  //   let role_task_idx = args[0];
+  readRoleUser : async (...args) => {
+    let role_task_idx = args[0];
 
-  //   let getRoleUserQuery = 'SELECT * FROM chat.role_user WHERE role_task_idx = ?';
-  //   let getRoleUser = await db.queryParamCnt_Arr(getRoleUserQuery, [role_task_idx]);
+    let getRoleUserQuery = 'SELECT * FROM chat.role_user WHERE role_task_idx = ?';
+    let getRoleUser = await db.queryParamCnt_Arr(getRoleUserQuery, [role_task_idx]);
 
-  //   if (!getRoleUser) {
-  //     return false;
-  //   } else {
-  //     return getRoleUser;
-  //   }
-  // },
+    if (!getRoleUser) {
+      return false;
+    } else {
+      return getRoleUser;
+    }
+  },
   readRoleResponse : async (...args) => {
     let role_task_idx = args[0];
 
@@ -1352,7 +1352,7 @@ module.exports = {
           }
         }
       }
-      
+
       if (flag === false) {
         return false;
       }
@@ -1383,6 +1383,10 @@ module.exports = {
     let role_task_idx = args[1];
     let role_response_idx = args[2];
     let content = args[3];
+    let minusArray = args[4];
+    let plusArray = args[5];
+
+    let flag = true;
 
     let checkWriterQuery = 'SELECT u_idx FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
     var checkWriter = await db.queryParamCnt_Arr(checkWriterQuery, [role_task_idx, u_idx]);
@@ -1390,6 +1394,36 @@ module.exports = {
     if(checkWriter.length === 1) {
       let updateRoleResponseQuery = 'UPDATE chat.role_response SET content = ? WHERE role_response_idx = ?';
       let updateRoleResponse = await db.queryParamCnt_Arr(updateRoleResponseQuery, [content, role_response_idx]);
+
+      if (minusArray) {
+        for (let i = 0 ; i < minusArray.length ; i++) {
+          let deleteFileQuery = 'DELETE FROM chat.role_file WHERE role_response_idx = ? AND file = ?';
+          let deleteFile = await db.queryParamCnt_Arr(deleteFileQuery, [role_response_idx, minusArray[i]]);
+
+          if (!deleteFile) {
+            flag = false;
+            break;
+          }
+        }
+        if (flag === false) {
+          return false;
+        }
+      }
+
+      if (plusArray) {
+        for (let i = 0 ; i < plusArray.length ; i++) {
+          let insertFileQuery = 'INSERT INTO chat.role_file (role_response_idx, file) VALUES (?, ?)';
+          let insertFile = await db.queryParamCnt_Arr(insertFileQuery, [role_response_idx, plusArray[i]]);
+
+          if (!insertFile) {
+            flag = false;
+            break;
+          }
+        }
+        if (flag === false) {
+          return false;
+        }
+      }
 
       if (!updateRoleResponse) {
         return 0;

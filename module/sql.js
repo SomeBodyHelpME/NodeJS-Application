@@ -1314,11 +1314,11 @@ module.exports = {
   },
   ////////////유저 수정해야함 => 수정하긴 했는데 다시한번 생각해볼것////////////////
   updateRoleUser : async (...args) => {
-    let role_idx = args[0];
-    let u_idx = args[1]; 
-    let minusArray = args[2];
-    let plusArray = args[3];
-    let role_task_idx = args[4];
+    let u_idx = args[0];
+    let role_idx = args[1];
+    let role_task_idx = args[2];
+    let minusArray = args[3];
+    let plusArray = args[4];
     let status = args[5];
 
     let flag = true;
@@ -1329,7 +1329,7 @@ module.exports = {
     if (u_idx === getMasterIdx[0].master_idx) {   // master가 추가, 삭제 할 경우
       for (let i = 0 ; i < minusArray.length ; i++) {
         let deleteRoleUserQuery = 'DELETE FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
-        var deleteRoleUser = await db.queryParamCnt_Arr(deleteRoleUserQuery, [minusArray[i], u_idx]);
+        var deleteRoleUser = await db.queryParamCnt_Arr(deleteRoleUserQuery, [role_task_idx, minusArray[i]]);
         if (!deleteRoleUser) {
           flag = false;
           break;
@@ -1340,7 +1340,7 @@ module.exports = {
       }
       for (let i = 0 ; i < plusArray.length ; i++) {
         let insertRoleUserQuery = 'INSERT INTO chat.role_user (role_task_idx, u_idx) VALUES (?, ?)';
-        var insertRoleUser = await db.queryParamCnt_Arr(insertRoleUserQuery, [plusArray[i], u_idx]);
+        var insertRoleUser = await db.queryParamCnt_Arr(insertRoleUserQuery, [role_task_idx, plusArray[i]]);
         if (!insertRoleUser) {
           flag = false;
           break;

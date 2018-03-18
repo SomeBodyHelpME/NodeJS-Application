@@ -57,7 +57,7 @@ router.put('/user', async(req, res, next) => {
 		let plusArray = req.body.plusArray;
 		let status = req.body.status;
 
-		let result = await sql.updateRoleUser(role_idx, u_idx, role_task_idx, minusArray, plusArray, status);
+		let result = await sql.updateRoleUser(u_idx, role_idx, role_task_idx, minusArray, plusArray, status);
 		if (!result) {
 			res.status(500).send({
 				message : "Internal Server Error"

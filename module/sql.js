@@ -1088,6 +1088,7 @@ module.exports = {
     let insertProjectQuery = 'INSERT INTO chat.role (g_idx, title, master_idx, write_time) VALUES (?, ?, ?, ?)';
     let insertProject = await db.queryParamCnt_Arr(insertProjectQuery, [g_idx, title, master_idx, write_time]);
 
+
     for (let i = 0 ; i < taskArray.length ; i++) {
       let insertTaskQuery = 'INSERT INTO chat.role_task (role_idx, content) VALUES (?, ?)';
       var insertTask = await db.queryParamCnt_Arr(insertTaskQuery, [insertProject.insertId, taskArray[i]]);
@@ -1327,24 +1328,33 @@ module.exports = {
     let getMasterIdx = await db.queryParamCnt_Arr(getMasterIdxQuery, [role_idx]);
 
     if (u_idx === getMasterIdx[0].master_idx) {   // master가 추가, 삭제 할 경우
-      for (let i = 0 ; i < minusArray.length ; i++) {
-        let deleteRoleUserQuery = 'DELETE FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
-        var deleteRoleUser = await db.queryParamCnt_Arr(deleteRoleUserQuery, [role_task_idx, minusArray[i]]);
-        if (!deleteRoleUser) {
-          flag = false;
-          break;
+      if (minusArray) {
+        for (let i = 0 ; i < minusArray.length ; i++) {
+          let deleteRoleUserQuery = 'DELETE FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
+          var deleteRoleUser = await db.queryParamCnt_Arr(deleteRoleUserQuery, [role_task_idx, minusArray[i]]);
+          if (!deleteRoleUser) {
+            flag = false;
+            break;
+          }
         }
       }
+      
       if (flag === false) {
         return false;
       }
-      for (let i = 0 ; i < plusArray.length ; i++) {
-        let insertRoleUserQuery = 'INSERT INTO chat.role_user (role_task_idx, u_idx) VALUES (?, ?)';
-        var insertRoleUser = await db.queryParamCnt_Arr(insertRoleUserQuery, [role_task_idx, plusArray[i]]);
-        if (!insertRoleUser) {
-          flag = false;
-          break;
+      if (plusArray) {
+        for (let i = 0 ; i < plusArray.length ; i++) {
+          let insertRoleUserQuery = 'INSERT INTO chat.role_user (role_task_idx, u_idx) VALUES (?, ?)';
+          var insertRoleUser = await db.queryParamCnt_Arr(insertRoleUserQuery, [role_task_idx, plusArray[i]]);
+          if (!insertRoleUser) {
+            flag = false;
+            break;
+          }
         }
+      }
+      
+      if (flag === false) {
+        return false;
       }
     } else {    // user가 자신의 것을 추가(flag =)
       if (status === 1) {

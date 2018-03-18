@@ -1216,7 +1216,7 @@ module.exports = {
 
       if (getRoleUser) {
         for (let j = 0 ; j < getRoleUser.length ; j++) {
-          getRoleTask[i].userArray.push(getRoleUser[j]);
+          getRoleTask[i].userArray.push(getRoleUser[j].u_idx);
         }
       }
     }

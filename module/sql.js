@@ -1214,10 +1214,12 @@ module.exports = {
       let getRoleUserQuery = 'SELECT u_idx FROM chat.role_user WHERE role_task_idx = ?';
       var getRoleUser = await db.queryParamCnt_Arr(getRoleUserQuery, [getRoleTask[i].role_task_idx]);
 
+      let result = [];
       if (getRoleUser) {
         for (let j = 0 ; j < getRoleUser.length ; j++) {
-          getRoleTask[i].userArray.push(getRoleUser[j].u_idx);
+          result.push(getRoleUser[j].u_idx);
         }
+        getRoleTask[i].userArray = result;
       }
     }
     if (!getRoleTask) {

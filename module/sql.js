@@ -1214,7 +1214,11 @@ module.exports = {
       let getRoleUserQuery = 'SELECT u_idx FROM chat.role_user WHERE role_task_idx = ?';
       var getRoleUser = await db.queryParamCnt_Arr(getRoleUserQuery, [getRoleTask[i].role_task_idx]);
 
-      getRoleTask[i].userArray = getRoleUser;
+      if (getRoleUser) {
+        for (let j = 0 ; j < getRoleUser.length ; j++) {
+          getRoleTask[i].userArray.push(getRoleUser[j]);
+        }
+      }
     }
     if (!getRoleTask) {
       return false;
@@ -1225,14 +1229,16 @@ module.exports = {
   readRoleUser : async (...args) => {
     let role_task_idx = args[0];
 
-    let getRoleUserQuery = 'SELECT * FROM chat.role_user WHERE role_task_idx = ?';
+    let getRoleUserQuery = 'SELECT u_idx FROM chat.role_user WHERE role_task_idx = ?';
     let getRoleUser = await db.queryParamCnt_Arr(getRoleUserQuery, [role_task_idx]);
 
-    if (!getRoleUser) {
-      return false;
-    } else {
-      return getRoleUser;
+    let result = [];
+    if (getRoleUser) {
+      for (let i = 0 ; i < getRoleUser.length ; i++) {
+        result.push(getRoleUser[i].u_idx);
+      }
     }
+    return result;
   },
   readRoleResponse : async (...args) => {
     let role_task_idx = args[0];
@@ -1376,7 +1382,16 @@ module.exports = {
       return false;
     }
 
-    return true;
+    let result = [];
+    let getUserIndexQuery = 'SELECT u_idx FROM role_user WHERE role_task_idx = ?';
+    let getUserIndex = await db.queryParamCnt_Arr(getUserIndexQuery, [role_task_idx]);
+
+    if (getUserIndex) {
+      for (let i = 0 ; i < getUserIndex.length ; i++) {
+        result.push(getUserIndex[i].u_idx);
+      }
+    }
+    return result;
   },
   updateRoleResponse : async (...args) => {
     let u_idx = args[0];

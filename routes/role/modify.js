@@ -64,7 +64,8 @@ router.put('/user', async(req, res, next) => {
 			});
 		} else {
 			res.status(201).send({
-				message : "Success to Modify User"
+				message : "Success to Modify User",
+				data : result
 			});
 		}
 	}

@@ -603,7 +603,7 @@ module.exports = {
     let write_time = args[3];
     let title = args[4];
     let content = args[5];
-    let example = args[6];  //배열의 형태로 넘어옴 ex) ['신촌', '이대', '시청']
+    let choice = args[6];  //배열의 형태로 넘어옴 ex) ['신촌', '이대', '시청']
     let endtime = args[7];
 
     // let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
@@ -612,9 +612,9 @@ module.exports = {
     let insertVoteQuery = 'INSERT INTO chat.vote (u_idx, chat_idx, g_idx, write_time, title, content) VALUES (?, ?, ?, ?, ?, ?)';
     var insertVote = await db.queryParamCnt_Arr(insertVoteQuery, [u_idx, chat_idx, g_idx, write_time, title, content]);
 
-    for(let i = 0 ; i < example.length ; i++) {
-      let insertVoteContentQuery = 'INSERT INTO chat.vote_content (vote_idx, example) VALUES (?, ?)';
-      var insertVoteContent = await db.queryParamCnt_Arr(insertVoteContentQuery, [insertVote.insertId, example[i]]);
+    for(let i = 0 ; i < choice.length ; i++) {
+      let insertVoteContentQuery = 'INSERT INTO chat.vote_content (vote_idx, choice) VALUES (?, ?)';
+      var insertVoteContent = await db.queryParamCnt_Arr(insertVoteContentQuery, [insertVote.insertId, choice[i]]);
     }
 
     let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
@@ -648,7 +648,7 @@ module.exports = {
   modifyVote : async (...args) => {
     let u_idx = args[0];
     let vote_idx = args[1];
-    let example = args[2];
+    let choice = args[2];
 
     let checkWriterQuery = 'SELECT u_idx FROM chat.vote WHERE vote_idx = ? AND u_idx = ?';
     var checkWriter = await db.queryParamCnt_Arr(checkWriterQuery, [vote_idx, u_idx]);
@@ -657,9 +657,9 @@ module.exports = {
       let deleteAllContentQuery = 'DELETE FROM chat.vote_content WHERE vote_idx = ?';
       var deleteAllContent = await db.queryParamCnt_Arr(deleteAllContentQuery, [vote_idx]);
 
-      for(let i = 0 ; i < example.length ; i++) {
-        let insertVoteContentQuery = 'INSERT INTO chat.vote_content (vote_idx, vote_content_idx, example) VALUES (?, ?, ?)';
-        var insertVoteContent = await db.queryParamCnt_Arr(insertVoteContentQuery, [vote_idx, i, example[i]]);
+      for(let i = 0 ; i < choice.length ; i++) {
+        let insertVoteContentQuery = 'INSERT INTO chat.vote_content (vote_idx, vote_content_idx, choice) VALUES (?, ?, ?)';
+        var insertVoteContent = await db.queryParamCnt_Arr(insertVoteContentQuery, [vote_idx, i, choice[i]]);
       }
       return true;
     } else {
@@ -679,9 +679,6 @@ module.exports = {
     }
   },
   showSingleLightsDetail : async (...args) => {
-
-  },
-  showSingleVoteDetail : async (...args) => {
 
   },
   fcmSendWhenMakeThings : async (...args) => {
@@ -1168,7 +1165,7 @@ module.exports = {
 
       for(let i = 0 ; i < files.length ; i++) {
         let insertFileQuery = 'INSERT INTO chat.role_file (role_response_idx, file) VALUES (?, ?)';
-        var insertFile = await db.queryParamCnt_Arr(insertFileQuery, [insertResponse.insertId, file[i]]);
+        var insertFile = await db.queryParamCnt_Arr(insertFileQuery, [insertResponse.insertId, files[i]]);
       }
       if(!insertResponse) {
         return 0;

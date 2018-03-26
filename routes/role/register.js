@@ -38,7 +38,7 @@ router.post('/', async(req, res, next) => { //역할 등록
 router.post('/task', async(req, res, next) => {
 	let role_idx = req.body.role_idx;
 	let content = req.body.content;
-
+ 
 	let result = await sql.createRoleTask(role_idx, content);
 	if (!result) {
 		res.status(500).send({
@@ -76,7 +76,7 @@ router.post('/user', async(req, res, next) => {
 });
 
 var MAXNUM = 10;
-router.post('/response', upload.fields({name : "file", maxCount : MAXNUM}), async(req, res, next) => {
+router.post('/response', upload.fields([{name : "file", maxCount : MAXNUM}]), async(req, res, next) => {
 	let token = req.headers.token;
   let decoded = jwt.verify(token);
   if (decoded === -1) {
@@ -89,7 +89,7 @@ router.post('/response', upload.fields({name : "file", maxCount : MAXNUM}), asyn
 		let role_task_idx = req.body.role_task_idx;
 		let response_content = req.body.response_content;
 		let files = req.files.file;	// Array
-
+		
 		let result = await sql.createRoleResponse(role_idx, role_task_idx, u_idx, response_content, files);
 		if (result === 0) {
 			res.status(500).send({
@@ -99,7 +99,7 @@ router.post('/response', upload.fields({name : "file", maxCount : MAXNUM}), asyn
 			res.status(400).send({
 				message : "Wrong Person"
 			});
-		} else if (result === 1) {
+		} else {
 			res.status(201).send({
 				message : "Success to Register Result"
 			});

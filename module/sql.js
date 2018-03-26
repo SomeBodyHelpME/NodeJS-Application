@@ -1162,10 +1162,10 @@ module.exports = {
     if(checkWriter.length === 1) {
       let insertResponseQuery = 'INSERT INTO chat.role_response (role_idx, role_task_idx, content) VALUES (?, ?, ?)';
       var insertResponse = await db.queryParamCnt_Arr(insertResponseQuery, [role_idx, role_task_idx, response_content]);
-
+      console.log(files);
       for(let i = 0 ; i < files.length ; i++) {
         let insertFileQuery = 'INSERT INTO chat.role_file (role_response_idx, file) VALUES (?, ?)';
-        var insertFile = await db.queryParamCnt_Arr(insertFileQuery, [insertResponse.insertId, files[i]]);
+        var insertFile = await db.queryParamCnt_Arr(insertFileQuery, [insertResponse.insertId, files[i].location]);
       }
       if(!insertResponse) {
         return 0;
@@ -1445,7 +1445,7 @@ module.exports = {
       if (plusArray) {
         for (let i = 0 ; i < plusArray.length ; i++) {
           let insertFileQuery = 'INSERT INTO chat.role_file (role_response_idx, file) VALUES (?, ?)';
-          let insertFile = await db.queryParamCnt_Arr(insertFileQuery, [role_response_idx, plusArray[i]]);
+          let insertFile = await db.queryParamCnt_Arr(insertFileQuery, [role_response_idx, plusArray[i].location]);
 
           if (!insertFile) {
             flag = false;

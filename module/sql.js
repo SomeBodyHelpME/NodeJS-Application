@@ -480,16 +480,16 @@ module.exports = {
       return getOneVoteInformation[0];
     }
   },
-  forEachVoteExample : async (...args) => {
+  forEachVoteChoice : async (...args) => {
     let vote_idx = args[0];
 
-    let getAllExampleforEachVoteQuery = 'SELECT * FROM chat.vote_content WHERE chat.vote_content.vote_idx = ? ORDER BY chat.vote_content.vote_content_idx';
-    var getAllExampleforEachVote = await db.queryParamCnt_Arr(getAllExampleforEachVoteQuery, [vote_idx]);
+    let getAllChoiceforEachVoteQuery = 'SELECT * FROM chat.vote_content WHERE chat.vote_content.vote_idx = ? ORDER BY chat.vote_content.vote_content_idx';
+    var getAllChoiceforEachVote = await db.queryParamCnt_Arr(getAllChoiceforEachVoteQuery, [vote_idx]);
 
-    if(!getAllExampleforEachVote) {
+    if(!getAllChoiceforEachVote) {
       return false;
     } else {
-      return getAllExampleforEachVote;
+      return getAllChoiceforEachVote;
     }
   },// forEachVoteExample
   forEachVoteResponse : async (...args) => {
@@ -665,6 +665,24 @@ module.exports = {
     } else {
       return false;
     }
+  },
+  showSingleNoticeDetail : async (...args) => {
+    let notice_idx = args[0];
+
+    let getSingleNoticeQuery = 'SELECT * FROM chat.notice WHERE notice_idx = ?';
+    let getSingleNotice = await db.queryParamCnt_Arr(getSingleNoticeQuery, [notice_idx]);
+
+    if (!getSingleNotice) {
+      return false;
+    } else {
+      return getSingleNotice;
+    }
+  },
+  showSingleLightsDetail : async (...args) => {
+
+  },
+  showSingleVoteDetail : async (...args) => {
+
   },
   fcmSendWhenMakeThings : async (...args) => {
     let u_idx = args[0];

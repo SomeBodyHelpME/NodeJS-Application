@@ -145,9 +145,9 @@ router.get('/vote/res/:g_idx/:vote_idx', async(req, res, next) => {
     let g_idx = req.params.g_idx;
     let vote_idx = req.params.vote_idx;
     let voteresult = await sql.forEachVoteOne(vote_idx);
-    let exampleresult = await sql.forEachVoteExample(vote_idx);
+    let choiceresult = await sql.forEachVoteChoice(vote_idx);
     let responseresult = await sql.forEachVoteResponse(g_idx, vote_idx);
-    if(!voteresult || !exampleresult || !responseresult) {
+    if(!voteresult || !choiceresult || !responseresult) {
       res.status(500).send({
         message : "Internal Server Error"
       });
@@ -155,10 +155,58 @@ router.get('/vote/res/:g_idx/:vote_idx', async(req, res, next) => {
       res.status(200).send({
         message : "Success to Load Vote Detail",
         vote : voteresult,
-        example : exampleresult,
+        choice : choiceresult,
         response : responseresult
       });
     }
+  }
+});
+
+router.get('/single/notice/:notice_idx', async(req, res, next) => {
+  let notice_idx = req.params.notice_idx;
+
+  let result = sql.showSingleNoticeDetail(notice_idx);
+  if (!result) {
+    res.status(500).send({
+      message : "Internal Server Error"
+    });
+  } else {
+    res.status(200).send({
+      message : "Success to Load Single Notice Detail",
+      data : result
+    });
+  }
+});
+
+router.get('/single/lights/:light_idx', async(req, res, next) => {
+  let light_idx = req.params.light_idx;
+
+  let result = sql.showSingleLightsDetail(light_idx);
+  if (!result) {
+    res.status(500).send({
+      message : "Internal Server Error"
+    });
+  } else {
+    res.status(200).send({
+      message : "Success to Load Single Notice Lights",
+      data : result
+    });
+  }
+});
+
+router.get('/single/vote/:vote_idx', async(req, res, next) => {
+  let vote_idx = req.params.vote_idx;
+
+  let result = sql.showSingleVoteDetail(vote_idx);
+  if (!result) {
+    res.status(500).send({
+      message : "Internal Server Error"
+    });
+  } else {
+    res.status(200).send({
+      message : "Success to Load Single Notice Vote",
+      data : result
+    });
   }
 });
 

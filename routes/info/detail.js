@@ -194,20 +194,6 @@ router.get('/single/lights/:light_idx', async(req, res, next) => {
   }
 });
 
-router.get('/single/vote/:vote_idx', async(req, res, next) => {
-  let vote_idx = req.params.vote_idx;
 
-  let result = sql.showSingleVoteDetail(vote_idx);
-  if (!result) {
-    res.status(500).send({
-      message : "Internal Server Error"
-    });
-  } else {
-    res.status(200).send({
-      message : "Success to Load Single Notice Vote",
-      data : result
-    });
-  }
-});
 
 module.exports = router;

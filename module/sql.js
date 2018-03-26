@@ -679,7 +679,7 @@ module.exports = {
     }
   },
   showSingleLightsDetail : async (...args) => {
-
+    return true;
   },
   fcmSendWhenMakeThings : async (...args) => {
     let u_idx = args[0];

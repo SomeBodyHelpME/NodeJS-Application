@@ -166,10 +166,10 @@ router.post('/vote', async(req, res, next) => {
     let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
     let content = req.body.content;
     let title = req.body.title;
-    let example = req.body.example;
+    let choice = req.body.choice;
     let endtime = req.body.endtime;
 
-    let result = await sql.makeVote(u_idx, chat_idx, g_idx, write_time, title, content, example, endtime);
+    let result = await sql.makeVote(u_idx, chat_idx, g_idx, write_time, title, content, choice, endtime);
     if(!result) {
       res.status(500).send({
         message : "Internal Server Error"
@@ -193,8 +193,8 @@ router.put('/vote', async(req, res, next) => {
   } else {
     let u_idx = decoded.u_idx;
     let vote_idx = req.body.vote_idx;
-    let example = req.body.example;
-    let result = await sql.modifyVote(u_idx, vote_idx, example);
+    let choice = req.body.choice;
+    let result = await sql.modifyVote(u_idx, vote_idx, choice);
     if(!result) {
       res.status(400).send({
         message : "Wrong Person"

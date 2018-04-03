@@ -169,6 +169,9 @@ router.post('/vote', async(req, res, next) => {
     let choice = req.body.choice;
     let endtime = req.body.endtime;
 
+    if (!endtime) {
+      endtime = moment().add(7, 'days').format("YYYY-MM-DD HH:mm:ss");
+    } 
     let result = await sql.makeVote(u_idx, chat_idx, g_idx, write_time, title, content, choice, endtime);
     if(!result) {
       res.status(500).send({

@@ -679,6 +679,84 @@ module.exports = {
     }
   },
   showSingleLightsDetail : async (...args) => {
+    let light_idx = args[0];
+    let u_idx = args[1];
+
+    let getLightsInfoQuery = 'SELECT * FROM chat.lights WHERE light_idx = ?';
+    let getLightsInfo = await db.queryParamCnt_Arr(getLightsInfoQuery, [light_idx]);
+
+    var result = {};
+    if (getLightsInfo[0].u_idx === u_idx) {   //작성자
+      let getLightsResponseQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ?';
+      let getLightsResponse = await db.queryParamCnt_Arr(getLightsResponseQuery, [light_idx]);
+
+      result.lights = getLightsInfo[0];
+      result.response = getLightsResponse;
+      result.message = '';
+
+    } else {
+      if (getLightsInfo[0].open_status === 0) {
+        let getLightsResponseOneUserQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ? AND u_idx = ?'; 
+        let getLightsResponseOneUser = await db.queryParamCnt_Arr(getLightsResponseOneUserQuery, [light_idx, u_idx]);
+        
+        if (getLightsResponseOneUser.length === 0) {
+          result.lights = getLightsInfo[0];
+          result.response = [];
+          result.message = '';
+
+        } else if (getLightsResponseOneUser[0].color === 'g') {
+          let getLightsResponseQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ?';
+          let getLightsResponse = await db.queryParamCnt_Arr(getLightsResponseQuery, [light_idx]);
+
+          result.lights = getLightsInfo[0];
+          result.response = getLightsResponse;
+          result.message = '';
+
+        } else if (getLightsResponseOneUser[0].color === 'y') {
+          result.lights = getLightsInfo[0];
+          result.response = getLightsResponseOneUser;
+          result.message = '';
+
+        } else if (getLightsResponseOneUser[0].color === 'r') {
+          result.lights = getLightsInfo[0];
+          result.response = [];
+          result.message = ''; 
+
+        }
+      } else {
+        let getLightsResponseOneUserQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ? AND u_idx = ?'; 
+        let getLightsResponseOneUser = await db.queryParamCnt_Arr(getLightsResponseOneUserQuery, [light_idx, u_idx]);
+
+        result.lights = getLightsInfo[0];
+        result.response = getLightsResponseOneUser;
+        result.message = '';
+      }
+
+
+
+      // let checkColorQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ? AND u_idx = ?'; 
+      // let checkColor = await db.queryParamCnt_Arr(checkColorQuery, [light_idx, u_idx]);
+      
+      // if (checkColor[0].color === 'g') {
+      //   let getLightsResponseQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ?';
+      //   let getLightsResponse = await db.queryParamCnt_Arr(getLightsResponseQuery, [light_idx]);
+
+      //   result.lights = getLightsInfo[0];
+      //   result.response = getLightsResponse;
+
+      // } else if (checkColor[0].color === 'y') {
+      //   result.lights = getLightsInfo[0];
+      //   result.response = checkColor;
+
+      // } else {      //checkColor[0].color === 'r'
+      //   result.lights = getLightsInfo[0];
+      //   result.response = [];
+      // }
+
+    }
+    
+    
+    
     return true;
   },
   fcmSendWhenMakeThings : async (...args) => {
@@ -1159,15 +1237,18 @@ module.exports = {
 
     let checkWriterQuery = 'SELECT u_idx FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
     var checkWriter = await db.queryParamCnt_Arr(checkWriterQuery, [role_task_idx, u_idx]);
-    if(checkWriter.length === 1) {
+    if (checkWriter.length === 1) {
       let insertResponseQuery = 'INSERT INTO chat.role_response (role_idx, role_task_idx, content) VALUES (?, ?, ?)';
       var insertResponse = await db.queryParamCnt_Arr(insertResponseQuery, [role_idx, role_task_idx, response_content]);
       console.log(files);
-      for(let i = 0 ; i < files.length ; i++) {
-        let insertFileQuery = 'INSERT INTO chat.role_file (role_response_idx, file) VALUES (?, ?)';
-        var insertFile = await db.queryParamCnt_Arr(insertFileQuery, [insertResponse.insertId, files[i].location]);
-      }
-      if(!insertResponse) {
+      if (files !== undefined) {
+        for(let i = 0 ; i < files.length ; i++) {
+          let insertFileQuery = 'INSERT INTO chat.role_file (role_response_idx, file) VALUES (?, ?)';
+          var insertFile = await db.queryParamCnt_Arr(insertFileQuery, [insertResponse.insertId, files[i].location]);
+        }  
+      } 
+      
+      if (!insertResponse) {
         return 0;
       } else {
         return insertResponse;

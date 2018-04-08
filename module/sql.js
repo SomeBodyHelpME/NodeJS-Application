@@ -1238,14 +1238,22 @@ module.exports = {
     let checkWriterQuery = 'SELECT u_idx FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
     var checkWriter = await db.queryParamCnt_Arr(checkWriterQuery, [role_task_idx, u_idx]);
     if (checkWriter.length === 1) {
-      let insertResponseQuery = 'INSERT INTO chat.role_response (role_idx, role_task_idx, content) VALUES (?, ?, ?)';
-      var insertResponse = await db.queryParamCnt_Arr(insertResponseQuery, [role_idx, role_task_idx, response_content]);
-      console.log(files);
-      if (files !== undefined) {
-        for(let i = 0 ; i < files.length ; i++) {
-          let insertFileQuery = 'INSERT INTO chat.role_file (role_response_idx, file) VALUES (?, ?)';
-          var insertFile = await db.queryParamCnt_Arr(insertFileQuery, [insertResponse.insertId, files[i].location]);
-        }  
+
+      let checkResponseQuery = 'SELECT role_response_idx FROM chat.role_response WHERE role_task_idx = ? AND u_idx = ?';
+      var checkResponse = await db.queryParamCnt_Arr(checkResponseQuery, [role_task_idx, u_idx]);
+
+      if (checkResponse.length === 0) {
+        let insertResponseQuery = 'INSERT INTO chat.role_response (role_idx, role_task_idx, content) VALUES (?, ?, ?)';
+        var insertResponse = await db.queryParamCnt_Arr(insertResponseQuery, [role_idx, role_task_idx, response_content]);
+        console.log(files);
+        if (files !== undefined) {
+          for(let i = 0 ; i < files.length ; i++) {
+            let insertFileQuery = 'INSERT INTO chat.role_file (role_response_idx, file) VALUES (?, ?)';
+            var insertFile = await db.queryParamCnt_Arr(insertFileQuery, [insertResponse.insertId, files[i].location]);
+          }  
+        } 
+      } else {
+        return 2;
       } 
       
       if (!insertResponse) {
@@ -1343,17 +1351,19 @@ module.exports = {
 
     let getRoleResponseQuery = 'SELECT * FROM chat.role_response WHERE role_task_idx = ?';
     let getRoleResponse = await db.queryParamCnt_Arr(getRoleResponseQuery, [role_task_idx]);
-
-    let getRoleResponseFileQuery = 'SELECT * FROM chat.role_file WHERE role_task_idx = ?';
-    let getRoleResponseFile = await db.queryParamCnt_Arr(getRoleResponseFileQuery, [role_task_idx]);
-
-    if (!getRoleResponse || !getRoleResponseFile) {
+    var result = [];
+    for (let i = 0 ; i < getRoleResponse.length ; i++) {
+      let getRoleResponseFileQuery = 'SELECT * FROM chat.role_file WHERE role_response_idx = ?';
+      let getRoleResponseFile = await db.queryParamCnt_Arr(getRoleResponseFileQuery, [getRoleResponse[i].role_response_idx]);
+      result.push({
+        response : getRoleResponse[i],
+        file : getRoleResponseFile
+      });
+    }
+    if (!getRoleResponse) {
       return false;
     } else {
-      return {
-        response : getRoleResponse,
-        file : getRoleResponseFile
-      };
+      return result;
     }
   },
   readRoleFeedback : async (...args) => {

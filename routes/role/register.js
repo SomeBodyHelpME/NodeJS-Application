@@ -126,9 +126,17 @@ router.post('/feedback', async(req, res, next) => {
 				message : "Internal Server Error"
 			});
 		} else {
-			res.status(201).send({
-				message : "Success to Register Feedback"
-			});
+			let result2 = await sql.readRoleFeedback(role_response_idx);
+			if (!result2) {
+				res.status(500).send({
+					message : "Internal Server Error"
+				});
+			} else {
+				res.status(201).send({
+					message : "Success to Register Feedback",
+					data : result2
+				});	
+			}
 		}
   }
 });

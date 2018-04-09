@@ -1243,8 +1243,8 @@ module.exports = {
       var checkResponse = await db.queryParamCnt_Arr(checkResponseQuery, [role_task_idx, u_idx]);
 
       if (checkResponse.length === 0) {
-        let insertResponseQuery = 'INSERT INTO chat.role_response (role_idx, role_task_idx, content) VALUES (?, ?, ?)';
-        var insertResponse = await db.queryParamCnt_Arr(insertResponseQuery, [role_idx, role_task_idx, response_content]);
+        let insertResponseQuery = 'INSERT INTO chat.role_response (role_idx, role_task_idx, content, u_idx) VALUES (?, ?, ?, ?)';
+        var insertResponse = await db.queryParamCnt_Arr(insertResponseQuery, [role_idx, role_task_idx, response_content, u_idx]);
         console.log(files);
         if (files !== undefined) {
           for(let i = 0 ; i < files.length ; i++) {
@@ -1355,7 +1355,12 @@ module.exports = {
     for (let i = 0 ; i < getRoleResponse.length ; i++) {
       let getRoleResponseFileQuery = 'SELECT * FROM chat.role_file WHERE role_response_idx = ?';
       let getRoleResponseFile = await db.queryParamCnt_Arr(getRoleResponseFileQuery, [getRoleResponse[i].role_response_idx]);
+
+      let getRoleFeedbackCountQuery = 'SELECT COUNT(role_feedback_idx) FROM chat.role_feedback WHERE role_feedback_idx = ?';
+      let getRoleFeedbackCount = await db.queryParamCnt_Arr(getRoleFeedbackCountQuery, [getRoleResponse[i].role_response_idx]);
       result.push({
+        count : getRoleFeedbackCount[0]["COUNT(role_feedback_idx)"],
+        u_idx : getRoleResponse[i].u_idx,
         response : getRoleResponse[i],
         file : getRoleResponseFile
       });
@@ -1369,7 +1374,7 @@ module.exports = {
   readRoleFeedback : async (...args) => {
     let role_response_idx = args[0];
 
-    let getRoleFeedbackQuery = 'SELECT * FROM chat.role_feedback WHERE role_response_idx = ?';
+    let getRoleFeedbackQuery = 'SELECT * FROM chat.role_feedback WHERE role_response_idx = ? ORDER BY role_feedback_idx';
     let getRoleFeedback = await db.queryParamCnt_Arr(getRoleFeedbackQuery, [role_response_idx]);
 
     if (!getRoleFeedback) {

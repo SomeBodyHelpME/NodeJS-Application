@@ -89,8 +89,9 @@ router.post('/response', upload.fields([{name : "file", maxCount : MAXNUM}]), as
 		let role_task_idx = req.body.role_task_idx;
 		let response_content = req.body.response_content;
 		let files = req.files.file;	// Array
-		
-		let result = await sql.createRoleResponse(role_idx, role_task_idx, u_idx, response_content, files);
+		let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
+
+		let result = await sql.createRoleResponse(role_idx, role_task_idx, u_idx, response_content, files, write_time);
 		if (result === 0) {
 			res.status(500).send({
 				message : "Internal Server Error"
@@ -119,8 +120,9 @@ router.post('/feedback', async(req, res, next) => {
     let u_idx = decoded.u_idx;
     let role_response_idx = req.body.role_response_idx;
     let content = req.body.content;
+    let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
 
-    let result = await sql.createRoleFeedback(u_idx, role_response_idx, content);
+    let result = await sql.createRoleFeedback(u_idx, role_response_idx, content, write_time);
     if(!result) {
 			res.status(500).send({
 				message : "Internal Server Error"

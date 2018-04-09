@@ -1234,6 +1234,7 @@ module.exports = {
     let u_idx = args[2];
     let response_content = args[3];
     let files = args[4];
+    let write_time = args[5];
 
     let checkWriterQuery = 'SELECT u_idx FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
     var checkWriter = await db.queryParamCnt_Arr(checkWriterQuery, [role_task_idx, u_idx]);
@@ -1243,8 +1244,8 @@ module.exports = {
       var checkResponse = await db.queryParamCnt_Arr(checkResponseQuery, [role_task_idx, u_idx]);
 
       if (checkResponse.length === 0) {
-        let insertResponseQuery = 'INSERT INTO chat.role_response (role_idx, role_task_idx, content, u_idx) VALUES (?, ?, ?, ?)';
-        var insertResponse = await db.queryParamCnt_Arr(insertResponseQuery, [role_idx, role_task_idx, response_content, u_idx]);
+        let insertResponseQuery = 'INSERT INTO chat.role_response (role_idx, role_task_idx, content, u_idx, write_time) VALUES (?, ?, ?, ?, ?)';
+        var insertResponse = await db.queryParamCnt_Arr(insertResponseQuery, [role_idx, role_task_idx, response_content, u_idx, write_time]);
         console.log(files);
         if (files !== undefined) {
           for(let i = 0 ; i < files.length ; i++) {
@@ -1269,9 +1270,10 @@ module.exports = {
     let u_idx = args[0];
     let role_response_idx = args[1];
     let content = args[2];
+    let write_time = args[3];
 
-    let insertFeedbackQuery = 'INSERT INTO chat.role_feedback (u_idx, role_response_idx, content) VALUES (?, ?, ?)';
-    let insertFeedback = await db.queryParamCnt_Arr(insertFeedbackQuery, [u_idx, role_response_idx, content]);
+    let insertFeedbackQuery = 'INSERT INTO chat.role_feedback (u_idx, role_response_idx, content, write_time) VALUES (?, ?, ?)';
+    let insertFeedback = await db.queryParamCnt_Arr(insertFeedbackQuery, [u_idx, role_response_idx, content, write_time]);
 
     if(!insertFeedback) {
       return false;

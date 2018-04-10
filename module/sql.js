@@ -1272,7 +1272,7 @@ module.exports = {
     let content = args[2];
     let write_time = args[3];
 
-    let insertFeedbackQuery = 'INSERT INTO chat.role_feedback (u_idx, role_response_idx, content, write_time) VALUES (?, ?, ?)';
+    let insertFeedbackQuery = 'INSERT INTO chat.role_feedback (u_idx, role_response_idx, content, write_time) VALUES (?, ?, ?, ?)';
     let insertFeedback = await db.queryParamCnt_Arr(insertFeedbackQuery, [u_idx, role_response_idx, content, write_time]);
 
     if(!insertFeedback) {

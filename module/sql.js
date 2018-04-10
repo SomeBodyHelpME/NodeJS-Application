@@ -1240,10 +1240,10 @@ module.exports = {
     var checkWriter = await db.queryParamCnt_Arr(checkWriterQuery, [role_task_idx, u_idx]);
     if (checkWriter.length === 1) {
 
-      let checkResponseQuery = 'SELECT role_response_idx FROM chat.role_response WHERE role_task_idx = ? AND u_idx = ?';
-      var checkResponse = await db.queryParamCnt_Arr(checkResponseQuery, [role_task_idx, u_idx]);
+      // let checkResponseQuery = 'SELECT role_response_idx FROM chat.role_response WHERE role_task_idx = ? AND u_idx = ?';
+      // var checkResponse = await db.queryParamCnt_Arr(checkResponseQuery, [role_task_idx, u_idx]);
 
-      if (checkResponse.length === 0) {
+      // if (checkResponse.length === 0) {
         let insertResponseQuery = 'INSERT INTO chat.role_response (role_idx, role_task_idx, content, u_idx, write_time) VALUES (?, ?, ?, ?, ?)';
         var insertResponse = await db.queryParamCnt_Arr(insertResponseQuery, [role_idx, role_task_idx, response_content, u_idx, write_time]);
         console.log(files);
@@ -1253,9 +1253,9 @@ module.exports = {
             var insertFile = await db.queryParamCnt_Arr(insertFileQuery, [insertResponse.insertId, files[i].location]);
           }  
         } 
-      } else {
-        return 2;
-      } 
+      // } else {
+      //   return 2;
+      // } 
       
       if (!insertResponse) {
         return 0;

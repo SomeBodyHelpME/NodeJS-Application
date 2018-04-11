@@ -613,7 +613,7 @@ module.exports = {
     var insertVote = await db.queryParamCnt_Arr(insertVoteQuery, [u_idx, chat_idx, g_idx, write_time, title, content]);
 
     for(let i = 0 ; i < choice.length ; i++) {
-      let insertVoteContentQuery = 'INSERT INTO chat.vote_content (vote_idx, choice) VALUES (?, ?)';
+      let insertVoteContentQuery = 'INSERT INTO chat.vote_content (vote_idx, content) VALUES (?, ?)';
       var insertVoteContent = await db.queryParamCnt_Arr(insertVoteContentQuery, [insertVote.insertId, choice[i]]);
     }
 
@@ -658,7 +658,7 @@ module.exports = {
       var deleteAllContent = await db.queryParamCnt_Arr(deleteAllContentQuery, [vote_idx]);
 
       for(let i = 0 ; i < choice.length ; i++) {
-        let insertVoteContentQuery = 'INSERT INTO chat.vote_content (vote_idx, vote_content_idx, choice) VALUES (?, ?, ?)';
+        let insertVoteContentQuery = 'INSERT INTO chat.vote_content (vote_idx, vote_content_idx, content) VALUES (?, ?, ?)';
         var insertVoteContent = await db.queryParamCnt_Arr(insertVoteContentQuery, [vote_idx, i, choice[i]]);
       }
       return true;

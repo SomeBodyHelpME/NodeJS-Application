@@ -6,22 +6,23 @@ const upload = require('../../config/multer');
 const jwt = require('../../module/jwt.js');
 const db = require('../../module/pool.js');
 const sql = require('../../module/sql.js');
+const statuscode = require('../../module/statuscode.js');
 
 router.post('/login', async(req, res, next) => {
     var id = req.body.id;
     var pwd = req.body.pwd;
     var client_token = req.body.client_token;
 
-    let checkQuery = 'SELECT * FROM admin.user WHERE id = ?';
+    let checkQuery = 'SELECT * FROM chat.user WHERE id = ?';
     let checkResult = await db.queryParamCnt_Arr(checkQuery, [id]);
     if (checkResult.length === 1) {
         const hashedpwd = await crypto.pbkdf2(pwd, checkResult[0].salt, 100000, 32, 'sha512');
         if (hashedpwd.toString('base64') === checkResult[0].pwd) {
-          let updateTokenQuery = 'UPDATE admin.user SET token = ? WHERE id = ?';
+          let updateTokenQuery = 'UPDATE chat.user SET token = ? WHERE id = ?';
           let updateToken = await db.queryParamCnt_Arr(updateTokenQuery, [client_token, id]);
 
           const token = jwt.sign(id, checkResult[0].u_idx);
-          let infoQuery = 'SELECT * FROM admin.user WHERE id = ?';
+          let infoQuery = 'SELECT * FROM chat.user WHERE id = ?';
           let info = await db.queryParamCnt_Arr(infoQuery, id);
           if(!checkResult || !info) {
             res.status(500).send({
@@ -65,10 +66,11 @@ router.post('/register', async(req, res, next) => {
 
     const salt = await crypto.randomBytes(32);
     const hashedpwd = await crypto.pbkdf2(pwd, salt.toString('base64'), 100000, 32, 'sha512');
-    let checkIDQuery = 'SELECT * FROM admin.user WHERE id = ?';
+    let checkIDQuery = 'SELECT * FROM chat.user WHERE id = ?';
     let checkID = await db.queryParamCnt_Arr(checkIDQuery, [id]);
     if (checkID.length === 0) {
-        let insertQuery = 'INSERT INTO admin.user (name, salt, pwd, phone, id, token, photo) VALUES (?, ?, ?, ?, ?, ?, ?)';
+
+        let insertQuery = 'INSERT INTO chat.user (name, salt, pwd, phone, id, token, photo) VALUES (?, ?, ?, ?, ?, ?, ?)';
         let insertResult = await db.queryParamCnt_Arr(insertQuery, [name, salt.toString('base64'), hashedpwd.toString('base64'), phone, id, token, photo]);
         if(!checkID || !insertResult) {
           res.status(500).send({
@@ -89,7 +91,7 @@ router.post('/register', async(req, res, next) => {
 
 router.get('/register/check', async(req, res, next) => {
     var id = req.query.id;
-    let checkIDQuery = 'SELECT * FROM admin.user WHERE id = ?';
+    let checkIDQuery = 'SELECT * FROM chat.user WHERE id = ?';
     let checkID = await db.queryParamCnt_Arr(checkIDQuery, [id]);
     if(!checkID) {
       res.status(500).send({
@@ -107,33 +109,38 @@ router.get('/register/check', async(req, res, next) => {
 });
 
 router.post('/invite', async(req, res, next) => {
-    let name = req.body.name;
-    let phone = req.body.phone;
-    let g_idx =req.body.g_idx;
+  let name = req.body.name;
+  let phone = req.body.phone;
+  let g_idx =req.body.g_idx;
 
-    let findUserQuery = 'SELECT u_idx FROM admin.user WHERE name = ? AND phone = ?';
-    let findUser = await db.queryParamCnt_Arr(findUserQuery, [name, phone]);
+  let findUserQuery = 'SELECT u_idx FROM chat.user WHERE name = ? AND phone = ?';
+  let findUser = await db.queryParamCnt_Arr(findUserQuery, [name, phone]);
 
 
-    if(findUser.length === 1) {
-      let statusQuery = 'SELECT * FROM admin.joined WHERE g_idx = ? AND u_idx = ?';
-      let status = await db.queryParamCnt_Arr(statusQuery, [g_idx, findUser[0].u_idx]);
-      if(status.length === 0) {
-        let result = await sql.joinNewPerson(g_idx, findUser[0].u_idx);
-        res.status(201).send({
-          message: "Success to Invite Person"
-        });
-      } else {
-        res.status(400).send({
-          message : "Already Joined"
+  if(findUser.length === 1) {
+    let statusQuery = 'SELECT * FROM chat.joined WHERE g_idx = ? AND u_idx = ?';
+    let status = await db.queryParamCnt_Arr(statusQuery, [g_idx, findUser[0].u_idx]);
+    if(status.length === 0) {
+      let result = await sql.joinNewPerson(g_idx, findUser[0].u_idx);
+      res.status(201).send({
+        message: "Success to Invite Person"
+      });
+      let sendFCM_AllUser = await sql.sendFCMData(statuscode.groupjoineduserChange, g_idx);
+      if(!sendFCM_AllUser) {
+        res.status(500).send({
+          message : "Internal Server Error"
         });
       }
     } else {
       res.status(400).send({
-        message : "Fail to Search Person"
+        message : "Already Joined"
       });
     }
-
+  } else {
+    res.status(400).send({
+      message : "Fail to Search Person"
+    });
+  }
 });
 
 router.delete('/leave', async(req, res, next) => {
@@ -156,6 +163,7 @@ router.delete('/leave', async(req, res, next) => {
       res.status(201).send({
         message : "Success Leave Group"
       });
+      let sendFCM = await sql.sendFCMData(statuscode.joinedChange, g_idx);
     }
   }
 });
@@ -179,7 +187,7 @@ router.put('/profile', upload.single('photo'), async(req, res, next) => {
     var bio = req.body.bio;
     var phone = req.body.phone;
 
-    let selectUserInfoQuery = 'SELECT photo, name, bio, phone FROM admin.user WHERE u_idx = ?';
+    let selectUserInfoQuery = 'SELECT photo, name, bio, phone FROM chat.user WHERE u_idx = ?';
     let selectUserInfo = await db.queryParamCnt_Arr(selectUserInfoQuery, [u_idx]);
 
     if(photo === null) {
@@ -194,7 +202,7 @@ router.put('/profile', upload.single('photo'), async(req, res, next) => {
     if(phone === undefined) {
       phone = selectUserInfo[0].phone;
     }
-    let updateProfileQuery = 'UPDATE admin.user SET name = ?, bio = ?, phone = ?, photo = ? where u_idx = ?';
+    let updateProfileQuery = 'UPDATE chat.user SET name = ?, bio = ?, phone = ?, photo = ? where u_idx = ?';
     let updateProfile = await db.queryParamCnt_Arr(updateProfileQuery, [name, bio, phone, photo, u_idx]);
     if(!selectUserInfo || !updateProfile) {
       res.status(500).send({
@@ -202,8 +210,10 @@ router.put('/profile', upload.single('photo'), async(req, res, next) => {
       });
     } else if (updateProfile.changedRows === 1) {
       res.status(201).send({
-        message: "Success to Change"
+        message: "Success to Change",
+        data : photo
       });
+      let sendFCM = await sql.sendFCMData(statuscode.userChange, u_idx);
     } else {
       //값은 넘어왔는데 바뀐게 없다.오류는 x
       res.status(400).send({

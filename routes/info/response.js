@@ -8,7 +8,7 @@ const FCM = require('fcm-node');
 const serverKey = require('../../config/serverKey').key;
 const fcm = new FCM(serverKey);
 
-
+const statuscode = require('../../module/statuscode.js');
 const jwt = require('../../module/jwt.js');
 const db = require('../../module/pool.js');
 const sql = require('../../module/sql.js');
@@ -64,7 +64,7 @@ router.post('/lights', async(req, res, next) => {
     }
 });
 
-router.post('/vote', async(req, res, next) => {
+router.put('/vote', async(req, res, next) => {
     let token = req.headers.token;
     let decoded = jwt.verify(token);
     if (decoded === -1) {
@@ -75,7 +75,6 @@ router.post('/vote', async(req, res, next) => {
         let u_idx = decoded.u_idx;
         let vote_idx = req.body.vote_idx;
         let value = req.body.value;
-
         let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
         let result = await sql.actionVote(u_idx, vote_idx, value, write_time);
         if(!result) {
@@ -94,46 +93,39 @@ router.post('/press', async(req, res, next) => {
   let g_idx = req.body.g_idx;
   let vote_idx = req.body.vote_idx;
 
-  let flag = 0;
-
   let findUnvotedUserQuery = 'SELECT u_idx FROM chat.vote_response WHERE vote_idx = ? AND g_idx = ? AND status = ?';
   let findUnvotedUser = await db.queryParamCnt_Arr(findUnvotedUserQuery, [vote_idx, g_idx, 0]);
   console.log('findUnvotedUser', findUnvotedUser);
   for(let i = 0 ; i < findUnvotedUser.length ; i++) {
-    let findUserTokenQuery = 'SELECT token FROM admin.user WHERE u_idx = ?';
+    let findUserTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
     let findUserToken = await db.queryParamCnt_Arr(findUserTokenQuery, [findUnvotedUser[i].u_idx]);
     let client_token = findUserToken[0].token;
     console.log(client_token);
     var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
         to: client_token,
-        notification: {
-            title: '팀플의 요정',   //제목
-            body: '투표 해주세요!!'  //보낼메시지
-        },
+        // notification: {
+        //     title: '팀플의 요정',   //제목
+        //     body: '투표 해주세요!!'  //보낼메시지
+        // },
         data: {
-          data : 'vote'
+          data : statuscode.votePush
         }
     };
     console.log(findUnvotedUser[i]);
     fcm.send(message, function(err, response) {
       if(err) {
         console.log("Something has gone wrong!", err);
-        flag = 1;
+        res.status(500).send({
+          message : "Internal Server Error"
+        });
       } else {
         console.log("Successfully sent with response: ", response);
+        res.status(201).send({
+          message : "Success to Send Message"
+        });
       }
     });//fcm.send
   }
-  if(flag === 1) {
-    res.status(500).send({
-      message : "Internal Server Error"
-    });
-  } else {
-    res.status(201).send({
-      message : "Success to Send Message"
-    });
-  }
-
 });
 
 router.get('/close/:g_idx/:vote_idx', async(req, res, next) => {
@@ -148,7 +140,7 @@ router.get('/close/:g_idx/:vote_idx', async(req, res, next) => {
     let g_idx = req.params.g_idx;
     let vote_idx = req.params.vote_idx;
 
-    let result = await sql.voteClose(g_idx, vote_idx);
+    let result = await sql.closeVote(u_idx, g_idx, vote_idx);
     if(!result) {
       res.status(500).send({
         message : "Internal Server Error"

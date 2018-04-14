@@ -123,7 +123,8 @@ router.post('/invite', async(req, res, next) => {
     if(status.length === 0) {
       let result = await sql.joinNewPerson(g_idx, findUser[0].u_idx);
       res.status(201).send({
-        message: "Success to Invite Person"
+        message: "Success to Invite Person",
+        u_idx : findUser[0].u_idx
       });
       let sendFCM_AllUser = await sql.sendFCMData(statuscode.groupjoineduserChange, g_idx);
       if(!sendFCM_AllUser) {

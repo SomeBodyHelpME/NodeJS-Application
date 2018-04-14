@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto-promise');
+const request = require('request');
 const upload = require('../../config/multer');
 
 const jwt = require('../../module/jwt.js');
@@ -144,6 +145,41 @@ router.post('/invite', async(req, res, next) => {
   }
 });
 
+router.post('/leave', async(req, res, next) => {
+  let option = {
+    uri : 'http://localhost:3001/auth/leave',
+    method : 'DELETE',
+    headers : {
+      token : req.headers.token
+    },
+    form : {
+      g_idx : req.body.g_idx
+    }
+  }
+
+  request(option, async(err, response, body) => {
+    let bodyParsed = JSON.parse(body);
+    
+    if (bodyParsed.message === "Success Leave Group") {
+      res.status(201).send({
+        message : bodyParsed.message
+      });
+    } else if (bodyParsed.message === "Verification Failed") {
+      res.status(400).send({
+        message : bodyParsed.message
+      });
+    } else if (bodyParsed.message === "Internal Server Error") {
+      res.status(500).send({
+        message : bodyParsed.message
+      });
+    } else if (bodyParsed.message === "Wrong Information") {
+      res.status(400).send({
+        message : bodyParsed.message
+      });
+    } 
+  });
+});
+
 router.delete('/leave', async(req, res, next) => {
   let g_idx = req.body.g_idx;
   let token = req.headers.token;
@@ -161,9 +197,16 @@ router.delete('/leave', async(req, res, next) => {
         message : "Internal Server Error"
       });
     } else {
-      res.status(201).send({
-        message : "Success Leave Group"
-      });
+      if (result.affectedRows !== 0) {
+        res.status(201).send({
+          message : "Success Leave Group"
+        });  
+      } else {
+        res.status(400).send({
+          message : "Wrong Information"
+        });
+      }
+      
       let sendFCM = await sql.sendFCMData(statuscode.joinedChange, g_idx);
     }
   }

@@ -117,7 +117,7 @@ router.put('/feedback', async(req, res, next) => {
 		let role_response_idx = req.body.role_response_idx;
 		let content = req.body.content;
 
-		let result = await sql.updateRoleUser(u_idx, role_response_idx, content);
+		let result = await sql.updateRoleFeedback(u_idx, role_response_idx, content);
 		if (!result) {
 			res.status(500).send({
 				message : "Internal Server Error"

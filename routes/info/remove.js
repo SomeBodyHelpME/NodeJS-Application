@@ -64,33 +64,33 @@ router.delete('/lights', async(req, res, next) => {
   }
 });
 
-router.delete('/pick', async(req, res, next) => {
-	let token = req.headers.token;
-  let decoded = jwt.verify(token);
-  if (decoded === -1) {
-    res.status(400).send({
-      message : "Verification Failed"
-    });
-  } else {
-    let u_idx = decoded.u_idx;
-    let pick_idx = req.body.pick_idx;
+// router.delete('/pick', async(req, res, next) => {
+// 	let token = req.headers.token;
+//   let decoded = jwt.verify(token);
+//   if (decoded === -1) {
+//     res.status(400).send({
+//       message : "Verification Failed"
+//     });
+//   } else {
+//     let u_idx = decoded.u_idx;
+//     let pick_idx = req.body.pick_idx;
 
-    let result = await sql.deletePick(u_idx, pick_idx);
-    if (!result) {
-			res.status(500).send({
-				message : "Internal Server Error"
-			});
-		} else if (result.affectedRows === 1) {
-			res.status(201).send({
-				message : "Success to Delete Pick"
-			});
-		} else {
-			res.status(400).send({
-				message : "Wrong Person or Wrong Index"
-			});
-		}
-  }
-});
+//     let result = await sql.deletePick(u_idx, pick_idx);
+//     if (!result) {
+// 			res.status(500).send({
+// 				message : "Internal Server Error"
+// 			});
+// 		} else if (result.affectedRows === 1) {
+// 			res.status(201).send({
+// 				message : "Success to Delete Pick"
+// 			});
+// 		} else {
+// 			res.status(400).send({
+// 				message : "Wrong Person or Wrong Index"
+// 			});
+// 		}
+//   }
+// });
 
 router.delete('/vote', async(req, res, next) => {
 	let token = req.headers.token;

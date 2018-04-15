@@ -83,7 +83,8 @@ router.put('/vote', async(req, res, next) => {
           });
         } else {
           res.status(201).send({
-              message : "Success Response Vote"
+              message : "Success Response Vote",
+              data : result
           });
         }
     }

@@ -47,7 +47,7 @@ router.get('/lights', async(req, res, next) => {
     }
 });
 
-router.get('/lights/res/:color/:g_idx/:light_idx', async(req, res, next) => {
+router.get('/lights/each/:color/:g_idx/:light_idx', async(req, res, next) => {
   let token = req.headers.token;
   let decoded = jwt.verify(token);
   if(decoded === -1) {
@@ -83,30 +83,30 @@ router.get('/lights/res/:color/:g_idx/:light_idx', async(req, res, next) => {
   }
 });
 
-router.get('/pick', async(req, res, next) => {
-    let token = req.headers.token;
-    let decoded = jwt.verify(token);
-    if(decoded === -1)
-    {
-        res.status(400).send({
-            message : "Verification Failed"
-        });
-    } else {
-        let u_idx = decoded.u_idx;
-        let g_idx = req.query.g_idx;
-        let result = await sql.forEachPick(u_idx, g_idx);
-        if(!result) {
-          res.status(500).send({
-            message : "Internal Server Error"
-          });
-        } else {
-          res.status(200).send({
-              message : "Success to Load Picks for the Specific Room",
-              data : result
-          });
-        }
-    }
-});
+// router.get('/pick', async(req, res, next) => {
+//     let token = req.headers.token;
+//     let decoded = jwt.verify(token);
+//     if(decoded === -1)
+//     {
+//         res.status(400).send({
+//             message : "Verification Failed"
+//         });
+//     } else {
+//         let u_idx = decoded.u_idx;
+//         let g_idx = req.query.g_idx;
+//         let result = await sql.forEachPick(u_idx, g_idx);
+//         if(!result) {
+//           res.status(500).send({
+//             message : "Internal Server Error"
+//           });
+//         } else {
+//           res.status(200).send({
+//               message : "Success to Load Picks for the Specific Room",
+//               data : result
+//           });
+//         }
+//     }
+// });
 
 router.get('/vote', async(req, res, next) => {
     let token = req.headers.token;

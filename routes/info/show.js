@@ -187,4 +187,33 @@ router.get('/user', async(req, res, next) => {
   }
 });
 
+router.get('/newmember', async(req, res, next) => {
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if(decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+    let result1 = await sql.showAllGroupsJoined(u_idx);
+    let result2 = await sql.getJoinedInfo(u_idx);
+    let result3 = await sql.getUserInfo(u_idx);
+    if(!result1 || !result2 || !result3) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    } else {
+      res.status(200).send({
+        message : "Success to Load Information For A New Member",
+        data : {
+          group : result1,
+          joined : result2,
+          user : result3
+        }
+      });
+    }
+  }
+});
+
 module.exports = router;

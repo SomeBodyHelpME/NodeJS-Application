@@ -9,7 +9,7 @@ const db = require('../../module/pool.js');
 const sql = require('../../module/sql.js');
 const statuscode = require('../../module/statuscode.js');
 
-router.post('/chatroom', upload.single('photo'), async(req, res, next) => {
+router.post('/group', upload.single('photo'), async(req, res, next) => {
   var photo = ' ';
   if(req.file != undefined) {
     photo = req.file.location;
@@ -25,25 +25,48 @@ router.post('/chatroom', upload.single('photo'), async(req, res, next) => {
     let real_name = req.body.name;
     let ctrl_name = real_name + '_' + moment().format('YYMMDDHHmmss');
 
-    let createChatRoomQuery = 'INSERT INTO chat.group (real_name, ctrl_name, photo) VALUES (?, ?, ?)';
-    let createChatRoom = await db.queryParamCnt_Arr(createChatRoomQuery, [real_name, ctrl_name, photo]);
+    let result = await sql.makeNewGroup(u_idx, real_name, ctrl_name, photo);
+    
+    if(!result) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    } else {    
+      res.status(201).send({
+        message : "Success to Make New Group",
+        data : result
+      });
+    }
+  }
+});
 
-    let insertNewPersonQuery = 'INSERT INTO chat.joined (g_idx, u_idx) VALUES (?, ?)';
-    let insertNewPerson = await db.queryParamCnt_Arr(insertNewPersonQuery, [createChatRoom.insertId, u_idx]);
+router.post('/chatroom', upload.single('photo'), async(req, res, next) => {
+  var photo = ' ';
+  if(req.file != undefined) {
+    photo = req.file.location;
+  }
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if(decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+    let g_idx = req.body.g_idx;
+    let real_name = req.body.name;
+    let userArray = req.body.userArray;
+    let ctrl_name = real_name + '_' + moment().format('YYMMDDHHmmss');
 
-    let result = {
-      "g_idx" : createChatRoom.insertId,
-      "real_name" : real_name,
-      "ctrl_name" : ctrl_name,
-      "photo" : photo
-    };
-    if(!createChatRoom || !insertNewPerson) {
+    let result = await sql.makeNewChatroom(u_idx, g_idx, real_name, ctrl_name, photo, userArray);
+    
+    if (!result) {
       res.status(500).send({
         message : "Internal Server Error"
       });
     } else {
       res.status(201).send({
-        message : "Success to Make New Room",
+        message : "Success to Make New Chatroom",
         data : result
       });
     }
@@ -60,17 +83,17 @@ router.post('/notice', async(req, res, next) => {
   } else {
     let u_idx = decoded.u_idx;
     let chat_idx = req.body.chat_idx;
-    let g_idx = req.body.g_idx;
+    let chatroom_idx = req.body.chatroom_idx;
     let content = req.body.content;
     let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
 
-    let result = await sql.makeNotice(u_idx, chat_idx, g_idx, write_time, content);
+    let result = await sql.makeNotice(u_idx, chat_idx, chatroom_idx, write_time, content);
     if(!result) {
       res.status(500).send({
         message : "Internal Server Error"
       });
     } else {
-      let result2 = await sql.fcmSendWhenMakeThings(u_idx, g_idx, statuscode.makeNotice);
+      let result2 = await sql.fcmSendWhenMakeThings(u_idx, chatroom_idx, statuscode.makeNotice);
       if(!result2) {
         res.status(500).send({
           message : "Internal Server Error"
@@ -95,20 +118,20 @@ router.post('/lights', async(req, res, next) => {
   } else {
     let u_idx = decoded.u_idx;
     let chat_idx = req.body.chat_idx;
-    let g_idx = req.body.g_idx;
+    let chatroom_idx = req.body.chatroom_idx;
     let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
     let content = req.body.content;
     let open_status = req.body.open_status;
     let entire_status = req.body.entire_status;
     let userArray = req.body.userArray;
 
-    let result = await sql.makeLights(u_idx, g_idx, open_status, entire_status, content, write_time, chat_idx, userArray);
+    let result = await sql.makeLights(u_idx, chatroom_idx, open_status, entire_status, content, write_time, chat_idx, userArray);
     if(!result) {
       res.status(500).send({
         message : "Internal Server Error"
       });
     } else {
-      let result2 = await sql.fcmSendWhenMakeThings(u_idx, g_idx, statuscode.makeLights);
+      let result2 = await sql.fcmSendWhenMakeThings(u_idx, chatroom_idx, statuscode.makeLights);
       if(!result2) {
         res.status(500).send({
           message : "Internal Server Error"
@@ -162,7 +185,7 @@ router.post('/vote', async(req, res, next) => {
   } else {
     let u_idx = decoded.u_idx;
     let chat_idx = req.body.chat_idx;
-    let g_idx = req.body.g_idx;
+    let chatroom_idx = req.body.chatroom_idx;
     let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
     let content = req.body.content;
     let title = req.body.title;
@@ -172,7 +195,7 @@ router.post('/vote', async(req, res, next) => {
     if (!endtime) {
       endtime = moment().add(7, 'days').format("YYYY-MM-DD HH:mm:ss");
     } 
-    let result = await sql.makeVote(u_idx, chat_idx, g_idx, write_time, title, content, choice, endtime);
+    let result = await sql.makeVote(u_idx, chat_idx, chatroom_idx, write_time, title, content, choice, endtime);
     if(!result) {
       res.status(500).send({
         message : "Internal Server Error"

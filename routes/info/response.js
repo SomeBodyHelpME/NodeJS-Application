@@ -94,11 +94,11 @@ router.post('/press', async(req, res, next) => {
   let g_idx = req.body.g_idx;
   let vote_idx = req.body.vote_idx;
 
-  let findUnvotedUserQuery = 'SELECT u_idx FROM chat.vote_response WHERE vote_idx = ? AND g_idx = ? AND status = ?';
+  let findUnvotedUserQuery = 'SELECT u_idx FROM tkb.vote_response WHERE vote_idx = ? AND g_idx = ? AND status = ?';
   let findUnvotedUser = await db.queryParamCnt_Arr(findUnvotedUserQuery, [vote_idx, g_idx, 0]);
   console.log('findUnvotedUser', findUnvotedUser);
   for(let i = 0 ; i < findUnvotedUser.length ; i++) {
-    let findUserTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
+    let findUserTokenQuery = 'SELECT token FROM tkb.user WHERE u_idx = ?';
     let findUserToken = await db.queryParamCnt_Arr(findUserTokenQuery, [findUnvotedUser[i].u_idx]);
     let client_token = findUserToken[0].token;
     console.log(client_token);

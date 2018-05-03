@@ -12,46 +12,181 @@ const serverKey = require('../config/serverKey').key;
 const fcm = new FCM(serverKey);
 
 /* groupName get */
-// let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
+// let searchGroupInfoQuery = 'SELECT * FROM tkb.group WHERE g_idx = ?';
 // let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [g_idx]);
 
 /* Join 한 User 의 g_idx get */
-// let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
+// let findUserJoinedQuery = 'SELECT g_idx FROM tkb.joined WHERE u_idx = ?';
 // let findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
 
 
 module.exports = {
-  joinNewPerson : async (...args) => {
-    const g_idx = args[0];
-    const u_idx = args[1];
+  makeNewGroup : async (...args) => {
+    let u_idx = args[0];
+    let real_name = args[1];
+    let ctrl_name = args[2];
+    let photo = args[3];
 
-    let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
-    var searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [g_idx]);
-    let searchUserInfoQuery = 'SELECT * FROM chat.user WHERE u_idx = ?';
-    var searchUserInfo = await db.queryParamCnt_Arr(searchUserInfoQuery, [u_idx]);
+    let createGroupQuery = 'INSERT INTO tkb.group (real_name, ctrl_name, photo, default_chatroom_idx) VALUES (?, ?, ?, ?)';
+    let createGroup = await db.queryParamCnt_Arr(createGroupQuery, [real_name, ctrl_name, photo, 0]);
+    console.log(createGroup);
+    let insertNewPersonGroupQuery = 'INSERT INTO tkb.group_joined (g_idx, u_idx) VALUES (?, ?)';
+    let insertNewPersonGroup = await db.queryParamCnt_Arr(insertNewPersonGroupQuery, [createGroup.insertId, u_idx]);
 
-    let insertUserInfoQuery = 'INSERT INTO chat.joined (u_idx, g_idx) VALUES (?,?)';
+    let createDefaultChatroomQuery = 'INSERT INTO tkb.group_chatroom (real_name, ctrl_name, photo, g_idx) VALUES (?, ?, ?, ?)';
+    let createDefaultChatroom = await db.queryParamCnt_Arr(createDefaultChatroomQuery, [real_name, ctrl_name, photo, createGroup.insertId]);
+    // console.log(createDefaultChatroom);
+    let g_idx = createGroup.insertId;
+    let default_chatroom_idx = createDefaultChatroom.insertId;
+    console.log(g_idx);
+    console.log(default_chatroom_idx);
+    let insertNewPersonChatroomQuery = 'INSERT INTO tkb.chatroom_joined (chatroom_idx, g_idx, u_idx) VALUES (?, ?, ?)';
+    let insertNewPersonChatroom = await db.queryParamCnt_Arr(insertNewPersonChatroomQuery, [default_chatroom_idx, g_idx, u_idx]);
+
+    let updateChatroomIndexToGroupQuery = 'UPDATE tkb.group SET default_chatroom_idx = ? WHERE g_idx = ?';
+    let updateChatroomIndexToGroup = await db.queryParamCnt_Arr(updateChatroomIndexToGroupQuery, [default_chatroom_idx, g_idx]);
+    // console.log(createDefaultChatroom);
+
+    // console.log(updateChatroomIndexToGroup);
+
+    let result = {
+      "default_chatroom_idx" : createDefaultChatroom.insertId,
+      "g_idx" : createGroup.insertId,
+      "real_name" : real_name,
+      "ctrl_name" : ctrl_name,
+      "photo" : photo
+    };
+
+    if (!createGroup || !insertNewPersonGroup || !createDefaultChatroom || !insertNewPersonChatroom || !updateChatroomIndexToGroup) {
+      return false;
+    } else {
+      return result;
+    }
+  },
+  makeNewChatroom : async (...args) => {
+    let u_idx = args[0];
+    let g_idx = args[1];
+    let real_name = args[2];
+    let ctrl_name = args[3];
+    let photo = args[4];
+    let userArray = args[5];
+
+    let createChatRoomQuery = 'INSERT INTO tkb.group_chatroom (real_name, ctrl_name, photo, g_idx) VALUES (?, ?, ?, ?)';
+    let createChatRoom = await db.queryParamCnt_Arr(createChatRoomQuery, [real_name, ctrl_name, photo, g_idx]);
+
+    let insertNewPersonQuery = 'INSERT INTO tkb.chatroom_joined (chatroom_idx, g_idx, u_idx) VALUES (?, ?, ?)';
+    let insertNewPerson = await db.queryParamCnt_Arr(insertNewPersonQuery, [createChatRoom.insertId, g_idx, u_idx]);
+
+    if (userArray) {
+      for (let i = 0 ; i < userArray.length ; i++) {
+        let insertNewFriendQuery = 'INSERT INTO tkb.chatroom_joined (chatroom_idx, g_idx, u_idx) VALUES (?, ?, ?)';
+        let insertNewFriend = await db.queryParamCnt_Arr(insertNewFriendQuery, [createChatRoom.insertId, g_idx, userArray[i]]);
+
+        if (!insertNewFriend) {
+          break;
+        }
+      }  
+    }
+    
+    let result = {
+      "chatroom_idx" : createChatRoom.insertId,
+      "real_name" : real_name,
+      "ctrl_name" : ctrl_name,
+      "photo" : photo
+    };
+    if(!createChatRoom || !insertNewPerson) {
+      return false;
+    } else {
+      return result;
+    }
+
+  },
+  joinNewPersonGroup : async (...args) => {
+    let g_idx = args[0];
+    let u_idx = args[1];
+
+    // let searchGroupInfoQuery = 'SELECT * FROM tkb.group WHERE g_idx = ?';
+    // var searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [g_idx]);
+    // let searchUserInfoQuery = 'SELECT * FROM tkb.user WHERE u_idx = ?';
+    // var searchUserInfo = await db.queryParamCnt_Arr(searchUserInfoQuery, [u_idx]);
+
+    let insertUserInfoQuery = 'INSERT INTO tkb.group_joined (u_idx, g_idx) VALUES (?, ?)';
     var insertUserInfo = await db.queryParamCnt_Arr(insertUserInfoQuery, [u_idx, g_idx]);
 
-    if(!searchGroupInfo || !searchUserInfo || !insertUserInfo) {
+    let getDefaultChatroomIndexQuery = 'SELECT default_chatroom_idx FROM tkb.group WHERE g_idx = ?';
+    let getDefaultChatroomIndex = await db.queryParamCnt_Arr(getDefaultChatroomIndexQuery, [g_idx]);
+
+    let insertDefaultChatroomQuery = 'INSERT INTO tkb.chatroom_joined (u_idx, g_idx, chatroom_idx) VALUES (?, ?, ?)';
+    let insertDefaultChatroom = await db.queryParamCnt_Arr(insertDefaultChatroomQuery, [u_idx, g_idx, getDefaultChatroomIndex[0].default_chatroom_idx]);
+    
+    if(!insertUserInfo || !getDefaultChatroomIndex || !insertDefaultChatroom) {
       return false;
     } else {
       return true;
     }
-  },// joinNewPerson
+  },// joinNewPersonGroup
+  checkPerson : async (...args) => {
+    let chatroom_idx = args[0];
+    let g_idx = args[1];
+    let userArray = args[2];
+
+    let result = 2;
+
+    if (userArray) {
+      for (let i = 0 ; i < userArray.length ; i++) {
+        let checkQuery = 'SELECT * FROM tkb.chatroom_joined WHERE chatroom_idx = ? AND g_idx = ? AND u_idx = ?';
+        let checkResult = await db.queryParamCnt_Arr(checkQuery, [chatroom_idx, g_idx, userArray[i]]);
+
+        if (!checkResult) {
+          result = 0;
+          break;
+        } else if (checkResult.length === 1) {
+          result = 1;
+          break;
+        } 
+      }
+    }
+    
+    return result;
+  },
+  joinNewPersonChatroom : async (...args) => {
+    let chatroom_idx = args[0];
+    let g_idx = args[1];
+    let userArray = args[2];
+
+    // let searchGroupInfoQuery = 'SELECT * FROM tkb.group WHERE g_idx = ?';
+    // var searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [g_idx]);
+    // let searchUserInfoQuery = 'SELECT * FROM tkb.user WHERE u_idx = ?';
+    // var searchUserInfo = await db.queryParamCnt_Arr(searchUserInfoQuery, [u_idx]);
+
+    for (let i = 0 ; i < userArray.length ; i++) {
+      let insertUserInfoQuery = 'INSERT INTO tkb.chatroom_joined (u_idx, g_idx, chatroom_idx) VALUES (?, ?, ?)';
+      var insertUserInfo = await db.queryParamCnt_Arr(insertUserInfoQuery, [userArray[i], g_idx, chatroom_idx]);
+      // console.log(insertUserInfo);
+      if (!insertUserInfo) {
+        break;
+      }
+    }
+    
+    if(!insertUserInfo) {   //!searchGroupInfo || !searchUserInfo || 
+      return false;
+    } else {
+      return true;
+    }
+  },// joinNewPersonChatroom
   // findAllGroupMemberAddr : async (...args) => {
   //   const u_idx = args[0];
-  //   let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
+  //   let findUserJoinedQuery = 'SELECT g_idx FROM tkb.joined WHERE u_idx = ?';
   //   var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
   //   let result = [];
   //   for(let i = 0 ; i < findUserJoined.length ; i++) {
-  //     let findGroupNameQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
+  //     let findGroupNameQuery = 'SELECT * FROM tkb.group WHERE g_idx = ?';
   //     var findGroupName = await db.queryParamCnt_Arr(findGroupNameQuery, [findUserJoined[i].g_idx]);
-  //     let findUserIndexQuery = 'SELECT * FROM chat.joined WHERE g_idx = ? AND u_idx != ?';
+  //     let findUserIndexQuery = 'SELECT * FROM tkb.joined WHERE g_idx = ? AND u_idx != ?';
   //     var findUserIndex = await db.queryParamCnt_Arr(findUserIndexQuery, [findUserJoined[i].g_idx, u_idx]);
   //     let GroupArray = [];
   //     for(let j = 0 ; j < findUserIndex.length ; j++) {
-  //       let findUserDetailInfoQuery = 'SELECT u_idx, name, phone, bio, photo, id FROM chat.user WHERE u_idx = ?';
+  //       let findUserDetailInfoQuery = 'SELECT u_idx, name, phone, bio, photo, id FROM tkb.user WHERE u_idx = ?';
   //       var findUserDetailInfo = await db.queryParamCnt_Arr(findUserDetailInfoQuery, [findUserIndex[j].u_idx]);
   //       GroupArray.push(findUserDetailInfo[0]);
   //     }
@@ -68,7 +203,7 @@ module.exports = {
   // 미처리 항목 보여주는 뷰(그룹별로 보여줄 때)
   findRestGroupThings : async (...args) => {
     let u_idx = args[0];
-    let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
+    let findUserJoinedQuery = 'SELECT * FROM tkb.chatroom_joined WHERE u_idx = ?';
     var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
 
     // 공지 밀린 것
@@ -77,10 +212,10 @@ module.exports = {
       let GroupJson = {};
       let GroupArray1 = [];
       
-      let findNoticeIndexQuery = 'SELECT * FROM chat.notice WHERE g_idx = ?';
-      var findNoticeIndex = await db.queryParamCnt_Arr(findNoticeIndexQuery, [findUserJoined[i].g_idx]);
+      let findNoticeIndexQuery = 'SELECT * FROM tkb.notice WHERE chatroom_idx = ?';
+      var findNoticeIndex = await db.queryParamCnt_Arr(findNoticeIndexQuery, [findUserJoined[i].chatroom_idx]);
       for(let j = 0 ; j < findNoticeIndex.length ; j++) {
-        let findNoticeQuery = 'SELECT * FROM chat.notice_response WHERE notice_idx = ? AND status = ? AND u_idx = ?';
+        let findNoticeQuery = 'SELECT * FROM tkb.notice_response WHERE notice_idx = ? AND status = ? AND u_idx = ?';
         var findNotice = await db.queryParamCnt_Arr(findNoticeQuery, [findNoticeIndex[j].notice_idx, 0, u_idx]);
         if(findNotice.length != 0) {
           let AgendaJson = findNoticeIndex[j];
@@ -89,6 +224,7 @@ module.exports = {
       }
       if(GroupArray1.length != 0) {
         GroupJson.g_idx = findUserJoined[i].g_idx;
+        GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
         GroupJson.data = GroupArray1;
         NoticeArray.push(GroupJson);
       }
@@ -99,10 +235,10 @@ module.exports = {
       let GroupJson = {};
       let GroupArray2 = [];
       
-      let findLightsIndexQuery = 'SELECT chat.lights.* FROM chat.lights WHERE g_idx = ?';
-      var findLightsIndex = await db.queryParamCnt_Arr(findLightsIndexQuery, [findUserJoined[i].g_idx]);
+      let findLightsIndexQuery = 'SELECT tkb.lights.* FROM tkb.lights WHERE chatroom_idx = ?';
+      var findLightsIndex = await db.queryParamCnt_Arr(findLightsIndexQuery, [findUserJoined[i].chatroom_idx]);
       for(let j = 0 ; j < findLightsIndex.length ; j++) {
-        let findLightsQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ? AND color = ? AND u_idx = ?';
+        let findLightsQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ? AND color = ? AND u_idx = ?';
         var findLights = await db.queryParamCnt_Arr(findLightsQuery, [findLightsIndex[j].light_idx, "r", u_idx]); // 색깔 : r y g
         if(findLights.length != 0) {
           let AgendaJson = findLightsIndex[j];
@@ -111,6 +247,7 @@ module.exports = {
       }// for(let j = 0)
       if(GroupArray2.length != 0) {
         GroupJson.g_idx = findUserJoined[i].g_idx;
+        GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
         GroupJson.data = GroupArray2;
         LightsArray.push(GroupJson);
       }
@@ -122,10 +259,10 @@ module.exports = {
       let GroupJson = {};
       let GroupArray3 = [];
       
-      let findVotesIndexQuery = 'SELECT * FROM chat.vote WHERE g_idx = ?';
-      var findVotesIndex = await db.queryParamCnt_Arr(findVotesIndexQuery, [findUserJoined[i].g_idx]);
+      let findVotesIndexQuery = 'SELECT * FROM tkb.vote WHERE chatroom_idx = ?';
+      var findVotesIndex = await db.queryParamCnt_Arr(findVotesIndexQuery, [findUserJoined[i].chatroom_idx]);
       for(let j = 0 ; j < findVotesIndex.length ; j++) {
-        let findVotesQuery = 'SELECT * FROM chat.vote_response WHERE vote_idx = ? AND status = ? AND u_idx = ?';
+        let findVotesQuery = 'SELECT * FROM tkb.vote_response WHERE vote_idx = ? AND status = ? AND u_idx = ?';
         var findVotes = await db.queryParamCnt_Arr(findVotesQuery, [findVotesIndex[j].vote_idx, 0, u_idx]); // 미응답은 : w, 응답은 : a
         if(findVotes.length != 0) {
           let AgendaJson = findVotesIndex[j];
@@ -134,6 +271,7 @@ module.exports = {
       }// for(let j = 0)
       if(GroupArray3.length != 0) {
         GroupJson.g_idx = findUserJoined[i].g_idx;
+        GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
         GroupJson.data = GroupArray3;
         VotesArray.push(GroupJson);
       }
@@ -148,14 +286,15 @@ module.exports = {
     return result;
 
   },// findRestGroupThings(그룹별로 보여줄 때)
-  homeNotice : async (...args) => {
+  groupNotice : async (...args) => {
     let u_idx = args[0];
-    let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
-    var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
+    let g_idx = args[1];
+    let findUserJoinedQuery = 'SELECT chatroom_idx FROM tkb.chatroom_joined WHERE u_idx = ? AND g_idx = ?';
+    var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx, g_idx]);
     let result = [];
     for(let i = 0 ; i < findUserJoined.length ; i++) {
-      let findEachGroupNoticeQuery = 'SELECT * FROM chat.notice WHERE g_idx = ? ORDER BY chat.notice.notice_idx DESC';
-      var findEachGroupNotice = await db.queryParamCnt_Arr(findEachGroupNoticeQuery, [findUserJoined[i].g_idx]);
+      let findEachGroupNoticeQuery = 'SELECT tkb.notice.*, tkb.notice_response.status FROM tkb.notice JOIN tkb.notice_response USING(notice_idx) WHERE chatroom_idx = ? ORDER BY tkb.notice.notice_idx DESC';
+      var findEachGroupNotice = await db.queryParamCnt_Arr(findEachGroupNoticeQuery, [findUserJoined[i].chatroom_idx]);
 
       if(findEachGroupNotice === undefined) {
         break;
@@ -163,7 +302,7 @@ module.exports = {
       // if(findEachGroupNotice.length != 0) {  //이 부분은 공지가 없을 시 그룹 이름이 보이지 않는 경우, 현재는 공지가 없어도 그룹이름이 보임
         result.push(
           {
-            g_idx : findUserJoined[i].g_idx,
+            chatroom_idx : findUserJoined[i].chatroom_idx,
             data : findEachGroupNotice
           }
         );
@@ -176,25 +315,27 @@ module.exports = {
       return result;
     }
   },
-  homeLightsReceiver : async (...args) => {
+  groupLightsReceiver : async (...args) => {
     let u_idx = args[0];
-    let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
-    var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
-
+    let g_idx = args[1];
+    let findUserJoinedQuery = 'SELECT chatroom_idx FROM tkb.chatroom_joined WHERE u_idx = ? AND g_idx = ?';
+    var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx, g_idx]);
+    console.log(findUserJoined);
     // 수신자에 대한 내용
     let resArray = [];
     for(let i = 0 ; i < findUserJoined.length ; i++) {
       let GroupJson = {};
       
       let findEachGroupLightsQuery =
-      `SELECT chat.lights.*, chat.light_response.color FROM chat.light_response JOIN chat.lights USING(light_idx)
-      WHERE g_idx = ? AND chat.light_response.u_idx = ? AND chat.lights.u_idx != ? ORDER BY chat.lights.light_idx DESC`;
-      var findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [findUserJoined[i].g_idx, u_idx, u_idx]);
+      `SELECT tkb.lights.*, tkb.light_response.color FROM tkb.light_response JOIN tkb.lights USING(light_idx)
+      WHERE chatroom_idx = ? AND tkb.light_response.u_idx = ? AND tkb.lights.u_idx != ? ORDER BY tkb.lights.light_idx DESC`;
+      var findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [findUserJoined[i].chatroom_idx, u_idx, u_idx]);
       if(findEachGroupLights === undefined) {
         break;
       }
+      GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
       GroupJson.data = findEachGroupLights;
-      GroupJson.g_idx = findUserJoined[i].g_idx;
+      
       resArray.push(GroupJson);
     }
 
@@ -205,24 +346,26 @@ module.exports = {
       return resArray;
     }
   },
-  homeLightsSender : async (...args) => {
+  groupLightsSender : async (...args) => {
     let u_idx = args[0];
-    let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
-    var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
+    let g_idx = args[1];
+    let findUserJoinedQuery = 'SELECT chatroom_idx FROM tkb.chatroom_joined WHERE u_idx = ? AND g_idx = ? ';
+    var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx, g_idx]);
 
     // 발신자에 대한 내용
     let reqArray = [];
     for(let i = 0 ; i < findUserJoined.length ; i++) {
       let GroupJson = {};
       
-      let findEachGroupLightsQuery = 'SELECT * FROM chat.lights WHERE g_idx = ? AND u_idx = ? ORDER BY chat.lights.light_idx DESC';
-      var findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [findUserJoined[i].g_idx, u_idx]);
+      let findEachGroupLightsQuery = 'SELECT * FROM tkb.lights WHERE chatroom_idx = ? AND u_idx = ? ORDER BY tkb.lights.light_idx DESC';
+      var findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [findUserJoined[i].chatroom_idx, u_idx]);
 
       if(findEachGroupLights === undefined) {
         break;
       }
+      GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
       GroupJson.data = findEachGroupLights;
-      GroupJson.g_idx = findUserJoined[i].g_idx;
+
       reqArray.push(GroupJson);
     }
 
@@ -234,17 +377,17 @@ module.exports = {
   },
   // homePick : async (...args) => {
   //   let u_idx = args[0];
-  //   let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
+  //   let findUserJoinedQuery = 'SELECT g_idx FROM tkb.joined WHERE u_idx = ?';
   //   var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
   //   let result = [];
   //   for(let i = 0 ; i < findUserJoined.length ; i++) {
-  //     let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
+  //     let searchGroupInfoQuery = 'SELECT * FROM tkb.group WHERE g_idx = ?';
   //     var searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].g_idx]);
 
   //     let findEachGroupPickQuery =
-  //     `SELECT chat.pick.* , chat.user.photo, chat.user.name, chat.user.id
-  //     FROM chat.pick, chat.user WHERE chat.pick.write_id = chat.user.id
-  //     AND chat.pick.u_idx = ? AND chat.pick.g_idx= ? ORDER BY write_time DESC`;
+  //     `SELECT tkb.pick.* , tkb.user.photo, tkb.user.name, tkb.user.id
+  //     FROM tkb.pick, tkb.user WHERE tkb.pick.write_id = tkb.user.id
+  //     AND tkb.pick.u_idx = ? AND tkb.pick.g_idx= ? ORDER BY write_time DESC`;
   //     var findEachGroupPick = await db.queryParamCnt_Arr(findEachGroupPickQuery, [u_idx, findUserJoined[i].g_idx]);
 
   //     if(searchGroupInfo === undefined || findEachGroupPick === undefined) {
@@ -263,76 +406,87 @@ module.exports = {
   //     return result;
   //   }
   // },
-  homeVoteReceiver : async (...args) => {
+  groupVoteReceiver : async (...args) => {
     let u_idx = args[0];
-    let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
-    var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
+    let g_idx = args[1];
+    let findUserJoinedQuery = 'SELECT chatroom_idx FROM tkb.chatroom_joined WHERE u_idx = ? AND g_idx = ?';
+    var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx, g_idx]);
 
     // 수신자에 대한 내용
-    let resArray = [];
-    for(let i = 0 ; i < findUserJoined.length ; i++) {
+    let receiverArray = [];
+    for (let i = 0 ; i < findUserJoined.length ; i++) {
       let GroupJson = {};
       
-      let findEachGroupVoteNotFinishedQuery = 'SELECT * FROM chat.vote WHERE g_idx = ? AND u_idx != ? AND status = ? ORDER BY chat.vote.vote_idx DESC';
-      var findEachGroupVoteNotFinished = await db.queryParamCnt_Arr(findEachGroupVoteNotFinishedQuery, [findUserJoined[i].g_idx, u_idx, 0]);
+      let findEachGroupVoteQuery = 'SELECT * FROM tkb.vote WHERE chatroom_idx = ? AND u_idx != ? ORDER BY tkb.vote.vote_idx DESC';
+      let findEachGroupVote = await db.queryParamCnt_Arr(findEachGroupVoteQuery, [findUserJoined[i].chatroom_idx, u_idx]);
+      GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
+      GroupJson.data = findEachGroupVote;
+      // // let findEachGroupVoteNotFinishedQuery = 'SELECT * FROM tkb.vote WHERE chatroom_idx = ? AND u_idx != ? AND status = ? ORDER BY tkb.vote.vote_idx DESC';
+      // // var findEachGroupVoteNotFinished = await db.queryParamCnt_Arr(findEachGroupVoteNotFinishedQuery, [findUserJoined[i].chatroom_idx, u_idx, 0]);
 
-      let findEachGroupVoteFinishedQuery = 'SELECT * FROM chat.vote WHERE g_idx = ? AND u_idx != ? AND status = ? ORDER BY chat.vote.vote_idx DESC';
-      var findEachGroupVoteFinished = await db.queryParamCnt_Arr(findEachGroupVoteFinishedQuery, [findUserJoined[i].g_idx, u_idx, 1]);
+      // // let findEachGroupVoteFinishedQuery = 'SELECT * FROM tkb.vote WHERE chatroom_idx = ? AND u_idx != ? AND status = ? ORDER BY tkb.vote.vote_idx DESC';
+      // // var findEachGroupVoteFinished = await db.queryParamCnt_Arr(findEachGroupVoteFinishedQuery, [findUserJoined[i].chatroom_idx, u_idx, 1]);
 
-      if(findEachGroupVoteNotFinished === undefined || findEachGroupVoteFinished === undefined) {
-        break;
-      }
-      GroupJson.g_idx = findUserJoined[i].g_idx;
-      GroupJson.data = {
-        NotFinished : findEachGroupVoteNotFinished,
-        Finished : findEachGroupVoteFinished
-      };
-      resArray.push(GroupJson);
+      // // if(findEachGroupVoteNotFinished === undefined || findEachGroupVoteFinished === undefined) {
+      // //   break;
+      // // }
+      // GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
+      // GroupJson.data = {
+      //   NotFinished : findEachGroupVoteNotFinished,
+      //   Finished : findEachGroupVoteFinished
+      // };
+      receiverArray.push(GroupJson);
     }
-    if(!findUserJoined || !findEachGroupVoteNotFinished || !findEachGroupVoteFinished) {
+    if (!findUserJoined) {
       return false;
     } else {
-      return resArray;
+      return receiverArray;
     }
   },
-  homeVoteSender : async (...args) => {
+  groupVoteSender : async (...args) => {
     let u_idx = args[0];
-    let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
-    var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
+    let g_idx = args[1];
+    let findUserJoinedQuery = 'SELECT chatroom_idx FROM tkb.chatroom_joined WHERE u_idx = ? AND g_idx = ?';
+    var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx, g_idx]);
 
     //발신자에 대한 내용
-    let reqArray = [];
-    for(let i = 0 ; i < findUserJoined.length ; i++) {
+    let senderArray = [];
+    for (let i = 0 ; i < findUserJoined.length ; i++) {
       let GroupJson = {};
       
-      let findEachGroupVoteNotFinishedQuery = 'SELECT * FROM chat.vote WHERE g_idx = ? AND u_idx = ? AND status = ? ORDER BY chat.vote.vote_idx DESC';
-      var findEachGroupVoteNotFinished = await db.queryParamCnt_Arr(findEachGroupVoteNotFinishedQuery, [findUserJoined[i].g_idx, u_idx, 0]);
+      let findEachGroupVoteQuery = 'SELECT * FROM tkb.vote WHERE chatroom_idx = ? AND u_idx = ? ORDER BY tkb.vote.vote_idx DESC';
+      let findEachGroupVote = await db.queryParamCnt_Arr(findEachGroupVoteQuery, [findUserJoined[i].chatroom_idx, u_idx]);
+      GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
+      GroupJson.data = findEachGroupVote;
+      // let findEachGroupVoteNotFinishedQuery = 'SELECT * FROM tkb.vote WHERE chatroom_idx = ? AND u_idx = ? AND status = ? ORDER BY tkb.vote.vote_idx DESC';
+      // var findEachGroupVoteNotFinished = await db.queryParamCnt_Arr(findEachGroupVoteNotFinishedQuery, [findUserJoined[i].chatroom_idx, u_idx, 0]);
 
-      let findEachGroupVoteFinishedQuery = 'SELECT * FROM chat.vote WHERE g_idx = ? AND u_idx = ? AND status = ? ORDER BY chat.vote.vote_idx DESC';
-      var findEachGroupVoteFinished = await db.queryParamCnt_Arr(findEachGroupVoteFinishedQuery, [findUserJoined[i].g_idx, u_idx, 1]);
+      // let findEachGroupVoteFinishedQuery = 'SELECT * FROM tkb.vote WHERE chatroom_idx = ? AND u_idx = ? AND status = ? ORDER BY tkb.vote.vote_idx DESC';
+      // var findEachGroupVoteFinished = await db.queryParamCnt_Arr(findEachGroupVoteFinishedQuery, [findUserJoined[i].chatroom_idx, u_idx, 1]);
 
-      if(findEachGroupVoteNotFinished === undefined || findEachGroupVoteFinished === undefined) {
-        break;
-      }
-      GroupJson.g_idx = findUserJoined[i].g_idx;
-      GroupJson.data = {
-        NotFinished : findEachGroupVoteNotFinished,
-        Finished : findEachGroupVoteFinished
-      };
-      reqArray.push(GroupJson);
+      // if(findEachGroupVoteNotFinished === undefined || findEachGroupVoteFinished === undefined) {
+      //   break;
+      // }
+      // GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
+      // GroupJson.data = {
+      //   NotFinished : findEachGroupVoteNotFinished,
+      //   Finished : findEachGroupVoteFinished
+      // };
+      senderArray.push(GroupJson);
     }
 
-    if(!findUserJoined || !findEachGroupVoteNotFinished || !findEachGroupVoteFinished) {
+    if (!findUserJoined) {
       return false;
     } else {
-      return reqArray;
+      return senderArray;
     }
   },
   forEachNotice : async (...args) => {
-    let g_idx = args[0];
-    //let showAllNoticeQuery = 'SELECT * FROM chat.group JOIN chat.notice USING(g_idx) WHERE g_idx = ? ORDER BY write_time';  //이름 같이 전송해야 할 때
-    let showAllNoticeQuery = 'SELECT * FROM chat.notice WHERE g_idx = ? ORDER BY notice_idx DESC';
-    var showAllNotice = await db.queryParamCnt_Arr(showAllNoticeQuery, [g_idx]);
+    let chatroom_idx = args[0];
+
+    //let showAllNoticeQuery = 'SELECT * FROM tkb.group JOIN tkb.notice USING(chatroom_idx) WHERE chatroom_idx = ? ORDER BY write_time';  //이름 같이 전송해야 할 때
+    let showAllNoticeQuery = 'SELECT tkb.notice.*, tkb.notice_response.status FROM tkb.notice JOIN tkb.notice_response USING(notice_idx) WHERE chatroom_idx = ? ORDER BY notice_idx DESC';
+    var showAllNotice = await db.queryParamCnt_Arr(showAllNoticeQuery, [chatroom_idx]);
     if(!showAllNotice) {
       return false;
     } else {
@@ -341,12 +495,12 @@ module.exports = {
   },// forEachNotice
   forEachLights : async (...args) => {
     let u_idx = args[0];
-    let g_idx = args[1];
+    let chatroom_idx = args[1];
 
     let findEachGroupLightsQuery =
-    `SELECT chat.lights.*, chat.light_response.color FROM chat.light_response JOIN chat.lights USING(light_idx)
-    WHERE g_idx = ? AND chat.light_response.u_idx = ? ORDER BY chat.lights.light_idx DESC`;
-    var findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [g_idx, u_idx]);
+    `SELECT tkb.lights.*, tkb.light_response.color FROM tkb.light_response JOIN tkb.lights USING(light_idx)
+    WHERE chatroom_idx = ? AND tkb.light_response.u_idx = ? ORDER BY tkb.lights.light_idx DESC`;
+    var findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [chatroom_idx, u_idx]);
 
     if(!findEachGroupLights) {
       return false;
@@ -356,11 +510,11 @@ module.exports = {
   },// forEachLights
   forEachLightsStatus : async (...args) => {
     let u_idx = args[0];
-    let g_idx = args[1];
+    let chatroom_idx = args[1];
     let light_idx = args[2];
 
-    let findEachGroupLightsStatusQuery = 'SELECT u_idx FROM chat.lights WHERE g_idx = ? AND light_idx = ?';
-    var findEachGroupLightsStatus = await db.queryParamCnt_Arr(findEachGroupLightsStatusQuery, [g_idx, light_idx]);
+    let findEachGroupLightsStatusQuery = 'SELECT u_idx FROM tkb.lights WHERE chatroom_idx = ? AND light_idx = ?';
+    var findEachGroupLightsStatus = await db.queryParamCnt_Arr(findEachGroupLightsStatusQuery, [chatroom_idx, light_idx]);
 
     if(u_idx === findEachGroupLightsStatus[0].u_idx) {
       return true;
@@ -370,21 +524,21 @@ module.exports = {
   },
   forEachLightsResponse : async (...args) => {
     let u_idx = args[0];
-    let g_idx = args[1];
+    let chatroom_idx = args[1];
     let light_idx = args[2];
     let color = args[3];
     let result;
 
-    let findEachGroupLightsResQuery = 'SELECT * FROM chat.lights WHERE g_idx = ? AND light_idx = ?';
-    var findEachGroupLightsRes = await db.queryParamCnt_Arr(findEachGroupLightsResQuery, [g_idx, light_idx]);
+    let findEachGroupLightsResQuery = 'SELECT * FROM tkb.lights WHERE chatroom_idx = ? AND light_idx = ?';
+    var findEachGroupLightsRes = await db.queryParamCnt_Arr(findEachGroupLightsResQuery, [chatroom_idx, light_idx]);
 
     if(findEachGroupLightsRes[0].open_status === 1) {  //true check
-      let findEachGroupLightsResAllQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ? AND color = ?';
+      let findEachGroupLightsResAllQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ? AND color = ?';
       var findEachGroupLightsResAll = await db.queryParamCnt_Arr(findEachGroupLightsResAllQuery, [light_idx, color]);
 
       result = findEachGroupLightsResAll;
     } else {
-      let findEachGroupLightsResAloneQuery = 'SELECT * FROM chat.light_response WHERE u_idx = ? AND light_idx = ? AND color = ?';
+      let findEachGroupLightsResAloneQuery = 'SELECT * FROM tkb.light_response WHERE u_idx = ? AND light_idx = ? AND color = ?';
       var findEachGroupLightsResAlone = await db.queryParamCnt_Arr(findEachGroupLightsResAloneQuery, [u_idx, light_idx, color]);
 
       result = findEachGroupLightsResAlone;
@@ -400,9 +554,9 @@ module.exports = {
   //   let u_idx = args[0];
   //   let g_idx = args[1];
   //   let showAllPickQuery =
-  //   `SELECT chat.pick.*, chat.user.photo, chat.user.name, chat.user.id
-  //   FROM chat.pick, chat.user WHERE chat.pick.write_id = chat.user.id
-  //   AND chat.pick.u_idx = ? AND chat.pick.g_idx = ?
+  //   `SELECT tkb.pick.*, tkb.user.photo, tkb.user.name, tkb.user.id
+  //   FROM tkb.pick, tkb.user WHERE tkb.pick.write_id = tkb.user.id
+  //   AND tkb.pick.u_idx = ? AND tkb.pick.g_idx = ?
   //   ORDER BY write_time DESC`;
   //   var showAllPick = await db.queryParamCnt_Arr(showAllPickQuery, [u_idx, g_idx]);
 
@@ -414,27 +568,35 @@ module.exports = {
   // },// forEachPick
   forEachVote : async (...args) => {
     let u_idx = args[0];
-    let g_idx = args[1];
+    let chatroom_idx = args[1];
 
-    let showAllVoteNotFinishedQuery = 'SELECT chat.vote.* FROM chat.vote WHERE g_idx = ? AND status = ? ORDER BY chat.vote.vote_idx DESC';
-    var showAllVoteNotFinished = await db.queryParamCnt_Arr(showAllVoteNotFinishedQuery, [g_idx, 0]);
+    let showAllVoteQuery = 'SELECT tkb.vote.* FROM tkb.vote WHERE chatroom_idx = ? ORDER BY tkb.vote.vote_idx DESC';
+    let showAllVote = await db.queryParamCnt_Arr(showAllVoteQuery, [chatroom_idx]);
 
-    let showAllVoteFinishedQuery = 'SELECT * FROM chat.vote WHERE g_idx = ? AND status = ? ORDER BY chat.vote.vote_idx DESC';
-    var showAllVoteFinished = await db.queryParamCnt_Arr(showAllVoteFinishedQuery, [g_idx, 1]);
-
-    if(!showAllVoteNotFinished || !showAllVoteFinished) {
+    if (!showAllVote) {
       return false;
     } else {
-      return {
-        NotFinished : showAllVoteNotFinished,
-        Finished : showAllVoteFinished
-      };
+      return showAllVote;
     }
+    // let showAllVoteNotFinishedQuery = 'SELECT tkb.vote.* FROM tkb.vote WHERE chatroom_idx = ? AND status = ? ORDER BY tkb.vote.vote_idx DESC';
+    // var showAllVoteNotFinished = await db.queryParamCnt_Arr(showAllVoteNotFinishedQuery, [chatroom_idx, 0]);
+
+    // let showAllVoteFinishedQuery = 'SELECT * FROM tkb.vote WHERE chatroom_idx = ? AND status = ? ORDER BY tkb.vote.vote_idx DESC';
+    // var showAllVoteFinished = await db.queryParamCnt_Arr(showAllVoteFinishedQuery, [chatroom_idx, 1]);
+
+    // if(!showAllVoteNotFinished || !showAllVoteFinished) {
+    //   return false;
+    // } else {
+    //   return {
+    //     NotFinished : showAllVoteNotFinished,
+    //     Finished : showAllVoteFinished
+    //   };
+    // }
   },// forEachVote
   forEachVoteOne : async (...args) => {
     let vote_idx = args[0];
 
-    let getOneVoteInformationQuery = 'SELECT * FROM chat.vote WHERE vote_idx = ?';
+    let getOneVoteInformationQuery = 'SELECT * FROM tkb.vote WHERE vote_idx = ?';
     var getOneVoteInformation = await db.queryParamCnt_Arr(getOneVoteInformationQuery, [vote_idx]);
 
     if(!getOneVoteInformation) {
@@ -446,7 +608,7 @@ module.exports = {
   forEachVoteChoice : async (...args) => {
     let vote_idx = args[0];
 
-    let getAllChoiceforEachVoteQuery = 'SELECT * FROM chat.vote_content WHERE chat.vote_content.vote_idx = ? ORDER BY chat.vote_content.vote_content_idx';
+    let getAllChoiceforEachVoteQuery = 'SELECT * FROM tkb.vote_content WHERE tkb.vote_content.vote_idx = ? ORDER BY tkb.vote_content.vote_content_idx';
     var getAllChoiceforEachVote = await db.queryParamCnt_Arr(getAllChoiceforEachVoteQuery, [vote_idx]);
 
     if(!getAllChoiceforEachVote) {
@@ -456,10 +618,9 @@ module.exports = {
     }
   },// forEachVoteExample
   forEachVoteResponse : async (...args) => {
-    let g_idx = args[0];
-    let vote_idx = args[1];
+    let vote_idx = args[0];
 
-    let findEachGroupVoteResAllQuery = 'SELECT * FROM chat.vote_response WHERE vote_idx = ?';
+    let findEachGroupVoteResAllQuery = 'SELECT * FROM tkb.vote_response WHERE vote_idx = ?';
     var findEachGroupVoteResAll = await db.queryParamCnt_Arr(findEachGroupVoteResAllQuery, [vote_idx]);
 
     return findEachGroupVoteResAll;
@@ -467,20 +628,24 @@ module.exports = {
   makeNotice : async (...args) => {
     let u_idx = args[0];
     let chat_idx = args[1];
-    let g_idx = args[2];
+    let chatroom_idx = args[2];
     let write_time = args[3];
     let content = args[4];
 
-    // let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
-    // let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [g_idx]);
+    // let searchGroupInfoQuery = 'SELECT * FROM tkb.group WHERE chatroom_idx = ?';
+    // let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [chatroom_idx]);
 
-    let insertNoticeQuery = 'INSERT INTO chat.notice (u_idx, chat_idx, g_idx, write_time, content) VALUES (?, ?, ?, ?, ?)';
-    var insertNotice = await db.queryParamCnt_Arr(insertNoticeQuery, [u_idx, chat_idx, g_idx, write_time, content]);
-
-    let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ? AND u_idx != ?';
-    var searchAllUsersInSpecificGroup = await db.queryParamCnt_Arr(searchAllUsersInSpecificGroupQuery, [g_idx, u_idx]);
+    let insertNoticeQuery = 'INSERT INTO tkb.notice (u_idx, chat_idx, chatroom_idx, write_time, content) VALUES (?, ?, ?, ?, ?)';
+    var insertNotice = await db.queryParamCnt_Arr(insertNoticeQuery, [u_idx, chat_idx, chatroom_idx, write_time, content]);
+    console.log(u_idx);
+    console.log(chat_idx);
+    console.log(chatroom_idx);
+    console.log(write_time);
+    console.log(content);
+    let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM tkb.chatroom_joined WHERE chatroom_idx = ? AND u_idx != ?';
+    var searchAllUsersInSpecificGroup = await db.queryParamCnt_Arr(searchAllUsersInSpecificGroupQuery, [chatroom_idx, u_idx]);
     for(let i = 0 ; i < searchAllUsersInSpecificGroup.length ; i++) {
-      let insertNoticeResponseQuery = 'INSERT INTO chat.notice_response (notice_idx, u_idx, status) VALUES (?, ?, ?)';
+      let insertNoticeResponseQuery = 'INSERT INTO tkb.notice_response (notice_idx, u_idx, status) VALUES (?, ?, ?)';
       var insertNoticeResponse = await db.queryParamCnt_Arr(insertNoticeResponseQuery, [insertNotice.insertId, searchAllUsersInSpecificGroup[i].u_idx, 0]);
     }
     if(!insertNotice || !searchAllUsersInSpecificGroup) {
@@ -491,7 +656,7 @@ module.exports = {
   },
   makeLights : async (...args) => {
     let u_idx = args[0];
-    let g_idx = args[1];
+    let chatroom_idx = args[1];
     let open_status = args[2];
     let entire_status = args[3];
     let content = args[4];
@@ -500,34 +665,34 @@ module.exports = {
     let chat_idx = args[6];
     let userArray = args[7];        // select 문을 한 결과가 넘어와야 함
 
-    // let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
-    // let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [g_idx]);
+    // let searchGroupInfoQuery = 'SELECT * FROM tkb.group WHERE chatroom_idx = ?';
+    // let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [chatroom_idx]);
 
-    let insertLightsQuery = 'INSERT INTO chat.lights (u_idx, g_idx, open_status, entire_status, content, write_time, chat_idx) VALUES (?, ?, ?, ?, ?, ?, ?)';
-    var insertLights = await db.queryParamCnt_Arr(insertLightsQuery, [u_idx, g_idx, open_status, entire_status, content, write_time, chat_idx]);
+    let insertLightsQuery = 'INSERT INTO tkb.lights (u_idx, chatroom_idx, open_status, entire_status, content, write_time, chat_idx) VALUES (?, ?, ?, ?, ?, ?, ?)';
+    var insertLights = await db.queryParamCnt_Arr(insertLightsQuery, [u_idx, chatroom_idx, open_status, entire_status, content, write_time, chat_idx]);
     console.log('insertLights',insertLights);
     if(entire_status == 1) {
-//      let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ? AND u_idx != ?';
-      let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
-      var searchAllUsersInSpecificGroup = await db.queryParamCnt_Arr(searchAllUsersInSpecificGroupQuery, [g_idx, u_idx]);
+//      let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM tkb.joined WHERE chatroom_idx = ? AND u_idx != ?';
+      let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM tkb.chatroom_joined WHERE chatroom_idx = ?';
+      var searchAllUsersInSpecificGroup = await db.queryParamCnt_Arr(searchAllUsersInSpecificGroupQuery, [chatroom_idx, u_idx]);
       console.log('searchAllUsersInSpecificGroup',searchAllUsersInSpecificGroup);
       for(let i = 0 ; i < searchAllUsersInSpecificGroup.length ; i++) {
         if(searchAllUsersInSpecificGroup[i].u_idx === u_idx) {
-          let insertLightsResponseQuery = 'INSERT INTO chat.light_response (light_idx, u_idx, color, content, write_time) VALUES (?, ?, ?, ?, ?)';
+          let insertLightsResponseQuery = 'INSERT INTO tkb.light_response (light_idx, u_idx, color, content, write_time) VALUES (?, ?, ?, ?, ?)';
           var insertLightsResponse = await db.queryParamCnt_Arr(insertLightsResponseQuery, [insertLights.insertId, searchAllUsersInSpecificGroup[i].u_idx, "a", null, null]);
           console.log('insertLightsResponse',insertLightsResponse);
         } else {
-          let insertLightsResponseQuery = 'INSERT INTO chat.light_response (light_idx, u_idx, color, content, write_time) VALUES (?, ?, ?, ?, ?)';
+          let insertLightsResponseQuery = 'INSERT INTO tkb.light_response (light_idx, u_idx, color, content, write_time) VALUES (?, ?, ?, ?, ?)';
           var insertLightsResponse = await db.queryParamCnt_Arr(insertLightsResponseQuery, [insertLights.insertId, searchAllUsersInSpecificGroup[i].u_idx, "r", null, null]);
           console.log('insertLightsResponse',insertLightsResponse);
         }
       }
     } else {
-      let insertLightsResponseMakerQuery = 'INSERT INTO chat.light_response (light_idx, u_idx, color, content, write_time) VALUES (?, ?, ?, ?, ?)';
+      let insertLightsResponseMakerQuery = 'INSERT INTO tkb.light_response (light_idx, u_idx, color, content, write_time) VALUES (?, ?, ?, ?, ?)';
       var insertLightsResponseMaker = await db.queryParamCnt_Arr(insertLightsResponseMakerQuery, [insertLights.insertId, u_idx, "a", null, null]);
       for(let j = 0 ; j < userArray.length ; j++) {
         console.log(userArray[j]);
-        let insertLightsResponseQuery = 'INSERT INTO chat.light_response (light_idx, u_idx, color, content, write_time) VALUES (?, ?, ?, ?, ?)';
+        let insertLightsResponseQuery = 'INSERT INTO tkb.light_response (light_idx, u_idx, color, content, write_time) VALUES (?, ?, ?, ?, ?)';
         var insertLightsResponse = await db.queryParamCnt_Arr(insertLightsResponseQuery, [insertLights.insertId, userArray[j], "r", null, null]);
         console.log('insertLightsResponse',insertLightsResponse);
       }
@@ -546,10 +711,10 @@ module.exports = {
   //   let write_time = args[4];
   //   let content = args[5];
 
-  //   // let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
+  //   // let searchGroupInfoQuery = 'SELECT * FROM tkb.group WHERE g_idx = ?';
   //   // let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [g_idx]);
 
-  //   let insertPickQuery = 'INSERT INTO chat.pick (u_idx, write_id, chat_idx, g_idx, write_time, content) VALUES (?, ?, ?, ?, ?, ?)';
+  //   let insertPickQuery = 'INSERT INTO tkb.pick (u_idx, write_id, chat_idx, g_idx, write_time, content) VALUES (?, ?, ?, ?, ?, ?)';
   //   var insertPick = await db.queryParamCnt_Arr(insertPickQuery, [u_idx, write_id, chat_idx, g_idx, write_time, content]);
   //   if(!insertPick) {
   //     return false;
@@ -560,7 +725,7 @@ module.exports = {
   makeVote : async (...args) => {
     let u_idx = args[0];
     let chat_idx = args[1];
-    let g_idx = args[2];
+    let chatroom_idx = args[2];
 
     let write_time = args[3];
     let title = args[4];
@@ -568,22 +733,22 @@ module.exports = {
     let choice = args[6];  //배열의 형태로 넘어옴 ex) ['신촌', '이대', '시청']
     let endtime = args[7];
 
-    // let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
-    // let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [g_idx]);
+    // let searchGroupInfoQuery = 'SELECT * FROM tkb.group WHERE chatroom_idx = ?';
+    // let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [chatroom_idx]);
 
-    let insertVoteQuery = 'INSERT INTO chat.vote (u_idx, chat_idx, g_idx, write_time, title, content) VALUES (?, ?, ?, ?, ?, ?)';
-    var insertVote = await db.queryParamCnt_Arr(insertVoteQuery, [u_idx, chat_idx, g_idx, write_time, title, content]);
+    let insertVoteQuery = 'INSERT INTO tkb.vote (u_idx, chat_idx, chatroom_idx, write_time, title, content) VALUES (?, ?, ?, ?, ?, ?)';
+    var insertVote = await db.queryParamCnt_Arr(insertVoteQuery, [u_idx, chat_idx, chatroom_idx, write_time, title, content]);
 
     for(let i = 0 ; i < choice.length ; i++) {
-      let insertVoteContentQuery = 'INSERT INTO chat.vote_content (vote_idx, content) VALUES (?, ?)';
+      let insertVoteContentQuery = 'INSERT INTO tkb.vote_content (vote_idx, content) VALUES (?, ?)';
       var insertVoteContent = await db.queryParamCnt_Arr(insertVoteContentQuery, [insertVote.insertId, choice[i]]);
     }
 
-    let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
-    var searchAllUsersInSpecificGroup = await db.queryParamCnt_Arr(searchAllUsersInSpecificGroupQuery, [g_idx]);
+    let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM tkb.chatroom_joined WHERE chatroom_idx = ?';
+    var searchAllUsersInSpecificGroup = await db.queryParamCnt_Arr(searchAllUsersInSpecificGroupQuery, [chatroom_idx]);
     for(let i = 0 ; i < searchAllUsersInSpecificGroup.length ; i++) {
-      let insertLightsResponseQuery = 'INSERT INTO chat.vote_response (vote_idx, u_idx, status, value, write_time, g_idx) VALUES (?, ?, ?, ?, ?, ?)';
-      var insertLightsResponse = await db.queryParamCnt_Arr(insertLightsResponseQuery, [insertVote.insertId, searchAllUsersInSpecificGroup[i].u_idx, 0, null, null, g_idx]);
+      let insertVoteResponseQuery = 'INSERT INTO tkb.vote_response (vote_idx, u_idx, status, value, write_time, chatroom_idx) VALUES (?, ?, ?, ?, ?, ?)';
+      var insertVoteResponse = await db.queryParamCnt_Arr(insertVoteResponseQuery, [insertVote.insertId, searchAllUsersInSpecificGroup[i].u_idx, 0, null, null, chatroom_idx]);
     }
 
     // time modification 2018-01-01 01:01:01
@@ -596,7 +761,7 @@ module.exports = {
     let date = new Date(year, month-1, day, hour, minute, second);
     console.log(date);
     var j = schedule.scheduleJob(date, async function() {
-      var voteCloseQuery = 'UPDATE chat.vote SET status = ? WHERE vote_idx = ?';
+      var voteCloseQuery = 'UPDATE tkb.vote SET status = ? WHERE vote_idx = ?';
       var voteCloseResult = await db.queryParamCnt_Arr(voteCloseQuery, [1, insertVote.insertId]);
     });
 
@@ -612,15 +777,15 @@ module.exports = {
     let vote_idx = args[1];
     let choice = args[2];
 
-    let checkWriterQuery = 'SELECT u_idx FROM chat.vote WHERE vote_idx = ? AND u_idx = ?';
+    let checkWriterQuery = 'SELECT u_idx FROM tkb.vote WHERE vote_idx = ? AND u_idx = ?';
     var checkWriter = await db.queryParamCnt_Arr(checkWriterQuery, [vote_idx, u_idx]);
 
     if(checkWriter.length === 1) {
-      let deleteAllContentQuery = 'DELETE FROM chat.vote_content WHERE vote_idx = ?';
+      let deleteAllContentQuery = 'DELETE FROM tkb.vote_content WHERE vote_idx = ?';
       var deleteAllContent = await db.queryParamCnt_Arr(deleteAllContentQuery, [vote_idx]);
 
       for(let i = 0 ; i < choice.length ; i++) {
-        let insertVoteContentQuery = 'INSERT INTO chat.vote_content (vote_idx, vote_content_idx, content) VALUES (?, ?, ?)';
+        let insertVoteContentQuery = 'INSERT INTO tkb.vote_content (vote_idx, vote_content_idx, content) VALUES (?, ?, ?)';
         var insertVoteContent = await db.queryParamCnt_Arr(insertVoteContentQuery, [vote_idx, i, choice[i]]);
       }
       return true;
@@ -631,7 +796,7 @@ module.exports = {
   showSingleNoticeDetail : async (...args) => {
     let notice_idx = args[0];
 
-    let getSingleNoticeQuery = 'SELECT * FROM chat.notice WHERE notice_idx = ?';
+    let getSingleNoticeQuery = 'SELECT * FROM tkb.notice WHERE notice_idx = ?';
     let getSingleNotice = await db.queryParamCnt_Arr(getSingleNoticeQuery, [notice_idx]);
 
     if (!getSingleNotice) {
@@ -644,12 +809,12 @@ module.exports = {
     let light_idx = args[0];
     let u_idx = args[1];
 
-    let getLightsInfoQuery = 'SELECT * FROM chat.lights WHERE light_idx = ?';
+    let getLightsInfoQuery = 'SELECT * FROM tkb.lights WHERE light_idx = ?';
     let getLightsInfo = await db.queryParamCnt_Arr(getLightsInfoQuery, [light_idx]);
 
     var result = {};
     if (getLightsInfo[0].u_idx === u_idx) {   //작성자
-      let getLightsResponseQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ?';
+      let getLightsResponseQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ?';
       let getLightsResponse = await db.queryParamCnt_Arr(getLightsResponseQuery, [light_idx]);
 
       result.lights = getLightsInfo[0];
@@ -658,7 +823,7 @@ module.exports = {
 
     } else {
       if (getLightsInfo[0].open_status === 0) {
-        let getLightsResponseOneUserQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ? AND u_idx = ?'; 
+        let getLightsResponseOneUserQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ? AND u_idx = ?'; 
         let getLightsResponseOneUser = await db.queryParamCnt_Arr(getLightsResponseOneUserQuery, [light_idx, u_idx]);
         
         if (getLightsResponseOneUser.length === 0) {
@@ -667,7 +832,7 @@ module.exports = {
           result.message = '';
 
         } else if (getLightsResponseOneUser[0].color === 'g') {
-          let getLightsResponseQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ?';
+          let getLightsResponseQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ?';
           let getLightsResponse = await db.queryParamCnt_Arr(getLightsResponseQuery, [light_idx]);
 
           result.lights = getLightsInfo[0];
@@ -686,7 +851,7 @@ module.exports = {
 
         }
       } else {
-        let getLightsResponseOneUserQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ? AND u_idx = ?'; 
+        let getLightsResponseOneUserQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ? AND u_idx = ?'; 
         let getLightsResponseOneUser = await db.queryParamCnt_Arr(getLightsResponseOneUserQuery, [light_idx, u_idx]);
 
         result.lights = getLightsInfo[0];
@@ -696,11 +861,11 @@ module.exports = {
 
 
 
-      // let checkColorQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ? AND u_idx = ?'; 
+      // let checkColorQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ? AND u_idx = ?'; 
       // let checkColor = await db.queryParamCnt_Arr(checkColorQuery, [light_idx, u_idx]);
       
       // if (checkColor[0].color === 'g') {
-      //   let getLightsResponseQuery = 'SELECT * FROM chat.light_response WHERE light_idx = ?';
+      //   let getLightsResponseQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ?';
       //   let getLightsResponse = await db.queryParamCnt_Arr(getLightsResponseQuery, [light_idx]);
 
       //   result.lights = getLightsInfo[0];
@@ -723,7 +888,7 @@ module.exports = {
   },
   fcmSendWhenMakeThings : async (...args) => {
     let u_idx = args[0];
-    let g_idx = args[1];
+    let chatroom_idx = args[1];
     let status = args[2];
 
     var flag = true;
@@ -740,11 +905,11 @@ module.exports = {
       };
     }
 
-    let getUsersListInGroupQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ? AND u_idx != ?';
-    var getUsersListInGroup = await db.queryParamCnt_Arr(getUsersListInGroupQuery, [g_idx, u_idx]);
+    let getUsersListInGroupQuery = 'SELECT u_idx FROM tkb.chatroom_joined WHERE chatroom_idx = ? AND u_idx != ?';
+    var getUsersListInGroup = await db.queryParamCnt_Arr(getUsersListInGroupQuery, [chatroom_idx, u_idx]);
 
     for(let i = 0 ; i < getUsersListInGroup.length ; i++) {
-      let getUsersTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
+      let getUsersTokenQuery = 'SELECT token FROM tkb.user WHERE u_idx = ?';
       var getUsersToken = await db.queryParamCnt_Arr(getUsersTokenQuery, [getUsersListInGroup[i].u_idx]);
       let client_token = getUsersToken[0].token;
 
@@ -769,7 +934,7 @@ module.exports = {
   actionNotice : async (...args) => {
     let u_idx = args[0];
     let notice_idx = args[1];
-    let updateNoticeResQuery = 'UPDATE chat.notice_response SET status = ? WHERE notice_idx = ? AND u_idx = ?';
+    let updateNoticeResQuery = 'UPDATE tkb.notice_response SET status = ? WHERE notice_idx = ? AND u_idx = ?';
     let updateNoticeRes = await db.queryParamCnt_Arr(updateNoticeResQuery, [1, notice_idx, u_idx]);
     if(!updateNoticeRes) {
       return false;
@@ -783,7 +948,7 @@ module.exports = {
     let color = args[2];
     let content = args[3];
     let write_time = args[4];
-    let updateLightsResQuery = 'UPDATE chat.light_response SET color = ?, content = ?, write_time = ? WHERE light_idx = ? AND u_idx = ?';
+    let updateLightsResQuery = 'UPDATE tkb.light_response SET color = ?, content = ?, write_time = ? WHERE light_idx = ? AND u_idx = ?';
     var updateLightsRes = await db.queryParamCnt_Arr(updateLightsResQuery, [color, content, write_time, light_idx, u_idx]);
     if(!updateLightsRes) {
       return false;
@@ -797,12 +962,12 @@ module.exports = {
     let value = args[2];
     let write_time = args[3];
 
-    let updateVoteResQuery = 'UPDATE chat.vote_response SET value = ?, write_time = ?, status = ? WHERE vote_idx = ? AND u_idx = ?';
+    let updateVoteResQuery = 'UPDATE tkb.vote_response SET value = ?, write_time = ?, status = ? WHERE vote_idx = ? AND u_idx = ?';
     var updateVoteRes = await db.queryParamCnt_Arr(updateVoteResQuery, [value, write_time, 1, vote_idx, u_idx]);
     if (!updateVoteRes) {
       return false;
     } else {
-      let getOneVoteResponseQuery = 'SELECT * FROM chat.vote_response WHERE vote_idx = ?';
+      let getOneVoteResponseQuery = 'SELECT * FROM tkb.vote_response WHERE vote_idx = ?';
       let getOneVoteResponse = await db.queryParamCnt_Arr(getOneVoteResponseQuery, [vote_idx]);
 
       if (!getOneVoteResponse) {
@@ -816,7 +981,7 @@ module.exports = {
     let u_idx = args[0];
     let notice_idx = args[1];
 
-    let deleteNoticeQuery = 'DELETE chat.notice WHERE u_idx = ? AND notice_idx = ?';
+    let deleteNoticeQuery = 'DELETE tkb.notice WHERE u_idx = ? AND notice_idx = ?';
     let deleteNotice = await db.queryParamCnt_Arr(deleteNoticeQuery, [u_idx, notice_idx]);
 
     if (!deleteNotice) {
@@ -829,7 +994,7 @@ module.exports = {
     let u_idx = args[0];
     let light_idx = args[1];
 
-    let deleteLightsQuery = 'DELETE chat.lights WHERE u_idx = ? AND light_idx = ?';
+    let deleteLightsQuery = 'DELETE tkb.lights WHERE u_idx = ? AND light_idx = ?';
     let deleteLights = await db.queryParamCnt_Arr(deleteLightsQuery, [u_idx, light_idx]);
 
     if (!deleteLights) {
@@ -842,7 +1007,7 @@ module.exports = {
   //   let u_idx = args[0];
   //   let pick_idx = args[1];
 
-  //   let deletePickQuery = 'DELETE chat.pick WHERE u_idx = ? AND pick_idx = ?';
+  //   let deletePickQuery = 'DELETE tkb.pick WHERE u_idx = ? AND pick_idx = ?';
   //   let deletePick = await db.queryParamCnt_Arr(deletePickQuery, [u_idx, pick_idx]);
 
   //   if (!deletePick) {
@@ -855,7 +1020,7 @@ module.exports = {
     let u_idx = args[0];
     let vote_idx = args[1];
 
-    let deleteVoteQuery = 'DELETE chat.vote WHERE u_idx = ? AND vote_idx = ?';
+    let deleteVoteQuery = 'DELETE tkb.vote WHERE u_idx = ? AND vote_idx = ?';
     let deleteVote = await db.queryParamCnt_Arr(deleteVoteQuery, [u_idx, vote_idx]);
 
     if (!deleteVote) {
@@ -867,11 +1032,11 @@ module.exports = {
   // showSpecificMemberInChat : async (...args) => {
   //   let g_idx = args[0];
 
-  //   let getUsersListInGroupQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
+  //   let getUsersListInGroupQuery = 'SELECT u_idx FROM tkb.joined WHERE g_idx = ?';
   //   var getUsersListInGroup = await db.queryParamCnt_Arr(getUsersListInGroupQuery, [g_idx]);
   //   let result = [];
   //   for(let i = 0 ; i < getUsersListInGroup.length ; i++) {
-  //     let getUsersInfoQuery = 'SELECT u_idx, name, photo, id FROM chat.user WHERE u_idx = ?';
+  //     let getUsersInfoQuery = 'SELECT u_idx, name, photo, id FROM tkb.user WHERE u_idx = ?';
   //     var getUsersInfo = await db.queryParamCnt_Arr(getUsersInfoQuery, [getUsersListInGroup[i].u_idx]);
   //     result.push(getUsersInfo[0]);
   //   }
@@ -885,12 +1050,12 @@ module.exports = {
   //   let u_idx = args[0];
   //   let g_idx = args[1];
 
-  //   let getUsersListInGroupQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ? AND u_idx != ?';
+  //   let getUsersListInGroupQuery = 'SELECT u_idx FROM tkb.joined WHERE g_idx = ? AND u_idx != ?';
   //   var getUsersListInGroup = await db.queryParamCnt_Arr(getUsersListInGroupQuery, [g_idx, u_idx]);
   //   let result = [];
 
   //   for(let i = 0 ; i < getUsersListInGroup.length ; i++) {
-  //     let getUsersInfoQuery = 'SELECT u_idx, name, photo, id FROM chat.user WHERE u_idx = ?';
+  //     let getUsersInfoQuery = 'SELECT u_idx, name, photo, id FROM tkb.user WHERE u_idx = ?';
   //     var getUsersInfo = await db.queryParamCnt_Arr(getUsersInfoQuery, [getUsersListInGroup[i].u_idx]);
   //     result.push(getUsersInfo[0]);
   //   }
@@ -903,11 +1068,11 @@ module.exports = {
   // showChatLists : async (...args) => {
   //   let u_idx = args[0];
   //
-  //   let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
+  //   let findUserJoinedQuery = 'SELECT g_idx FROM tkb.joined WHERE u_idx = ?';
   //   var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
   //   let result = [];
   //   for(let i = 0 ; i < findUserJoined.length ; i++) {
-  //     let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
+  //     let searchGroupInfoQuery = 'SELECT * FROM tkb.group WHERE g_idx = ?';
   //     var searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].g_idx]);
   //
   //     result.push(searchGroupInfo[0]);
@@ -921,11 +1086,11 @@ module.exports = {
   showAllGroupsJoined : async (...args) => {
     let u_idx = args[0];
 
-    let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
+    let findUserJoinedQuery = 'SELECT g_idx FROM tkb.group_joined WHERE u_idx = ?';
     var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
     let result = [];
     for(let i = 0 ; i < findUserJoined.length ; i++) {
-      let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
+      let searchGroupInfoQuery = 'SELECT * FROM tkb.group WHERE g_idx = ?';
       var searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].g_idx]);
       result.push(searchGroupInfo[0]);
     }
@@ -935,22 +1100,57 @@ module.exports = {
       return result;
     }
   },
-  leaveRoom : async (...args) => {
+  showAllChatroomJoined : async (...args) => {
+    let u_idx = args[0];
+    let g_idx = args[1];
+    let findUserJoinedQuery = 'SELECT chatroom_idx FROM tkb.chatroom_joined WHERE u_idx = ? AND g_idx = ?';
+    var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
+    let result = [];
+    for(let i = 0 ; i < findUserJoined.length ; i++) {
+      let searchGroupInfoQuery = 'SELECT * FROM tkb.group_chatroom WHERE chatroom_idx = ?';
+      var searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].chatroom_idx]);
+      result.push(searchGroupInfo[0]);
+    }
+    if(!findUserJoined) {
+      return false;
+    } else {
+      return result;
+    }
+  },
+  leaveGroup : async (...args) => {
     let u_idx = args[0];
     let g_idx = args[1];
 
-    let leaveGroupQuery = 'DELETE FROM chat.joined WHERE g_idx = ? AND u_idx = ?';
+    let leaveGroupQuery = 'DELETE FROM tkb.group_joined WHERE g_idx = ? AND u_idx = ?';
     var leaveGroup = await db.queryParamCnt_Arr(leaveGroupQuery, [g_idx, u_idx]);
     if(!leaveGroup) {
       return false;
     } else {
-      let leftPersonCountQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
+      let leftPersonCountQuery = 'SELECT u_idx FROM tkb.group_joined WHERE g_idx = ?';
       var leftPersonCount = await db.queryParamCnt_Arr(leftPersonCountQuery, [g_idx]);
       if(leftPersonCount.length === 0) {
-        let deleteGroupInfoQuery = 'DELETE FROM chat.group WHERE g_idx = ?';
+        let deleteGroupInfoQuery = 'DELETE FROM tkb.group WHERE g_idx = ?';
         var deleteGroupInfo = await db.queryParamCnt_Arr(deleteGroupInfoQuery, [g_idx]);
       }
       return leaveGroup;
+    }
+  },
+  leaveChatroom : async (...args) => {
+    let u_idx = args[0];
+    let chatroom_idx = args[1];
+
+    let leaveChatroomQuery = 'DELETE FROM tkb.chatroom_joined WHERE chatroom_idx = ? AND u_idx = ?';
+    var leaveChatroom = await db.queryParamCnt_Arr(leaveChatroomQuery, [chatroom_idx, u_idx]);
+    if(!leaveChatroom) {
+      return false;
+    } else {
+      let leftPersonCountQuery = 'SELECT u_idx FROM tkb.chatroom_joined WHERE chatroom_idx = ?';
+      var leftPersonCount = await db.queryParamCnt_Arr(leftPersonCountQuery, [chatroom_idx]);
+      if(leftPersonCount.length === 0) {
+        let deleteChatroomInfoQuery = 'DELETE FROM tkb.group_chatroom WHERE chatroom_idx = ?';
+        var deleteChatroomInfo = await db.queryParamCnt_Arr(deleteChatroomInfoQuery, [chatroom_idx]);
+      }
+      return leaveChatroom;
     }
   },
   closeVote : async (...args) => {
@@ -958,7 +1158,7 @@ module.exports = {
     let g_idx = args[1];
     let vote_idx = args[2];
 
-    let voteCloseQuery = 'UPDATE chat.vote SET status = ? WHERE u_idx = ? AND g_idx = ? AND vote_idx = ?';
+    let voteCloseQuery = 'UPDATE tkb.vote SET status = ? WHERE u_idx = ? AND g_idx = ? AND vote_idx = ?';
     var voteCloseResult = await db.queryParamCnt_Arr(voteCloseQuery, [1, u_idx, g_idx, vote_idx]);
     if(!voteCloseResult) {
       return false;
@@ -989,11 +1189,11 @@ module.exports = {
     if(status === statuscode.groupChange || status === statuscode.joinedChange) {
       let flag = true;
 
-      let getAllUserQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
+      let getAllUserQuery = 'SELECT u_idx FROM tkb.joined WHERE g_idx = ?';
       var getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [idx]);
       //getAllUserQuery 하고 getUserTokenQuery 하고 JOIN 할 수 있을 것 같은데
       for(let i = 0 ; i < getAllUser.length ; i++) {
-        let getUserTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
+        let getUserTokenQuery = 'SELECT token FROM tkb.user WHERE u_idx = ?';
         var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [getAllUser[i].u_idx]);
         let client_token = getUserToken[0].token;
 
@@ -1018,12 +1218,12 @@ module.exports = {
     } else if(status === statuscode.userChange) {  //status === 2
       let flag = true;
 
-      let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
+      let findUserJoinedQuery = 'SELECT g_idx FROM tkb.joined WHERE u_idx = ?';
       var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [idx]);
 
       let userArray = [];
       for(let i = 0 ; i < findUserJoined.length ; i++) {
-        let getAllUserQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
+        let getAllUserQuery = 'SELECT u_idx FROM tkb.joined WHERE g_idx = ?';
         var getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [findUserJoined[i].g_idx]);
 
         //getAllUserQuery 하고 getUserTokenQuery 하고 JOIN 할 수 있을 것 같은데
@@ -1038,7 +1238,7 @@ module.exports = {
         if(userArray_wo_dup[i] === idx) {
           continue;
         }
-        let getUserTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
+        let getUserTokenQuery = 'SELECT token FROM tkb.user WHERE u_idx = ?';
         var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [userArray_wo_dup[i]]);
         let client_token = getUserToken[0].token;
 
@@ -1062,11 +1262,11 @@ module.exports = {
     } else if(status === statuscode.groupjoineduserChange) {
       let flag = true;
 
-      let getAllUserQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
+      let getAllUserQuery = 'SELECT u_idx FROM tkb.joined WHERE g_idx = ?';
       var getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [idx]);
 
       for(let i = 0 ; i < getAllUser.length ; i++) {
-        let getUserTokenQuery = 'SELECT token FROM chat.user WHERE u_idx = ?';
+        let getUserTokenQuery = 'SELECT token FROM tkb.user WHERE u_idx = ?';
         var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [getAllUser[i].u_idx]);
         let client_token = getUserToken[0].token;
 
@@ -1092,15 +1292,34 @@ module.exports = {
       return false;
     }
   },//sendFCMData
-  getJoinedInfo : async (...args) => {
+  getGJoinedInfo : async (...args) => {
     let u_idx = args[0];
     let resultArray = [];
-    let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
+    let findUserJoinedQuery = 'SELECT g_idx FROM tkb.group_joined WHERE u_idx = ?';
     var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
 
     for(let i = 0 ; i < findUserJoined.length ; i++) {
-      let findAllUserJoinedQuery = 'SELECT * FROM chat.joined WHERE g_idx = ?';
+      let findAllUserJoinedQuery = 'SELECT * FROM tkb.group_joined WHERE g_idx = ?';
       var findAllUserJoined = await db.queryParamCnt_Arr(findAllUserJoinedQuery, [findUserJoined[i].g_idx]);
+      for(let j = 0 ; j < findAllUserJoined.length ; j++) {
+        resultArray.push(findAllUserJoined[j]);
+      }//for(j=0)
+    }//for(i=0)
+    if(!findUserJoined) {
+      return false;
+    } else {
+      return resultArray;
+    }
+  },//getJoinedInfo
+  getCJoinedInfo : async (...args) => {
+    let u_idx = args[0];
+    let resultArray = [];
+    let findUserJoinedQuery = 'SELECT chatroom_idx FROM tkb.chatroom_joined WHERE u_idx = ?';
+    var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
+
+    for(let i = 0 ; i < findUserJoined.length ; i++) {
+      let findAllUserJoinedQuery = 'SELECT * FROM tkb.chatroom_joined WHERE chatroom_idx = ?';
+      var findAllUserJoined = await db.queryParamCnt_Arr(findAllUserJoinedQuery, [findUserJoined[i].chatroom_idx]);
       for(let j = 0 ; j < findAllUserJoined.length ; j++) {
         resultArray.push(findAllUserJoined[j]);
       }//for(j=0)
@@ -1114,12 +1333,12 @@ module.exports = {
   getUserInfo : async (...args) => {
     let u_idx = args[0];
 
-    let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
+    let findUserJoinedQuery = 'SELECT g_idx FROM tkb.group_joined WHERE u_idx = ?';
     var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
 
     let userArray = [];
     for(let i = 0 ; i < findUserJoined.length ; i++) {
-      let findAllUserQuery = 'SELECT u_idx FROM chat.joined WHERE g_idx = ?';
+      let findAllUserQuery = 'SELECT u_idx FROM tkb.group_joined WHERE g_idx = ?';
       var findAllUser = await db.queryParamCnt_Arr(findAllUserQuery, [findUserJoined[i].g_idx]);
 
       for(let j = 0 ; j < findAllUser.length ; j++) {
@@ -1132,7 +1351,7 @@ module.exports = {
 
     let result = [];
     for(let i = 0 ; i < userArray_wo_dup.length ; i++) {
-      let findUserDetailInfoQuery = 'SELECT u_idx, name, phone, bio, photo, id FROM chat.user WHERE u_idx = ?';
+      let findUserDetailInfoQuery = 'SELECT u_idx, name, phone, bio, photo, id FROM tkb.user WHERE u_idx = ?';
       var findUserDetailInfo = await db.queryParamCnt_Arr(findUserDetailInfoQuery, [userArray_wo_dup[i]]);
 
       result.push(findUserDetailInfo[0]);
@@ -1147,12 +1366,12 @@ module.exports = {
     let write_time = args[4];
     let flag = true;
 
-    let insertProjectQuery = 'INSERT INTO chat.role (g_idx, title, master_idx, write_time) VALUES (?, ?, ?, ?)';
+    let insertProjectQuery = 'INSERT INTO tkb.role (g_idx, title, master_idx, write_time) VALUES (?, ?, ?, ?)';
     let insertProject = await db.queryParamCnt_Arr(insertProjectQuery, [g_idx, title, master_idx, write_time]);
 
 
     for (let i = 0 ; i < taskArray.length ; i++) {
-      let insertTaskQuery = 'INSERT INTO chat.role_task (role_idx, content) VALUES (?, ?)';
+      let insertTaskQuery = 'INSERT INTO tkb.role_task (role_idx, content) VALUES (?, ?)';
       var insertTask = await db.queryParamCnt_Arr(insertTaskQuery, [insertProject.insertId, taskArray[i]]);
       if (!insertTask) {
         flag = false;
@@ -1171,7 +1390,7 @@ module.exports = {
 
   //   let flag = true;
   //   for (let i = 0 ; i < content.length ; i++) {
-  //     let insertRoleTaskQuery = 'INSERT INTO chat.role_task (role_idx, content) VALUES (?, ?)';
+  //     let insertRoleTaskQuery = 'INSERT INTO tkb.role_task (role_idx, content) VALUES (?, ?)';
   //     let insertRoleTask = await db.queryParamCnt_Arr(insertRoleTaskQuery, role_idx, content[i]);
   //     if (!insertRoleTask) {
   //       flag = false;
@@ -1188,7 +1407,7 @@ module.exports = {
   //   let role_task_idx = args[0];
   //   let u_idx = args[1];
 
-  //   let insertRoleUserQuery = 'INSERT INTO chat.role_user (role_task_idx, u_idx) VALUES (?, ?)';
+  //   let insertRoleUserQuery = 'INSERT INTO tkb.role_user (role_task_idx, u_idx) VALUES (?, ?)';
   //   let insertRoleUser = await db.queryParamCnt_Arr(insertRoleUserQuery, [role_task_idx, u_idx]);
 
   //   if (!insertRoleUser) {
@@ -1205,20 +1424,20 @@ module.exports = {
     let files = args[4];
     let write_time = args[5];
 
-    let checkWriterQuery = 'SELECT u_idx FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
+    let checkWriterQuery = 'SELECT u_idx FROM tkb.role_user WHERE role_task_idx = ? AND u_idx = ?';
     var checkWriter = await db.queryParamCnt_Arr(checkWriterQuery, [role_task_idx, u_idx]);
     if (checkWriter.length === 1) {
 
-      // let checkResponseQuery = 'SELECT role_response_idx FROM chat.role_response WHERE role_task_idx = ? AND u_idx = ?';
+      // let checkResponseQuery = 'SELECT role_response_idx FROM tkb.role_response WHERE role_task_idx = ? AND u_idx = ?';
       // var checkResponse = await db.queryParamCnt_Arr(checkResponseQuery, [role_task_idx, u_idx]);
 
       // if (checkResponse.length === 0) {
-        let insertResponseQuery = 'INSERT INTO chat.role_response (role_idx, role_task_idx, content, u_idx, write_time) VALUES (?, ?, ?, ?, ?)';
+        let insertResponseQuery = 'INSERT INTO tkb.role_response (role_idx, role_task_idx, content, u_idx, write_time) VALUES (?, ?, ?, ?, ?)';
         var insertResponse = await db.queryParamCnt_Arr(insertResponseQuery, [role_idx, role_task_idx, response_content, u_idx, write_time]);
         console.log(files);
         if (files !== undefined) {
           for(let i = 0 ; i < files.length ; i++) {
-            let insertFileQuery = 'INSERT INTO chat.role_file (role_response_idx, file) VALUES (?, ?)';
+            let insertFileQuery = 'INSERT INTO tkb.role_file (role_response_idx, file) VALUES (?, ?)';
             var insertFile = await db.queryParamCnt_Arr(insertFileQuery, [insertResponse.insertId, files[i].location]);
           }  
         } 
@@ -1241,7 +1460,7 @@ module.exports = {
     let content = args[2];
     let write_time = args[3];
 
-    let insertFeedbackQuery = 'INSERT INTO chat.role_feedback (u_idx, role_response_idx, content, write_time) VALUES (?, ?, ?, ?)';
+    let insertFeedbackQuery = 'INSERT INTO tkb.role_feedback (u_idx, role_response_idx, content, write_time) VALUES (?, ?, ?, ?)';
     let insertFeedback = await db.queryParamCnt_Arr(insertFeedbackQuery, [u_idx, role_response_idx, content, write_time]);
 
     if(!insertFeedback) {
@@ -1255,12 +1474,12 @@ module.exports = {
     let g_idx = args[1];
 
     if (!g_idx) {
-      let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
+      let findUserJoinedQuery = 'SELECT g_idx FROM tkb.joined WHERE u_idx = ?';
       let findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
 
       let result = [];
       for (let i = 0 ; i < findUserJoined.length ; i++) {
-        var getRoleProjectQuery = 'SELECT * FROM chat.role WHERE g_idx = ?';
+        var getRoleProjectQuery = 'SELECT * FROM tkb.role WHERE g_idx = ?';
         var getRoleProject = await db.queryParamCnt_Arr(getRoleProjectQuery, [findUserJoined[i].g_idx]);
         
         for (let j = 0 ; j < getRoleProject.length ; j++) {
@@ -1269,7 +1488,7 @@ module.exports = {
       }
       return result;
     } else {
-      var getRoleProjectQuery = 'SELECT * FROM chat.role WHERE g_idx = ?';
+      var getRoleProjectQuery = 'SELECT * FROM tkb.role WHERE g_idx = ?';
       var getRoleProject = await db.queryParamCnt_Arr(getRoleProjectQuery, [g_idx]);
 
       if (!getRoleProject) {
@@ -1282,11 +1501,11 @@ module.exports = {
   readRoleTask : async (...args) => {
     let role_idx = args[0];
 
-    let getRoleTaskQuery = 'SELECT * FROM chat.role_task WHERE role_idx = ?';
+    let getRoleTaskQuery = 'SELECT * FROM tkb.role_task WHERE role_idx = ?';
     let getRoleTask = await db.queryParamCnt_Arr(getRoleTaskQuery, [role_idx]);
 
     for (let i = 0 ; i < getRoleTask.length ; i++) {
-      let getRoleUserQuery = 'SELECT u_idx FROM chat.role_user WHERE role_task_idx = ?';
+      let getRoleUserQuery = 'SELECT u_idx FROM tkb.role_user WHERE role_task_idx = ?';
       var getRoleUser = await db.queryParamCnt_Arr(getRoleUserQuery, [getRoleTask[i].role_task_idx]);
 
       let result = [];
@@ -1306,7 +1525,7 @@ module.exports = {
   readRoleUser : async (...args) => {
     let role_task_idx = args[0];
 
-    let getRoleUserQuery = 'SELECT u_idx FROM chat.role_user WHERE role_task_idx = ?';
+    let getRoleUserQuery = 'SELECT u_idx FROM tkb.role_user WHERE role_task_idx = ?';
     let getRoleUser = await db.queryParamCnt_Arr(getRoleUserQuery, [role_task_idx]);
 
     let result = [];
@@ -1320,14 +1539,14 @@ module.exports = {
   readRoleResponse : async (...args) => {
     let role_task_idx = args[0];
 
-    let getRoleResponseQuery = 'SELECT * FROM chat.role_response WHERE role_task_idx = ?';
+    let getRoleResponseQuery = 'SELECT * FROM tkb.role_response WHERE role_task_idx = ?';
     let getRoleResponse = await db.queryParamCnt_Arr(getRoleResponseQuery, [role_task_idx]);
     var result = [];
     for (let i = 0 ; i < getRoleResponse.length ; i++) {
-      let getRoleResponseFileQuery = 'SELECT * FROM chat.role_file WHERE role_response_idx = ?';
+      let getRoleResponseFileQuery = 'SELECT * FROM tkb.role_file WHERE role_response_idx = ?';
       let getRoleResponseFile = await db.queryParamCnt_Arr(getRoleResponseFileQuery, [getRoleResponse[i].role_response_idx]);
 
-      let getRoleFeedbackCountQuery = 'SELECT COUNT(role_feedback_idx) FROM chat.role_feedback WHERE role_response_idx = ?';
+      let getRoleFeedbackCountQuery = 'SELECT COUNT(role_feedback_idx) FROM tkb.role_feedback WHERE role_response_idx = ?';
       let getRoleFeedbackCount = await db.queryParamCnt_Arr(getRoleFeedbackCountQuery, [getRoleResponse[i].role_response_idx]);
       result.push({
         count : getRoleFeedbackCount[0]["COUNT(role_feedback_idx)"],
@@ -1345,7 +1564,7 @@ module.exports = {
   readRoleFeedback : async (...args) => {
     let role_response_idx = args[0];
 
-    let getRoleFeedbackQuery = 'SELECT * FROM chat.role_feedback WHERE role_response_idx = ? ORDER BY role_feedback_idx';
+    let getRoleFeedbackQuery = 'SELECT * FROM tkb.role_feedback WHERE role_response_idx = ? ORDER BY role_feedback_idx';
     let getRoleFeedback = await db.queryParamCnt_Arr(getRoleFeedbackQuery, [role_response_idx]);
 
     if (!getRoleFeedback) {
@@ -1358,7 +1577,7 @@ module.exports = {
     let role_idx = args[0];
     let title = args[1];
 
-    let updateRoleProjectQuery = 'UPDATE chat.role SET title = ? WHERE role_idx = ?';
+    let updateRoleProjectQuery = 'UPDATE tkb.role SET title = ? WHERE role_idx = ?';
     let updateRoleProject = await db.queryParamCnt_Arr(updateRoleProjectQuery, [title, role_idx]);
 
     if (!updateRoleProject) {
@@ -1376,7 +1595,7 @@ module.exports = {
     
     if (minusArray) {
       for (let i = 0 ; i < minusArray.length ; i++) {
-        let deleteRoleTaskQuery = 'DELETE FROM chat.role_task WHERE role_task_idx = ?';
+        let deleteRoleTaskQuery = 'DELETE FROM tkb.role_task WHERE role_task_idx = ?';
         let deleteRoleTask = await db.queryParamCnt_Arr(deleteRoleTaskQuery, [minusArray[i]]);
         if (!deleteRoleTask) {
           flag = false;
@@ -1390,7 +1609,7 @@ module.exports = {
     
     if (plusArray) {
       for (let i = 0 ; i < plusArray.length ; i++) {
-        let insertRoleTaskQuery = 'INSERT INTO chat.role_task (role_idx, content) VALUES (?, ?)';
+        let insertRoleTaskQuery = 'INSERT INTO tkb.role_task (role_idx, content) VALUES (?, ?)';
         let insertRoleTask = await db.queryParamCnt_Arr(insertRoleTaskQuery, [role_idx, plusArray[i]]);
         if (!insertRoleTask) {
           flag = false;
@@ -1414,13 +1633,13 @@ module.exports = {
 
     let flag = true;
 
-    let getMasterIdxQuery = 'SELECT master_idx FROM chat.role WHERE role_idx = ?';
+    let getMasterIdxQuery = 'SELECT master_idx FROM tkb.role WHERE role_idx = ?';
     let getMasterIdx = await db.queryParamCnt_Arr(getMasterIdxQuery, [role_idx]);
 
     if (u_idx === getMasterIdx[0].master_idx) {   // master가 추가, 삭제 할 경우
       if (minusArray) {
         for (let i = 0 ; i < minusArray.length ; i++) {
-          let deleteRoleUserQuery = 'DELETE FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
+          let deleteRoleUserQuery = 'DELETE FROM tkb.role_user WHERE role_task_idx = ? AND u_idx = ?';
           var deleteRoleUser = await db.queryParamCnt_Arr(deleteRoleUserQuery, [role_task_idx, minusArray[i]]);
           if (!deleteRoleUser) {
             flag = false;
@@ -1434,7 +1653,7 @@ module.exports = {
       }
       if (plusArray) {
         for (let i = 0 ; i < plusArray.length ; i++) {
-          let insertRoleUserQuery = 'INSERT INTO chat.role_user (role_task_idx, u_idx) VALUES (?, ?)';
+          let insertRoleUserQuery = 'INSERT INTO tkb.role_user (role_task_idx, u_idx) VALUES (?, ?)';
           var insertRoleUser = await db.queryParamCnt_Arr(insertRoleUserQuery, [role_task_idx, plusArray[i]]);
           if (!insertRoleUser) {
             flag = false;
@@ -1448,13 +1667,13 @@ module.exports = {
       }
     } else {    // user가 자신의 것을 추가(flag =)
       if (status === 1) {
-        var insertRoleUserQuery = 'INSERT INTO chat.role_user (role_task_idx, u_idx) VALUES (?, ?)';
+        var insertRoleUserQuery = 'INSERT INTO tkb.role_user (role_task_idx, u_idx) VALUES (?, ?)';
         var insertRoleUser = await db.queryParamCnt_Arr(insertRoleUserQuery, [role_task_idx, u_idx]);
         if (!insertRoleUser) {
           flag = false;
         }
       } else if (status === -1) {
-        var deleteRoleUserQuery = 'DELETE FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
+        var deleteRoleUserQuery = 'DELETE FROM tkb.role_user WHERE role_task_idx = ? AND u_idx = ?';
         var deleteRoleUser = await db.queryParamCnt_Arr(deleteRoleUserQuery, [role_task_idx, u_idx]);
         if (!deleteRoleUser) {
           flag = false;
@@ -1487,16 +1706,16 @@ module.exports = {
 
     let flag = true;
 
-    let checkWriterQuery = 'SELECT u_idx FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
+    let checkWriterQuery = 'SELECT u_idx FROM tkb.role_user WHERE role_task_idx = ? AND u_idx = ?';
     var checkWriter = await db.queryParamCnt_Arr(checkWriterQuery, [role_task_idx, u_idx]);
 
     if(checkWriter.length === 1) {
-      let updateRoleResponseQuery = 'UPDATE chat.role_response SET content = ? WHERE role_response_idx = ?';
+      let updateRoleResponseQuery = 'UPDATE tkb.role_response SET content = ? WHERE role_response_idx = ?';
       let updateRoleResponse = await db.queryParamCnt_Arr(updateRoleResponseQuery, [content, role_response_idx]);
 
       if (minusArray) {
         for (let i = 0 ; i < minusArray.length ; i++) {
-          let deleteFileQuery = 'DELETE FROM chat.role_file WHERE role_response_idx = ? AND file = ?';
+          let deleteFileQuery = 'DELETE FROM tkb.role_file WHERE role_response_idx = ? AND file = ?';
           let deleteFile = await db.queryParamCnt_Arr(deleteFileQuery, [role_response_idx, minusArray[i]]);
 
           if (!deleteFile) {
@@ -1511,7 +1730,7 @@ module.exports = {
 
       if (plusArray) {
         for (let i = 0 ; i < plusArray.length ; i++) {
-          let insertFileQuery = 'INSERT INTO chat.role_file (role_response_idx, file) VALUES (?, ?)';
+          let insertFileQuery = 'INSERT INTO tkb.role_file (role_response_idx, file) VALUES (?, ?)';
           let insertFile = await db.queryParamCnt_Arr(insertFileQuery, [role_response_idx, plusArray[i].location]);
 
           if (!insertFile) {
@@ -1538,7 +1757,7 @@ module.exports = {
     let role_response_idx = args[1];
     let content = args[2];
 
-    let updateRoleFeedbackQuery = 'UPDATE chat.role_feedback SET content = ? WHERE u_idx = ? AND role_response_idx = ?';
+    let updateRoleFeedbackQuery = 'UPDATE tkb.role_feedback SET content = ? WHERE u_idx = ? AND role_response_idx = ?';
     let updateRoleFeedback = await db.queryParamCnt_Arr(updateRoleFeedbackQuery, [content, u_idx, role_response_idx]);
 
     if (!updateRoleFeedback) {
@@ -1550,7 +1769,7 @@ module.exports = {
   deleteRoleProject : async (...args) => {
     let role_idx = args[0];
 
-    let deleteRoleProjectQuery = 'DELETE FROM chat.role WHERE role_idx = ?';
+    let deleteRoleProjectQuery = 'DELETE FROM tkb.role WHERE role_idx = ?';
     let deleteRoleProject = await db.queryParamCnt_Arr(deleteRoleProjectQuery, [role_idx]);
 
     if (!deleteRoleProject) {
@@ -1562,7 +1781,7 @@ module.exports = {
   // deleteRoleTask : async (...args) => {
   //   let role_task_idx = args[0];
 
-  //   let deleteRoleTaskQuery = 'DELETE FROM chat.role_task WHERE role_task_idx = ?';
+  //   let deleteRoleTaskQuery = 'DELETE FROM tkb.role_task WHERE role_task_idx = ?';
   //   let deleteRoleTask = await db.queryParamCnt_Arr(deleteRoleTaskQuery, [role_task_idx]);
 
   //   if (!deleteRoleTask) {
@@ -1575,7 +1794,7 @@ module.exports = {
   //   let role_task_idx = args[0];
   //   let u_idx = args[1];
 
-  //   let deleteRoleUserQuery = 'DELETE FROM chat.role_user WHERE role_task_idx = ? AND u_idx = ?';
+  //   let deleteRoleUserQuery = 'DELETE FROM tkb.role_user WHERE role_task_idx = ? AND u_idx = ?';
   //   let deleteRoleUser = await db.queryParamCnt_Arr(deleteRoleUserQuery, [role_task_idx, u_idx]);
 
   //   if (!deleteRoleUser) {
@@ -1587,7 +1806,7 @@ module.exports = {
   deleteRoleResponse : async (...args) => {
     let role_response_idx = args[0];
 
-    let deleteRoleResponseQuery = 'DELETE FROM chat.role_response WHERE role_response_idx = ?';
+    let deleteRoleResponseQuery = 'DELETE FROM tkb.role_response WHERE role_response_idx = ?';
     let deleteRoleResponse = await db.queryParamCnt_Arr(deleteRoleResponseQuery, [role_response_idx]);
 
     if (!deleteRoleResponse) {
@@ -1600,7 +1819,7 @@ module.exports = {
     let role_response_idx = args[0];
     let u_idx = args[1];
 
-    let deleteRoleFeedbackQuery = 'DELETE FROM chat.role_feedback WHERE role_response_idx = ? AND u_idx = ?';
+    let deleteRoleFeedbackQuery = 'DELETE FROM tkb.role_feedback WHERE role_response_idx = ? AND u_idx = ?';
     let deleteRoleFeedback = await db.queryParamCnt_Arr(deleteRoleFeedbackQuery, [role_response_idx, u_idx]);
 
     if (!deleteRoleFeedback) {
@@ -1623,7 +1842,7 @@ module.exports = {
     let starttime = args[4];
     let endtime = args[5];
 
-    let insertCalendarQuery = 'INSERT INTO chat.calendar (g_idx, title, location, memo, starttime, endtime) VALUES (?, ?, ?, ?, ?, ?)';
+    let insertCalendarQuery = 'INSERT INTO tkb.calendar (g_idx, title, location, memo, starttime, endtime) VALUES (?, ?, ?, ?, ?, ?)';
     var insertCalendar = await db.queryParamCnt_Arr(insertCalendarQuery, [g_idx, title, location, memo, starttime, endtime]);
 
     if(!insertCalendar) {
@@ -1635,11 +1854,11 @@ module.exports = {
   showCalendar : async (...args) => {
     //일정에 색깔 어떻게 표현할거냐?
     let u_idx = args[0];
-    let findUserJoinedQuery = 'SELECT g_idx FROM chat.joined WHERE u_idx = ?';
+    let findUserJoinedQuery = 'SELECT g_idx FROM tkb.joined WHERE u_idx = ?';
     var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
     let result = [];
     for(let i = 0 ; i < findUserJoined.length ; i++) {
-      let searchGroupInfoQuery = 'SELECT * FROM chat.group WHERE g_idx = ?';
+      let searchGroupInfoQuery = 'SELECT * FROM tkb.group WHERE g_idx = ?';
       var searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [findUserJoined[i].g_idx]);
 
       let searchCalendarInfoQuery =
@@ -1677,9 +1896,9 @@ module.exports = {
     let endtime = args[5];
 
     //이거는 라우터에서 실행하자
-    // let getCalendarQuery = 'SELECT * FROM chat.calendar WHERE cal_idx = ?';
+    // let getCalendarQuery = 'SELECT * FROM tkb.calendar WHERE cal_idx = ?';
     // var getCalendar = await db.queryParamCnt_Arr(getCalendarQuery, [cal_idx]);
-    let updateCalendarQuery = 'UPDATE chat.calendar SET title = ? AND location = ? AND memo = ? AND starttime = ? AND endtime = ? WHERE cal_idx = ?';
+    let updateCalendarQuery = 'UPDATE tkb.calendar SET title = ? AND location = ? AND memo = ? AND starttime = ? AND endtime = ? WHERE cal_idx = ?';
     var updateCalendar = await db.queryParamCnt_Arr(updateCalendarQuery, [title, location, memo, starttime, endtime, cal_idx]);
 
     if(!updateCalendar) {
@@ -1691,7 +1910,7 @@ module.exports = {
   deleteCalendar : async (...args) => {
     let cal_idx = args[0];
 
-    let deleteCalendarQuery = 'DELETE FROM chat.calendar WHERE cal_idx = ?';
+    let deleteCalendarQuery = 'DELETE FROM tkb.calendar WHERE cal_idx = ?';
     var deleteCalendar = await db.queryParamCnt_Arr(deleteCalendarQuery, [cal_idx]);
 
     if(!deleteCalendar) {

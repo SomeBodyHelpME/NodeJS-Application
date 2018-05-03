@@ -6,9 +6,9 @@ const jwt = require('../../module/jwt.js');
 const db = require('../../module/pool.js');
 const sql = require('../../module/sql.js');
 
-router.get('/notice', async(req, res, next) => {
-    let g_idx = req.query.g_idx;
-    let result = await sql.forEachNotice(g_idx);
+router.get('/notice/:chatroom_idx', async(req, res, next) => {
+    let chatroom_idx = req.params.chatroom_idx;
+    let result = await sql.forEachNotice(chatroom_idx);
     if(!result) {
       res.status(500).send({
         message : "Internal Server Error"
@@ -21,7 +21,7 @@ router.get('/notice', async(req, res, next) => {
     }
 });
 
-router.get('/lights', async(req, res, next) => {
+router.get('/lights/:chatroom_idx', async(req, res, next) => {
     let token = req.headers.token;
     let decoded = jwt.verify(token);
     if(decoded === -1)
@@ -32,8 +32,8 @@ router.get('/lights', async(req, res, next) => {
     }
     else{
         let u_idx = decoded.u_idx;
-        let g_idx = req.query.g_idx;
-        let result = await sql.forEachLights(u_idx, g_idx);
+        let chatroom_idx = req.params.chatroom_idx;
+        let result = await sql.forEachLights(u_idx, chatroom_idx);
         if(!result) {
           res.status(500).send({
             message : "Internal Server Error"
@@ -47,7 +47,7 @@ router.get('/lights', async(req, res, next) => {
     }
 });
 
-router.get('/lights/each/:color/:g_idx/:light_idx', async(req, res, next) => {
+router.get('/lights/each/:color/:chatroom_idx/:light_idx', async(req, res, next) => {
   let token = req.headers.token;
   let decoded = jwt.verify(token);
   if(decoded === -1) {
@@ -57,11 +57,11 @@ router.get('/lights/each/:color/:g_idx/:light_idx', async(req, res, next) => {
   } else {
     let u_idx = decoded.u_idx;
     let color = req.params.color;
-    let g_idx = req.params.g_idx;
+    let chatroom_idx = req.params.chatroom_idx;
     let light_idx = req.params.light_idx;
 
-    let status = await sql.forEachLightsStatus(u_idx, g_idx, light_idx);
-    let result = await sql.forEachLightsResponse(u_idx, g_idx, light_idx, color);
+    let status = await sql.forEachLightsStatus(u_idx, chatroom_idx, light_idx);
+    let result = await sql.forEachLightsResponse(u_idx, chatroom_idx, light_idx, color);
 
     if(!result) {
       res.status(500).send({
@@ -108,7 +108,7 @@ router.get('/lights/each/:color/:g_idx/:light_idx', async(req, res, next) => {
 //     }
 // });
 
-router.get('/vote', async(req, res, next) => {
+router.get('/vote/:chatroom_idx', async(req, res, next) => {
     let token = req.headers.token;
     let decoded = jwt.verify(token);
     if(decoded === -1)
@@ -118,8 +118,8 @@ router.get('/vote', async(req, res, next) => {
         });
     } else {
         let u_idx = decoded.u_idx;
-        let g_idx = req.query.g_idx;
-        let result = await sql.forEachVote(u_idx, g_idx);
+        let chatroom_idx = req.params.chatroom_idx;
+        let result = await sql.forEachVote(u_idx, chatroom_idx);
         if(!result) {
           res.status(500).send({
             message : "Internal Server Error"
@@ -133,7 +133,7 @@ router.get('/vote', async(req, res, next) => {
     }
 });
 
-router.get('/vote/res/:g_idx/:vote_idx', async(req, res, next) => {
+router.get('/single/vote/:vote_idx', async(req, res, next) => {
   let token = req.headers.token;
   let decoded = jwt.verify(token);
   if(decoded === -1) {
@@ -142,11 +142,10 @@ router.get('/vote/res/:g_idx/:vote_idx', async(req, res, next) => {
     });
   } else {
     let u_idx = decoded.u_idx;
-    let g_idx = req.params.g_idx;
     let vote_idx = req.params.vote_idx;
     let voteresult = await sql.forEachVoteOne(vote_idx);
     let choiceresult = await sql.forEachVoteChoice(vote_idx);
-    let responseresult = await sql.forEachVoteResponse(g_idx, vote_idx);
+    let responseresult = await sql.forEachVoteResponse(vote_idx);
     if(!voteresult || !choiceresult || !responseresult) {
       res.status(500).send({
         message : "Internal Server Error"
@@ -188,7 +187,7 @@ router.get('/single/lights/:light_idx', async(req, res, next) => {
     });
   } else {
     res.status(200).send({
-      message : "Success to Load Single Notice Lights",
+      message : "Success to Load Single Lights Detail",
       data : result
     });
   }

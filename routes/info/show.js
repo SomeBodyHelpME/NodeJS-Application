@@ -118,7 +118,7 @@ router.get('/unperformed', async(req, res, next) => {
 //     }
 // });
 
-router.get('/grouplist', async(req, res, next) => {
+router.get('/group', async(req, res, next) => {
   let token = req.headers.token;
   let decoded = jwt.verify(token);
   if(decoded === -1) {
@@ -141,7 +141,7 @@ router.get('/grouplist', async(req, res, next) => {
   }
 });
 
-router.get('/joined', async(req, res, next) => {
+router.get('/chatroom/:g_idx', async(req, res, next) => {
   let token = req.headers.token;
   let decoded = jwt.verify(token);
   if(decoded === -1) {
@@ -150,14 +150,61 @@ router.get('/joined', async(req, res, next) => {
     });
   } else {
     let u_idx = decoded.u_idx;
-    let result = await sql.getJoinedInfo(u_idx);
+    let g_idx = req.params.g_idx;
+    let result = await sql.showAllChatroomJoined(u_idx, g_idx);
     if(!result) {
       res.status(500).send({
         message : "Internal Server Error"
       });
     } else {
       res.status(200).send({
-        message : "Success to Load Joined Information",
+        message : "Success to Load Chatroom List",
+        data : result
+      });
+    }
+  }
+});
+
+router.get('/joined/group', async(req, res, next) => {
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if(decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+    let result = await sql.getGJoinedInfo(u_idx);
+    if(!result) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    } else {
+      res.status(200).send({
+        message : "Success to Load Group Joined Information",
+        data : result
+      });
+    }
+  }
+});
+
+router.get('/joined/chatroom', async(req, res, next) => {
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if(decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+    let result = await sql.getCJoinedInfo(u_idx);
+    if(!result) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    } else {
+      res.status(200).send({
+        message : "Success to Load Chatroom Joined Information",
         data : result
       });
     }

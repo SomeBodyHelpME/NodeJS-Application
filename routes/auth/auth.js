@@ -14,16 +14,16 @@ router.post('/login', async(req, res, next) => {
     var pwd = req.body.pwd;
     var client_token = req.body.client_token;
 
-    let checkQuery = 'SELECT * FROM chat.user WHERE id = ?';
+    let checkQuery = 'SELECT * FROM tkb.user WHERE id = ?';
     let checkResult = await db.queryParamCnt_Arr(checkQuery, [id]);
     if (checkResult.length === 1) {
         const hashedpwd = await crypto.pbkdf2(pwd, checkResult[0].salt, 100000, 32, 'sha512');
         if (hashedpwd.toString('base64') === checkResult[0].pwd) {
-          let updateTokenQuery = 'UPDATE chat.user SET token = ? WHERE id = ?';
+          let updateTokenQuery = 'UPDATE tkb.user SET token = ? WHERE id = ?';
           let updateToken = await db.queryParamCnt_Arr(updateTokenQuery, [client_token, id]);
 
           const token = jwt.sign(id, checkResult[0].u_idx);
-          let infoQuery = 'SELECT * FROM chat.user WHERE id = ?';
+          let infoQuery = 'SELECT * FROM tkb.user WHERE id = ?';
           let info = await db.queryParamCnt_Arr(infoQuery, id);
           if(!checkResult || !info) {
             res.status(500).send({
@@ -67,11 +67,11 @@ router.post('/register', async(req, res, next) => {
 
     const salt = await crypto.randomBytes(32);
     const hashedpwd = await crypto.pbkdf2(pwd, salt.toString('base64'), 100000, 32, 'sha512');
-    let checkIDQuery = 'SELECT * FROM chat.user WHERE id = ?';
+    let checkIDQuery = 'SELECT * FROM tkb.user WHERE id = ?';
     let checkID = await db.queryParamCnt_Arr(checkIDQuery, [id]);
     if (checkID.length === 0) {
 
-        let insertQuery = 'INSERT INTO chat.user (name, salt, pwd, phone, id, token, photo) VALUES (?, ?, ?, ?, ?, ?, ?)';
+        let insertQuery = 'INSERT INTO tkb.user (name, salt, pwd, phone, id, token, photo) VALUES (?, ?, ?, ?, ?, ?, ?)';
         let insertResult = await db.queryParamCnt_Arr(insertQuery, [name, salt.toString('base64'), hashedpwd.toString('base64'), phone, id, token, photo]);
         if(!checkID || !insertResult) {
           res.status(500).send({
@@ -92,7 +92,7 @@ router.post('/register', async(req, res, next) => {
 
 router.get('/register/check', async(req, res, next) => {
     var id = req.query.id;
-    let checkIDQuery = 'SELECT * FROM chat.user WHERE id = ?';
+    let checkIDQuery = 'SELECT * FROM tkb.user WHERE id = ?';
     let checkID = await db.queryParamCnt_Arr(checkIDQuery, [id]);
     if(!checkID) {
       res.status(500).send({
@@ -109,20 +109,20 @@ router.get('/register/check', async(req, res, next) => {
     }
 });
 
-router.post('/invite', async(req, res, next) => {
+router.post('/invite/group', async(req, res, next) => {
   let name = req.body.name;
   let phone = req.body.phone;
   let g_idx =req.body.g_idx;
 
-  let findUserQuery = 'SELECT u_idx FROM chat.user WHERE name = ? AND phone = ?';
+  let findUserQuery = 'SELECT u_idx FROM tkb.user WHERE name = ? AND phone = ?';
   let findUser = await db.queryParamCnt_Arr(findUserQuery, [name, phone]);
 
 
-  if(findUser.length === 1) {
-    let statusQuery = 'SELECT * FROM chat.joined WHERE g_idx = ? AND u_idx = ?';
+  if(findUser && findUser.length === 1) {
+    let statusQuery = 'SELECT * FROM tkb.group_joined WHERE g_idx = ? AND u_idx = ?';
     let status = await db.queryParamCnt_Arr(statusQuery, [g_idx, findUser[0].u_idx]);
-    if(status.length === 0) {
-      let result = await sql.joinNewPerson(g_idx, findUser[0].u_idx);
+    if(status && status.length === 0) {
+      let result = await sql.joinNewPersonGroup(g_idx, findUser[0].u_idx);
       res.status(201).send({
         message: "Success to Invite Person",
         data : findUser[0].u_idx
@@ -145,9 +145,68 @@ router.post('/invite', async(req, res, next) => {
   }
 });
 
-router.post('/leave', async(req, res, next) => {
+router.post('/invite/chatroom', async(req, res, next) => {
+  let userArray = req.body.userArray;
+  let chatroom_idx =req.body.chatroom_idx;
+  let g_idx = req.body.g_idx;
+  
+  let checkResult = await sql.checkPerson(chatroom_idx, g_idx, userArray);
+  if (checkResult === 2) {
+    let result = await sql.joinNewPersonChatroom(chatroom_idx, g_idx, userArray);
+    
+    if (result) {
+      res.status(201).send({
+        message: "Success to Invite Person"
+      });
+      let sendFCM_AllUser = await sql.sendFCMData(statuscode.groupjoineduserChange, g_idx);
+      // if(!sendFCM_AllUser) {
+      //   res.status(500).send({
+      //     message : "Internal Server Error"
+      //   });
+      // }  
+    } else {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    }
+  } else if (checkResult === 1){
+    res.status(400).send({
+      message : "Already Joined"
+    });
+  } else if (checkResult === 0) {
+    res.status(500).send({
+      message : "Internal Server Error"
+    });
+  }
+  
+  
+
+
+  // let statusQuery = 'SELECT * FROM tkb.group_joined WHERE g_idx = ? AND u_idx = ?';
+  // let status = await db.queryParamCnt_Arr(statusQuery, [g_idx, findUser[0].u_idx]);
+  // if(status.length === 0) {
+  //   let result = await sql.joinNewPersonGroup(g_idx, findUser[0].u_idx);
+  //   res.status(201).send({
+  //     message: "Success to Invite Person",
+  //     data : findUser[0].u_idx
+  //   });
+  //   let sendFCM_AllUser = await sql.sendFCMData(statuscode.groupjoineduserChange, g_idx);
+  //   if(!sendFCM_AllUser) {
+  //     res.status(500).send({
+  //       message : "Internal Server Error"
+  //     });
+  //   }
+  // } else {
+  //   res.status(400).send({
+  //     message : "Already Joined"
+  //   });
+  // }
+
+});
+
+router.post('/leave/group', async(req, res, next) => {
   let option = {
-    uri : 'http://localhost:3001/auth/leave',
+    uri : 'http://13.125.118.111:3002/auth/leave/group',
     method : 'DELETE',
     headers : {
       token : req.headers.token
@@ -180,7 +239,7 @@ router.post('/leave', async(req, res, next) => {
   });
 });
 
-router.delete('/leave', async(req, res, next) => {
+router.delete('/leave/group', async(req, res, next) => {
   let g_idx = req.body.g_idx;
   let token = req.headers.token;
   let decoded = jwt.verify(token);
@@ -191,7 +250,7 @@ router.delete('/leave', async(req, res, next) => {
   } else {
     let u_idx = decoded.u_idx;
 
-    let result = await sql.leaveRoom(u_idx, g_idx);
+    let result = await sql.leaveGroup(u_idx, g_idx);
     if(!result) {
       res.status(500).send({
         message : "Internal Server Error"
@@ -200,6 +259,73 @@ router.delete('/leave', async(req, res, next) => {
       if (result.affectedRows !== 0) {
         res.status(201).send({
           message : "Success Leave Group"
+        });  
+      } else {
+        res.status(400).send({
+          message : "Wrong Information"
+        });
+      }
+      
+      let sendFCM = await sql.sendFCMData(statuscode.joinedChange, g_idx);
+    }
+  }
+});
+
+router.post('/leave/chatroom', async(req, res, next) => {
+  let option = {
+    uri : 'http://13.125.118.111:3002/auth/leave/chatroom',
+    method : 'DELETE',
+    headers : {
+      token : req.headers.token
+    },
+    form : {
+      chatroom_idx : req.body.chatroom_idx
+    }
+  }
+
+  request(option, async(err, response, body) => {
+    let bodyParsed = JSON.parse(body);
+    
+    if (bodyParsed.message === "Success Leave Chatroom") {
+      res.status(201).send({
+        message : bodyParsed.message
+      });
+    } else if (bodyParsed.message === "Verification Failed") {
+      res.status(400).send({
+        message : bodyParsed.message
+      });
+    } else if (bodyParsed.message === "Internal Server Error") {
+      res.status(500).send({
+        message : bodyParsed.message
+      });
+    } else if (bodyParsed.message === "Wrong Information") {
+      res.status(400).send({
+        message : bodyParsed.message
+      });
+    } 
+  });
+});
+
+router.delete('/leave/chatroom', async(req, res, next) => {
+  let chatroom_idx = req.body.chatroom_idx;
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if(decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+
+    let result = await sql.leaveChatroom(u_idx, chatroom_idx);
+    if(!result) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    } else {
+      if (result.affectedRows !== 0) {
+        res.status(201).send({
+          message : "Success Leave Chatroom"
         });  
       } else {
         res.status(400).send({
@@ -231,7 +357,7 @@ router.put('/profile', upload.single('photo'), async(req, res, next) => {
     var bio = req.body.bio;
     var phone = req.body.phone;
 
-    let selectUserInfoQuery = 'SELECT photo, name, bio, phone FROM chat.user WHERE u_idx = ?';
+    let selectUserInfoQuery = 'SELECT photo, name, bio, phone FROM tkb.user WHERE u_idx = ?';
     let selectUserInfo = await db.queryParamCnt_Arr(selectUserInfoQuery, [u_idx]);
 
     if(photo === null) {
@@ -246,7 +372,7 @@ router.put('/profile', upload.single('photo'), async(req, res, next) => {
     if(phone === undefined) {
       phone = selectUserInfo[0].phone;
     }
-    let updateProfileQuery = 'UPDATE chat.user SET name = ?, bio = ?, phone = ?, photo = ? where u_idx = ?';
+    let updateProfileQuery = 'UPDATE tkb.user SET name = ?, bio = ?, phone = ?, photo = ? where u_idx = ?';
     let updateProfile = await db.queryParamCnt_Arr(updateProfileQuery, [name, bio, phone, photo, u_idx]);
     if(!selectUserInfo || !updateProfile) {
       res.status(500).send({

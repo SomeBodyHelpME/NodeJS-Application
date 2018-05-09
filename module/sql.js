@@ -286,6 +286,35 @@ module.exports = {
     return result;
 
   },// findRestGroupThings(그룹별로 보여줄 때)
+  // groupNotice : async (...args) => {
+  //   let u_idx = args[0];
+  //   let g_idx = args[1];
+  //   let findUserJoinedQuery = 'SELECT chatroom_idx FROM tkb.chatroom_joined WHERE u_idx = ? AND g_idx = ?';
+  //   var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx, g_idx]);
+  //   let result = [];
+  //   for(let i = 0 ; i < findUserJoined.length ; i++) {
+  //     let findEachGroupNoticeQuery = 'SELECT tkb.notice.*, tkb.notice_response.status AS response_status FROM tkb.notice JOIN tkb.notice_response USING(notice_idx) WHERE chatroom_idx = ? ORDER BY tkb.notice.notice_idx DESC';
+  //     var findEachGroupNotice = await db.queryParamCnt_Arr(findEachGroupNoticeQuery, [findUserJoined[i].chatroom_idx]);
+
+  //     if(findEachGroupNotice === undefined) {
+  //       break;
+  //     }
+  //     // if(findEachGroupNotice.length != 0) {  //이 부분은 공지가 없을 시 그룹 이름이 보이지 않는 경우, 현재는 공지가 없어도 그룹이름이 보임
+  //       result.push(
+  //         {
+  //           chatroom_idx : findUserJoined[i].chatroom_idx,
+  //           data : findEachGroupNotice
+  //         }
+  //       );
+
+  //     // }
+  //   }
+  //   if(!findUserJoined || ! findEachGroupNotice) {
+  //     return false;
+  //   } else {
+  //     return result;
+  //   }
+  // },
   groupNotice : async (...args) => {
     let u_idx = args[0];
     let g_idx = args[1];
@@ -295,20 +324,18 @@ module.exports = {
     for(let i = 0 ; i < findUserJoined.length ; i++) {
       let findEachGroupNoticeQuery = 'SELECT tkb.notice.*, tkb.notice_response.status FROM tkb.notice JOIN tkb.notice_response USING(notice_idx) WHERE chatroom_idx = ? ORDER BY tkb.notice.notice_idx DESC';
       var findEachGroupNotice = await db.queryParamCnt_Arr(findEachGroupNoticeQuery, [findUserJoined[i].chatroom_idx]);
-
+      console.log(findEachGroupNotice);
       if(findEachGroupNotice === undefined) {
         break;
       }
-      // if(findEachGroupNotice.length != 0) {  //이 부분은 공지가 없을 시 그룹 이름이 보이지 않는 경우, 현재는 공지가 없어도 그룹이름이 보임
-        result.push(
-          {
-            chatroom_idx : findUserJoined[i].chatroom_idx,
-            data : findEachGroupNotice
-          }
-        );
-
-      // }
+      
+      result = result.concat(findEachGroupNotice);  
     }
+
+    result.sort(function(a, b) {      // descending order
+      return a.write_time > b.write_time ? -1 : a.write_time < b.write_time ? 1 : 0;
+    });
+
     if(!findUserJoined || ! findEachGroupNotice) {
       return false;
     } else {
@@ -333,12 +360,13 @@ module.exports = {
       if(findEachGroupLights === undefined) {
         break;
       }
-      GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
-      GroupJson.data = findEachGroupLights;
       
-      resArray.push(GroupJson);
+      resArray = resArray.concat(findEachGroupLights);
     }
 
+    resArray.sort(function(a, b) {      // descending order
+      return a.write_time > b.write_time ? -1 : a.write_time < b.write_time ? 1 : 0;
+    });
 
     if(!findUserJoined || !findEachGroupLights) {
       return false;
@@ -363,11 +391,13 @@ module.exports = {
       if(findEachGroupLights === undefined) {
         break;
       }
-      GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
-      GroupJson.data = findEachGroupLights;
-
-      reqArray.push(GroupJson);
+      
+      reqArray = reqArray.concat(findEachGroupLights);
     }
+
+    reqArray.sort(function(a, b) {      // descending order
+      return a.write_time > b.write_time ? -1 : a.write_time < b.write_time ? 1 : 0;
+    });
 
     if(!findUserJoined || !findEachGroupLights) {
       return false;
@@ -413,34 +443,54 @@ module.exports = {
     var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx, g_idx]);
 
     // 수신자에 대한 내용
-    let receiverArray = [];
+    let NotFinishedArray = [];
+    let FinishedArray = [];
+
     for (let i = 0 ; i < findUserJoined.length ; i++) {
-      let GroupJson = {};
+      // let GroupJson = {};
       
-      let findEachGroupVoteQuery = 'SELECT * FROM tkb.vote WHERE chatroom_idx = ? AND u_idx != ? ORDER BY tkb.vote.vote_idx DESC';
-      let findEachGroupVote = await db.queryParamCnt_Arr(findEachGroupVoteQuery, [findUserJoined[i].chatroom_idx, u_idx]);
-      GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
-      GroupJson.data = findEachGroupVote;
-      // // let findEachGroupVoteNotFinishedQuery = 'SELECT * FROM tkb.vote WHERE chatroom_idx = ? AND u_idx != ? AND status = ? ORDER BY tkb.vote.vote_idx DESC';
-      // // var findEachGroupVoteNotFinished = await db.queryParamCnt_Arr(findEachGroupVoteNotFinishedQuery, [findUserJoined[i].chatroom_idx, u_idx, 0]);
+      // let findEachGroupVoteQuery = `SELECT tkb.vote.*, tkb.vote_response.status AS response_status, tkb.vote_response.value AS response_value FROM tkb.vote_response JOIN tkb.vote USING(vote_idx)
+      // WHERE tkb.vote.chatroom_idx = ? AND tkb.vote.u_idx != ? AND tkb.vote_response.u_idx = ? ORDER BY tkb.vote.vote_idx DESC`;
+      // let findEachGroupVote = await db.queryParamCnt_Arr(findEachGroupVoteQuery, [findUserJoined[i].chatroom_idx, u_idx, u_idx]);
+      // GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
+      // GroupJson.data = findEachGroupVote;
+      let findEachGroupVoteNotFinishedQuery = `SELECT tkb.vote.*, tkb.vote_response.status AS response_status, tkb.vote_response.value AS response_value FROM tkb.vote_response JOIN tkb.vote USING(vote_idx)
+      WHERE tkb.vote.chatroom_idx = ? AND tkb.vote.u_idx != ? AND tkb.vote_response.u_idx = ? AND tkb.vote.status = ? ORDER BY tkb.vote.vote_idx DESC`;
+      var findEachGroupVoteNotFinished = await db.queryParamCnt_Arr(findEachGroupVoteNotFinishedQuery, [findUserJoined[i].chatroom_idx, u_idx, u_idx, 0]);
 
-      // // let findEachGroupVoteFinishedQuery = 'SELECT * FROM tkb.vote WHERE chatroom_idx = ? AND u_idx != ? AND status = ? ORDER BY tkb.vote.vote_idx DESC';
-      // // var findEachGroupVoteFinished = await db.queryParamCnt_Arr(findEachGroupVoteFinishedQuery, [findUserJoined[i].chatroom_idx, u_idx, 1]);
+      let findEachGroupVoteFinishedQuery = `SELECT tkb.vote.*, tkb.vote_response.status AS response_status, tkb.vote_response.value AS response_value FROM tkb.vote_response JOIN tkb.vote USING(vote_idx)
+      WHERE tkb.vote.chatroom_idx = ? AND tkb.vote.u_idx != ? AND tkb.vote_response.u_idx = ? AND tkb.vote.status = ? ORDER BY tkb.vote.vote_idx DESC`;
+      var findEachGroupVoteFinished = await db.queryParamCnt_Arr(findEachGroupVoteFinishedQuery, [findUserJoined[i].chatroom_idx, u_idx, u_idx, 1]);
 
-      // // if(findEachGroupVoteNotFinished === undefined || findEachGroupVoteFinished === undefined) {
-      // //   break;
-      // // }
+      if(findEachGroupVoteNotFinished === undefined || findEachGroupVoteFinished === undefined) {
+        break;
+      }
       // GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
       // GroupJson.data = {
       //   NotFinished : findEachGroupVoteNotFinished,
       //   Finished : findEachGroupVoteFinished
       // };
-      receiverArray.push(GroupJson);
+      // receiverArray.push(GroupJson);
+
+      NotFinishedArray = NotFinishedArray.concat(findEachGroupVoteNotFinished);
+      FinishedArray = FinishedArray.concat(findEachGroupVoteFinished);
     }
+
+    NotFinishedArray.sort(function(a, b) {      // descending order
+      return a.write_time > b.write_time ? -1 : a.write_time < b.write_time ? 1 : 0;
+    });
+
+    FinishedArray.sort(function(a, b) {      // descending order
+      return a.write_time > b.write_time ? -1 : a.write_time < b.write_time ? 1 : 0;
+    });
+
     if (!findUserJoined) {
       return false;
     } else {
-      return receiverArray;
+      return {
+        NotFinished : NotFinishedArray,
+        Finished : FinishedArray
+      };
     }
   },
   groupVoteSender : async (...args) => {
@@ -450,30 +500,48 @@ module.exports = {
     var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx, g_idx]);
 
     //발신자에 대한 내용
-    let senderArray = [];
+    // let senderArray = [];
+    let NotFinishedArray = [];
+    let FinishedArray = [];
+
     for (let i = 0 ; i < findUserJoined.length ; i++) {
       let GroupJson = {};
       
-      let findEachGroupVoteQuery = 'SELECT * FROM tkb.vote WHERE chatroom_idx = ? AND u_idx = ? ORDER BY tkb.vote.vote_idx DESC';
-      let findEachGroupVote = await db.queryParamCnt_Arr(findEachGroupVoteQuery, [findUserJoined[i].chatroom_idx, u_idx]);
-      GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
-      GroupJson.data = findEachGroupVote;
-      // let findEachGroupVoteNotFinishedQuery = 'SELECT * FROM tkb.vote WHERE chatroom_idx = ? AND u_idx = ? AND status = ? ORDER BY tkb.vote.vote_idx DESC';
-      // var findEachGroupVoteNotFinished = await db.queryParamCnt_Arr(findEachGroupVoteNotFinishedQuery, [findUserJoined[i].chatroom_idx, u_idx, 0]);
+      // let findEachGroupVoteQuery = `SELECT tkb.vote.*, tkb.vote_response.status AS response_status, tkb.vote_response.value AS response_value FROM tkb.vote_response JOIN tkb.vote USING(vote_idx)
+      // WHERE tkb.vote.chatroom_idx = ? AND tkb.vote.u_idx = ? AND tkb.vote_response.u_idx = ? ORDER BY tkb.vote.vote_idx DESC`;
+      // let findEachGroupVote = await db.queryParamCnt_Arr(findEachGroupVoteQuery, [findUserJoined[i].chatroom_idx, u_idx, u_idx]);
+      // GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
+      // GroupJson.data = findEachGroupVote;
+      let findEachGroupVoteNotFinishedQuery = `SELECT tkb.vote.*, tkb.vote_response.status AS response_status, tkb.vote_response.value AS response_value FROM tkb.vote_response JOIN tkb.vote USING(vote_idx)
+      WHERE tkb.vote.chatroom_idx = ? AND tkb.vote.u_idx = ? AND tkb.vote_response.u_idx = ? AND tkb.vote.status = ? ORDER BY tkb.vote.vote_idx DESC`;
+      var findEachGroupVoteNotFinished = await db.queryParamCnt_Arr(findEachGroupVoteNotFinishedQuery, [findUserJoined[i].chatroom_idx, u_idx, u_idx, 0]);
 
-      // let findEachGroupVoteFinishedQuery = 'SELECT * FROM tkb.vote WHERE chatroom_idx = ? AND u_idx = ? AND status = ? ORDER BY tkb.vote.vote_idx DESC';
-      // var findEachGroupVoteFinished = await db.queryParamCnt_Arr(findEachGroupVoteFinishedQuery, [findUserJoined[i].chatroom_idx, u_idx, 1]);
+      let findEachGroupVoteFinishedQuery = `SELECT tkb.vote.*, tkb.vote_response.status AS response_status, tkb.vote_response.value AS response_value FROM tkb.vote_response JOIN tkb.vote USING(vote_idx)
+      WHERE tkb.vote.chatroom_idx = ? AND tkb.vote.u_idx = ? AND tkb.vote_response.u_idx = ? AND tkb.vote.status = ? ORDER BY tkb.vote.vote_idx DESC`;
+      var findEachGroupVoteFinished = await db.queryParamCnt_Arr(findEachGroupVoteFinishedQuery, [findUserJoined[i].chatroom_idx, u_idx, u_idx, 1]);
 
-      // if(findEachGroupVoteNotFinished === undefined || findEachGroupVoteFinished === undefined) {
-      //   break;
-      // }
+      if(findEachGroupVoteNotFinished === undefined || findEachGroupVoteFinished === undefined) {
+        break;
+      }
       // GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
       // GroupJson.data = {
       //   NotFinished : findEachGroupVoteNotFinished,
       //   Finished : findEachGroupVoteFinished
       // };
-      senderArray.push(GroupJson);
+      // senderArray.push(GroupJson);
+     
+      NotFinishedArray = NotFinishedArray.concat(findEachGroupVoteNotFinished);
+      FinishedArray = FinishedArray.concat(findEachGroupVoteFinished);
     }
+
+    NotFinishedArray.sort(function(a, b) {      // descending order
+      return a.write_time > b.write_time ? -1 : a.write_time < b.write_time ? 1 : 0;
+    });
+
+    FinishedArray.sort(function(a, b) {      // descending order
+      return a.write_time > b.write_time ? -1 : a.write_time < b.write_time ? 1 : 0;
+    });
+
 
     if (!findUserJoined) {
       return false;
@@ -485,7 +553,7 @@ module.exports = {
     let chatroom_idx = args[0];
 
     //let showAllNoticeQuery = 'SELECT * FROM tkb.group JOIN tkb.notice USING(chatroom_idx) WHERE chatroom_idx = ? ORDER BY write_time';  //이름 같이 전송해야 할 때
-    let showAllNoticeQuery = 'SELECT tkb.notice.*, tkb.notice_response.status FROM tkb.notice JOIN tkb.notice_response USING(notice_idx) WHERE chatroom_idx = ? ORDER BY notice_idx DESC';
+    let showAllNoticeQuery = 'SELECT tkb.notice.*, tkb.notice_response.status AS response_status FROM tkb.notice JOIN tkb.notice_response USING(notice_idx) WHERE chatroom_idx = ? ORDER BY notice_idx DESC';
     var showAllNotice = await db.queryParamCnt_Arr(showAllNoticeQuery, [chatroom_idx]);
     if(!showAllNotice) {
       return false;
@@ -570,28 +638,31 @@ module.exports = {
     let u_idx = args[0];
     let chatroom_idx = args[1];
 
-    let showAllVoteQuery = 'SELECT tkb.vote.* FROM tkb.vote WHERE chatroom_idx = ? ORDER BY tkb.vote.vote_idx DESC';
-    let showAllVote = await db.queryParamCnt_Arr(showAllVoteQuery, [chatroom_idx]);
+    // let showAllVoteQuery = `SELECT tkb.vote.*, tkb.vote_response.status AS response_status, tkb.vote_response.value AS response_value FROM tkb.vote_response JOIN tkb.vote USING(vote_idx) 
+    // WHERE tkb.vote.chatroom_idx = ? AND tkb.vote_response.u_idx = ? ORDER BY tkb.vote.vote_idx DESC`;
+    // let showAllVote = await db.queryParamCnt_Arr(showAllVoteQuery, [chatroom_idx, u_idx]);
 
-    if (!showAllVote) {
-      return false;
-    } else {
-      return showAllVote;
-    }
-    // let showAllVoteNotFinishedQuery = 'SELECT tkb.vote.* FROM tkb.vote WHERE chatroom_idx = ? AND status = ? ORDER BY tkb.vote.vote_idx DESC';
-    // var showAllVoteNotFinished = await db.queryParamCnt_Arr(showAllVoteNotFinishedQuery, [chatroom_idx, 0]);
-
-    // let showAllVoteFinishedQuery = 'SELECT * FROM tkb.vote WHERE chatroom_idx = ? AND status = ? ORDER BY tkb.vote.vote_idx DESC';
-    // var showAllVoteFinished = await db.queryParamCnt_Arr(showAllVoteFinishedQuery, [chatroom_idx, 1]);
-
-    // if(!showAllVoteNotFinished || !showAllVoteFinished) {
+    // if (!showAllVote) {
     //   return false;
     // } else {
-    //   return {
-    //     NotFinished : showAllVoteNotFinished,
-    //     Finished : showAllVoteFinished
-    //   };
+    //   return showAllVote;
     // }
+    let showAllVoteNotFinishedQuery = `SELECT tkb.vote.*, tkb.vote_response.status AS response_status, tkb.vote_response.value AS response_value FROM tkb.vote_response JOIN tkb.vote USING(vote_idx) 
+    WHERE tkb.vote.chatroom_idx = ? AND tkb.vote_response.u_idx = ? AND tkb.vote.status = ? ORDER BY tkb.vote.vote_idx DESC`;
+    var showAllVoteNotFinished = await db.queryParamCnt_Arr(showAllVoteNotFinishedQuery, [chatroom_idx, u_idx, 0]);
+
+    let showAllVoteFinishedQuery = `SELECT tkb.vote.*, tkb.vote_response.status AS response_status, tkb.vote_response.value AS response_value FROM tkb.vote_response JOIN tkb.vote USING(vote_idx) 
+    WHERE tkb.vote.chatroom_idx = ? AND tkb.vote_response.u_idx = ? AND tkb.vote.status = ? ORDER BY tkb.vote.vote_idx DESC`;
+    var showAllVoteFinished = await db.queryParamCnt_Arr(showAllVoteFinishedQuery, [chatroom_idx, u_idx, 1]);
+
+    if(!showAllVoteNotFinished || !showAllVoteFinished) {
+      return false;
+    } else {
+      return {
+        NotFinished : showAllVoteNotFinished,
+        Finished : showAllVoteFinished
+      };
+    }
   },// forEachVote
   forEachVoteOne : async (...args) => {
     let vote_idx = args[0];
@@ -625,6 +696,15 @@ module.exports = {
 
     return findEachGroupVoteResAll;
   },// forEachVoteResponse
+  forEachVoteCombine : async (...args) => {
+    let choiceresult = args[0];
+    let responseresult = args[1];
+
+    for (let i = 0 ; i < responseresult.length ; i++) {
+      choiceresult[responseresult[i].value].userArray.append(responseresult[i].u_idx);
+    }
+    return choiceresult;
+  },
   makeNotice : async (...args) => {
     let u_idx = args[0];
     let chat_idx = args[1];
@@ -736,7 +816,7 @@ module.exports = {
     // let searchGroupInfoQuery = 'SELECT * FROM tkb.group WHERE chatroom_idx = ?';
     // let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [chatroom_idx]);
 
-    let insertVoteQuery = 'INSERT INTO tkb.vote (u_idx, chat_idx, chatroom_idx, write_time, title, content) VALUES (?, ?, ?, ?, ?, ?)';
+    let insertVoteQuery = 'INSERT INTO tkb.vote (u_idx, chat_idx, chatroom_idx, write_time, title, content, endtime) VALUES (?, ?, ?, ?, ?, ?, ?)';
     var insertVote = await db.queryParamCnt_Arr(insertVoteQuery, [u_idx, chat_idx, chatroom_idx, write_time, title, content]);
 
     for(let i = 0 ; i < choice.length ; i++) {
@@ -1102,8 +1182,10 @@ module.exports = {
   },
   showAllChatroomJoined : async (...args) => {
     let u_idx = args[0];
-    let g_idx = args[1];
-    let findUserJoinedQuery = 'SELECT chatroom_idx FROM tkb.chatroom_joined WHERE u_idx = ? AND g_idx = ?';
+    // let g_idx = args[1];
+    // let findUserJoinedQuery = 'SELECT chatroom_idx FROM tkb.chatroom_joined WHERE u_idx = ? AND g_idx = ?';
+    // var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx, g_idx]);
+    let findUserJoinedQuery = 'SELECT chatroom_idx FROM tkb.chatroom_joined WHERE u_idx = ?';
     var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
     let result = [];
     for(let i = 0 ; i < findUserJoined.length ; i++) {

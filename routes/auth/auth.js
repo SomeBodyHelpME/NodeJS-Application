@@ -90,8 +90,8 @@ router.post('/register', async(req, res, next) => {
 
 });
 
-router.get('/register/check', async(req, res, next) => {
-    var id = req.query.id;
+router.post('/register/check', async(req, res, next) => {
+    var id = req.body.id;
     let checkIDQuery = 'SELECT * FROM tkb.user WHERE id = ?';
     let checkID = await db.queryParamCnt_Arr(checkIDQuery, [id]);
     if(!checkID) {

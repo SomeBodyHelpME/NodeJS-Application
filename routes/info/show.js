@@ -141,7 +141,8 @@ router.get('/group', async(req, res, next) => {
   }
 });
 
-router.get('/chatroom/:g_idx', async(req, res, next) => {
+// router.get('/chatroom/:g_idx', async(req, res, next) => {
+router.get('/chatroom', async(req, res, next) => {
   let token = req.headers.token;
   let decoded = jwt.verify(token);
   if(decoded === -1) {
@@ -150,8 +151,9 @@ router.get('/chatroom/:g_idx', async(req, res, next) => {
     });
   } else {
     let u_idx = decoded.u_idx;
-    let g_idx = req.params.g_idx;
-    let result = await sql.showAllChatroomJoined(u_idx, g_idx);
+    // let g_idx = req.params.g_idx;
+    // let result = await sql.showAllChatroomJoined(u_idx, g_idx);
+    let result = await sql.showAllChatroomJoined(u_idx);
     if(!result) {
       res.status(500).send({
         message : "Internal Server Error"

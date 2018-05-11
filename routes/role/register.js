@@ -28,9 +28,16 @@ router.post('/', async(req, res, next) => { //역할 등록
 				message : "Internal Server Error"
 			});
 		} else {
-			res.status(201).send({
-				message : "Success to Register Project"
-			});
+			let result2 = await sql.fcmSendWhenMakeThings(u_idx, chatroom_idx, statuscode.makeVote);
+      if(!result2) {
+        res.status(500).send({
+          message : "Internal Server Error"
+        });
+      } else {
+        res.status(201).send({
+					message : "Success to Register Project"
+				});
+      }//else
 		}
 	}
 });

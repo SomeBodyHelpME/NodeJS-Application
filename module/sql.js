@@ -973,43 +973,67 @@ module.exports = {
 
     var flag = true;
 
-    if(status === statuscode.makeNotice) {
+    if (status === statuscode.makeNotice) {
       var notifyMsg = {
           title: '팀플의 요정',   //제목
           body: '공지가 등록되었습니다!!'  //보낼메시지
       };
-    } else if(status === statuscode.makeLights) {
+    } else if (status === statuscode.makeLights) {
       var notifyMsg = {
         title: '팀플의 요정',   //제목
         body: '신호등이 등록되었습니다!!'  //보낼메시지
+      };
+    } else if (status === statuscode.makeVote) {
+      var notifyMsg = {
+        title: '팀플의 요정',   //제목
+        body: '투표가 등록되었습니다!!'  //보낼메시지
+      };
+    } else if (status === statuscode.makeRole) {
+      var notifyMsg = {
+        title: '팀플의 요정',   //제목
+        body: '역할이 등록되었습니다!!'  //보낼메시지
       };
     }
 
     let getUsersListInGroupQuery = 'SELECT u_idx FROM tkb.chatroom_joined WHERE chatroom_idx = ? AND u_idx != ?';
     var getUsersListInGroup = await db.queryParamCnt_Arr(getUsersListInGroupQuery, [chatroom_idx, u_idx]);
 
-    for(let i = 0 ; i < getUsersListInGroup.length ; i++) {
-      let getUsersTokenQuery = 'SELECT token FROM tkb.user WHERE u_idx = ?';
-      var getUsersToken = await db.queryParamCnt_Arr(getUsersTokenQuery, [getUsersListInGroup[i].u_idx]);
-      let client_token = getUsersToken[0].token;
+    if (getUsersListInGroup) {
+      for(let i = 0 ; i < getUsersListInGroup.length ; i++) {
+        let getUsersTokenQuery = 'SELECT token FROM tkb.user WHERE u_idx = ?';
+        var getUsersToken = await db.queryParamCnt_Arr(getUsersTokenQuery, [getUsersListInGroup[i].u_idx]);
+        
+        if (getUsersToken) {
+          let client_token = getUsersToken[0].token;
 
 
-      var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
-          to: client_token,
-          notification: notifyMsg
-      };
+          var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+              to: client_token,
+              notification: notifyMsg
+          };
 
-      fcm.send(message, function(err, response) {
-        if(err) {
-          console.log("Something has gone wrong!", err);
-          flag = false;
-        } else {
-          console.log("Successfully sent with response: ", response);
-        }
-      });//fcm.send
-      if(!flag) break;
+          fcm.send(message, function(err, response) {
+            if(err) {
+              console.log("Something has gone wrong!", err);
+              // flag = false;
+            } else {
+              console.log("Successfully sent with response: ", response);
+            }
+          });//fcm.send
+          // if(!flag) break;
+        }  
+        
+      }
+        
+        
     }
-    return flag;
+   
+    if (!getUsersListInGroup) {
+      return false;
+    } else {
+      return true;
+    }
+    // return flag;
   },
   actionNotice : async (...args) => {
     let u_idx = args[0];
@@ -1265,114 +1289,278 @@ module.exports = {
 
       문제점) 그룹의 사진, 이름을 바꾸는 라우터가 없기 때문에 i)번을 작업할 필요가 없다.
     */
-    let status = args[0];
-    let idx = args[1];
+    let userArray = args[0];
+    let status = args[1];
+    let idx = args[2];
+    
+    var message = {};
 
-    if(status === statuscode.groupChange || status === statuscode.joinedChange) {
-      let flag = true;
-
-      let getAllUserQuery = 'SELECT u_idx FROM tkb.joined WHERE g_idx = ?';
+    if (status === statuscode.FiveThingsChange) {
+      let getAllUserQuery = 'SELECT tkb.user.token, tkb.user.u_idx FROM tkb.group_joined JOIN tkb.user USING(u_idx) WHERE tkb.group_joined.g_idx = ?';
       var getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [idx]);
-      //getAllUserQuery 하고 getUserTokenQuery 하고 JOIN 할 수 있을 것 같은데
-      for(let i = 0 ; i < getAllUser.length ; i++) {
-        let getUserTokenQuery = 'SELECT token FROM tkb.user WHERE u_idx = ?';
-        var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [getAllUser[i].u_idx]);
-        let client_token = getUserToken[0].token;
 
-        var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+      if (getAllUser) {
+        for (let i = 0 ; i < getAllUser.length ; i++) {
+          let client_token = getAllUser[i].token;
+          if (userArray[0] === getAllUser[i].u_idx) {
+            message = {
+              to: client_token,
+              data: {
+                data : status
+              }
+            };  // message
+          } else {
+            message = {
+              to: client_token,
+              data: {
+                data : statuscode.Group_joinedUserChange
+              }
+            };  // message
+          } // else
+          
+          fcm.send(message, function(err, response) {
+            if(err) {
+              console.log("Something has gone wrong!", err);
+            } else {
+              console.log("Successfully sent with response: ", response);
+            }
+          }); // fcm.send
+        } // for
+      } // if (getAllUser)
+    } else if (status === statuscode.ChatroomChatroom_joinedChange) {        // 이부분 O(n^2)임 고쳐야함
+      let getAllUserQuery = 'SELECT tkb.user.token, tkb.user.u_idx FROM tkb.chatroom_joined JOIN tkb.user USING (u_idx) WHERE tkb.chatroom_joined.chatroom_idx = ?';
+      let getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [idx]);
+
+      if (getAllUser) {
+        for (let i = 0 ; i < getAllUser.length ; i++) {
+          let client_token = getAllUser[i].token;
+          message = {
+            to:client_token,
+            data: {
+              data : statuscode.Chatroom_joinedChange
+            }
+          };  // message
+
+          for(let j = 0 ; j < userArray.length ; j++) {
+            if (userArray[j] === getAllUser[i].u_idx) {
+              message.data.data = status;
+              break;
+            } else {
+              continue;
+            } // else
+          } // for (j)
+
+          fcm.send(message, function(err, response) {
+            if(err) {
+              console.log("Something has gone wrong!", err);
+            } else {
+              console.log("Successfully sent with response: ", response);
+            }
+          }); // fcm.send
+        } // for (i)
+      } // if (getAllUser)
+    } else if (status === statuscode.Group_joinedChatroom_joinedChange) {
+      let getAllUserQuery = 'SELECT tkb.user.token, tkb.user.u_idx FROM tkb.group_joined JOIN tkb.user USING (u_idx) WHERE tkb.group_joined.g_idx = ? AND tkb.group_joined.u_idx != ?';
+      let getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [idx, userArray[0]]);
+
+      if (getAllUser) {
+        for (let i = 0 ; i < getAllUser.length ; i++) {
+          let client_token = getAllUser[i].token;
+
+          message = {
             to: client_token,
             data: {
               data : status
             }
-        };
+          };  // message
 
-        fcm.send(message, function(err, response) {
-          if(err) {
-            console.log("Something has gone wrong!", err);
-            flag = false;
-          } else {
-            console.log("Successfully sent with response: ", response);
-          }
-        });//fcm.send
-        if(!flag) break;
-      }//for(j=0)
-      return flag;
-    } else if(status === statuscode.userChange) {  //status === 2
-      let flag = true;
+          fcm.send(message, function(err, response) {
+            if(err) {
+              console.log("Something has gone wrong!", err);
+            } else {
+              console.log("Successfully sent with response: ", response);
+            }
+          }); // fcm.send
+        } // for
+      } // if (getAllUser)
+    } else if (status === statuscode.Chatroom_joinedChange) {
+      let getAllUserQuery = 'SELECT tkb.user.token, tkb.user.u_idx FROM tkb.chatroom_joined JOIN tkb.user USING (u_idx) WHERE tkb.chatroom_joined.chatroom_idx = ? AND tkb.chatroom_joined.u_idx != ?';
+      let getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [idx, userArray[0]]);
 
-      let findUserJoinedQuery = 'SELECT g_idx FROM tkb.joined WHERE u_idx = ?';
-      var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [idx]);
+      if (getAllUser) {
+        for (let i = 0 ; i < getAllUser.length ; i++) {
+          let client_token = getAllUser[i].token;
 
-      let userArray = [];
-      for(let i = 0 ; i < findUserJoined.length ; i++) {
-        let getAllUserQuery = 'SELECT u_idx FROM tkb.joined WHERE g_idx = ?';
-        var getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [findUserJoined[i].g_idx]);
-
-        //getAllUserQuery 하고 getUserTokenQuery 하고 JOIN 할 수 있을 것 같은데
-        for(let j = 0 ; j < getAllUser.length ; j++) {
-          userArray.push(getAllUser[j].u_idx);
-        }
-        console.log(userArray);
-      }
-      let userArray_wo_dup = Array.from(new Set(userArray));
-      console.log(userArray_wo_dup);
-      for(let i = 0 ; i < userArray_wo_dup.length ; i++) {
-        if(userArray_wo_dup[i] === idx) {
-          continue;
-        }
-        let getUserTokenQuery = 'SELECT token FROM tkb.user WHERE u_idx = ?';
-        var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [userArray_wo_dup[i]]);
-        let client_token = getUserToken[0].token;
-
-        var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+          message = {
             to: client_token,
             data: {
-              data : statuscode.userChange
+              data : status
             }
-        };
-        fcm.send(message, function(err, response) {
-          if(err) {
-            console.log("Something has gone wrong!", err);
-            flag = false;
-          } else {
-            console.log("Successfully sent with response: ", response);
-          }
-        });//fcm.send
-        if(!flag) break;
-      }
-      return flag;
-    } else if(status === statuscode.groupjoineduserChange) {
-      let flag = true;
+          };  // message
 
-      let getAllUserQuery = 'SELECT u_idx FROM tkb.joined WHERE g_idx = ?';
-      var getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [idx]);
+          fcm.send(message, function(err, response) {
+            if(err) {
+              console.log("Something has gone wrong!", err);
+            } else {
+              console.log("Successfully sent with response: ", response);
+            }
+          }); // fcm.send
+        } // for
+      } // if (getAllUser)
+    } else if (status === statuscode.UserChange) {
+      //let getAllUserQuery = 'SELECT gj2.u_idx, tkb.user.token FROM tkb.user JOIN (chat.group_joined gj JOIN chat.group_joined gj2 USING(g_idx)) USING(u_idx) WHERE gj.u_idx = ? AND gj2.u_idx != ?';
+      let getAllUserQuery = 'SELECT DISTINCT gj2.u_idx, u.token FROM tkb.user u JOIN (tkb.group_joined gj JOIN tkb.group_joined gj2 USING(g_idx)) ON gj2.u_idx = u.u_idx WHERE gj.u_idx = ? AND gj2.u_idx != ?';
+      let getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [userArray[0], userArray[0]]);
 
-      for(let i = 0 ; i < getAllUser.length ; i++) {
-        let getUserTokenQuery = 'SELECT token FROM tkb.user WHERE u_idx = ?';
-        var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [getAllUser[i].u_idx]);
-        let client_token = getUserToken[0].token;
+      if (getAllUser) {
+        for (let i = 0 ; i < getAllUser.length ; i++) {
+          let client_token = getAllUser[i].token;
 
-        var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+          message = {
             to: client_token,
             data: {
-              data : statuscode.groupjoineduserChange
+              data : status
             }
-        };
+          };  // message
+        } // for
+      } // if (getAllUser)
+      // let userArray = [];
+      // if (getAllUser) {
+      //   for(let i = 0 ; i < getAllUser.length ; i++) {          
+      //     userArray.push(getAllUser[i].token);
+      //   }  
 
-        fcm.send(message, function(err, response) {
-          if(err) {
-            console.log("Something has gone wrong!", err);
-            flag = false;
-          } else {
-            console.log("Successfully sent with response: ", response);
-          }
-        });//fcm.send
-        if(!flag) break;
-      }// for
-      return flag;
-    } else {
-      return false;
+      //   let userArray_wo_dup = Array.from(new Set(userArray));
+      //   console.log(userArray_wo_dup);
+
+      //   for(let i = 0 ; i < userArray_wo_dup.length ; i++) {
+      //     let client_token = userArray_wo_dup[i];
+      //     var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+      //       to: client_token,
+      //       data: {
+      //         data : status
+      //       }
+      //     };
+
+      //     fcm.send(message, function(err, response) {
+      //       if(err) {
+      //         console.log("Something has gone wrong!", err);
+      //       } else {
+      //         console.log("Successfully sent with response: ", response);
+      //       }
+      //     }); //fcm.send
+      //   }
+
+      // }
     }
+
+
+
+    // if(status === statuscode.groupChange || status === statuscode.joinedChange) {
+    //   let flag = true;
+
+    //   let getAllUserQuery = 'SELECT u_idx FROM tkb.joined WHERE g_idx = ?';
+    //   var getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [idx]);
+    //   //getAllUserQuery 하고 getUserTokenQuery 하고 JOIN 할 수 있을 것 같은데
+    //   for(let i = 0 ; i < getAllUser.length ; i++) {
+    //     let getUserTokenQuery = 'SELECT token FROM tkb.user WHERE u_idx = ?';
+    //     var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [getAllUser[i].u_idx]);
+    //     let client_token = getUserToken[0].token;
+
+    //     var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+    //         to: client_token,
+    //         data: {
+    //           data : status
+    //         }
+    //     };
+
+    //     fcm.send(message, function(err, response) {
+    //       if(err) {
+    //         console.log("Something has gone wrong!", err);
+    //         flag = false;
+    //       } else {
+    //         console.log("Successfully sent with response: ", response);
+    //       }
+    //     });//fcm.send
+    //     if(!flag) break;
+    //   }//for(j=0)
+    //   return flag;
+    // } else if(status === statuscode.userChange) {  //status === 2
+    //   let flag = true;
+
+    //   let findUserJoinedQuery = 'SELECT g_idx FROM tkb.joined WHERE u_idx = ?';
+    //   var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [idx]);
+
+    //   let userArray = [];
+    //   for(let i = 0 ; i < findUserJoined.length ; i++) {
+    //     let getAllUserQuery = 'SELECT u_idx FROM tkb.joined WHERE g_idx = ?';
+    //     var getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [findUserJoined[i].g_idx]);
+
+    //     //getAllUserQuery 하고 getUserTokenQuery 하고 JOIN 할 수 있을 것 같은데
+    //     for(let j = 0 ; j < getAllUser.length ; j++) {
+    //       userArray.push(getAllUser[j].u_idx);
+    //     }
+    //     console.log(userArray);
+    //   }
+    //   let userArray_wo_dup = Array.from(new Set(userArray));
+    //   console.log(userArray_wo_dup);
+    //   for(let i = 0 ; i < userArray_wo_dup.length ; i++) {
+    //     if(userArray_wo_dup[i] === idx) {
+    //       continue;
+    //     }
+    //     let getUserTokenQuery = 'SELECT token FROM tkb.user WHERE u_idx = ?';
+    //     var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [userArray_wo_dup[i]]);
+    //     let client_token = getUserToken[0].token;
+
+    //     var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+    //         to: client_token,
+    //         data: {
+    //           data : statuscode.userChange
+    //         }
+    //     };
+    //     fcm.send(message, function(err, response) {
+    //       if(err) {
+    //         console.log("Something has gone wrong!", err);
+    //         flag = false;
+    //       } else {
+    //         console.log("Successfully sent with response: ", response);
+    //       }
+    //     });//fcm.send
+    //     if(!flag) break;
+    //   }
+    //   return flag;
+    // } else if(status === statuscode.groupjoineduserChange) {
+    //   let flag = true;
+
+    //   let getAllUserQuery = 'SELECT u_idx FROM tkb.joined WHERE g_idx = ?';
+    //   var getAllUser = await db.queryParamCnt_Arr(getAllUserQuery, [idx]);
+
+    //   for(let i = 0 ; i < getAllUser.length ; i++) {
+    //     let getUserTokenQuery = 'SELECT token FROM tkb.user WHERE u_idx = ?';
+    //     var getUserToken = await db.queryParamCnt_Arr(getUserTokenQuery, [getAllUser[i].u_idx]);
+    //     let client_token = getUserToken[0].token;
+
+    //     var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+    //         to: client_token,
+    //         data: {
+    //           data : statuscode.groupjoineduserChange
+    //         }
+    //     };
+
+    //     fcm.send(message, function(err, response) {
+    //       if(err) {
+    //         console.log("Something has gone wrong!", err);
+    //         flag = false;
+    //       } else {
+    //         console.log("Successfully sent with response: ", response);
+    //       }
+    //     });//fcm.send
+    //     if(!flag) break;
+    //   }// for
+    //   return flag;
+    // } else {
+    //   return false;
+    // }
   },//sendFCMData
   getGJoinedInfo : async (...args) => {
     let u_idx = args[0];

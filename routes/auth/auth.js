@@ -123,14 +123,16 @@ router.post('/invite/group', async(req, res, next) => {
     let status = await db.queryParamCnt_Arr(statusQuery, [g_idx, findUser[0].u_idx]);
     if(status && status.length === 0) {
       let result = await sql.joinNewPersonGroup(g_idx, findUser[0].u_idx);
-      res.status(201).send({
-        message: "Success to Invite Person",
-        data : findUser[0].u_idx
-      });
-      let sendFCM_AllUser = await sql.sendFCMData(statuscode.groupjoineduserChange, g_idx);
+      
+      let sendFCM_AllUser = await sql.sendFCMData([findUser[0].u_idx], statuscode.FiveThingsChange, g_idx);
       if(!sendFCM_AllUser) {
         res.status(500).send({
           message : "Internal Server Error"
+        });
+      } else {
+        res.status(201).send({
+          message: "Success to Invite Person",
+          data : findUser[0].u_idx
         });
       }
     } else {
@@ -158,7 +160,7 @@ router.post('/invite/chatroom', async(req, res, next) => {
       res.status(201).send({
         message: "Success to Invite Person"
       });
-      let sendFCM_AllUser = await sql.sendFCMData(statuscode.groupjoineduserChange, g_idx);
+      let sendFCM_AllUser = await sql.sendFCMData(userArray, statuscode.ChatroomChatroom_joinedChange, chatroom_idx);
       // if(!sendFCM_AllUser) {
       //   res.status(500).send({
       //     message : "Internal Server Error"
@@ -206,7 +208,7 @@ router.post('/invite/chatroom', async(req, res, next) => {
 
 router.post('/leave/group', async(req, res, next) => {
   let option = {
-    uri : 'http://13.125.118.111:3002/auth/leave/group',
+    uri : 'http://13.125.118.111:3003/auth/leave/group',
     method : 'DELETE',
     headers : {
       token : req.headers.token
@@ -266,7 +268,7 @@ router.delete('/leave/group', async(req, res, next) => {
         });
       }
       
-      let sendFCM = await sql.sendFCMData(statuscode.joinedChange, g_idx);
+      let sendFCM = await sql.sendFCMData([u_idx], statuscode.Group_joinedChatroom_joinedChange, g_idx);
     }
   }
 });
@@ -333,7 +335,7 @@ router.delete('/leave/chatroom', async(req, res, next) => {
         });
       }
       
-      let sendFCM = await sql.sendFCMData(statuscode.joinedChange, g_idx);
+      let sendFCM = await sql.sendFCMData([u_idx], statuscode.Chatroom_joinedChange, chatroom_idx);
     }
   }
 });
@@ -383,7 +385,7 @@ router.put('/profile', upload.single('photo'), async(req, res, next) => {
         message: "Success to Change",
         data : photo
       });
-      let sendFCM = await sql.sendFCMData(statuscode.userChange, u_idx);
+      let sendFCM = await sql.sendFCMData([u_idx], statuscode.UserChange, 0);
     } else {
       //값은 넘어왔는데 바뀐게 없다.오류는 x
       res.status(400).send({

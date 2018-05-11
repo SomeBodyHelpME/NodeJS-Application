@@ -45,6 +45,11 @@ router.post('/chatroom', upload.single('photo'), async(req, res, next) => {
   if(req.file != undefined) {
     photo = req.file.location;
   }
+  var userArray = [];
+  if(req.body.userArray != undefined) {
+    userArray = req.body.userArray;
+  }
+
   let token = req.headers.token;
   let decoded = jwt.verify(token);
   if(decoded === -1) {
@@ -55,7 +60,6 @@ router.post('/chatroom', upload.single('photo'), async(req, res, next) => {
     let u_idx = decoded.u_idx;
     let g_idx = req.body.g_idx;
     let real_name = req.body.name;
-    let userArray = req.body.userArray;
     let ctrl_name = real_name + '_' + moment().format('YYMMDDHHmmss');
 
     let result = await sql.makeNewChatroom(u_idx, g_idx, real_name, ctrl_name, photo, userArray);
@@ -201,10 +205,17 @@ router.post('/vote', async(req, res, next) => {
         message : "Internal Server Error"
       });
     } else {
-      res.status(201).send({
-        message : "Success Make Vote",
-        data : result
-      });
+      let result2 = await sql.fcmSendWhenMakeThings(u_idx, chatroom_idx, statuscode.makeVote);
+      if(!result2) {
+        res.status(500).send({
+          message : "Internal Server Error"
+        });
+      } else {
+        res.status(201).send({
+          message : "Success Make Vote",
+          data : result
+        });
+      }//else
     }
   }
 });

@@ -17,12 +17,12 @@ router.post('/', async(req, res, next) => { //역할 등록
     });
   } else {
     let u_idx = decoded.u_idx;
-		let g_idx = req.body.g_idx;
+		let chatroom_idx = req.body.chatroom_idx;
 		let title = req.body.title;
 		let taskArray = req.body.taskArray;
 		let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
 
-		let result = await sql.createRoleProject(g_idx, title, u_idx, taskArray, write_time);
+		let result = await sql.createRoleProject(chatroom_idx, title, u_idx, taskArray, write_time);
 		if (!result) {
 			res.status(500).send({
 				message : "Internal Server Error"

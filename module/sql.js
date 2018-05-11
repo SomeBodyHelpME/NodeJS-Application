@@ -1629,25 +1629,27 @@ module.exports = {
     return result;
   },
   createRoleProject : async (...args) => {
-    let g_idx = args[0];
+    let chatroom_idx = args[0];
     let title = args[1];
     let master_idx = args[2];
     let taskArray = args[3];
     let write_time = args[4];
     let flag = true;
 
-    let insertProjectQuery = 'INSERT INTO tkb.role (g_idx, title, master_idx, write_time) VALUES (?, ?, ?, ?)';
-    let insertProject = await db.queryParamCnt_Arr(insertProjectQuery, [g_idx, title, master_idx, write_time]);
+    let insertProjectQuery = 'INSERT INTO tkb.role (chatroom_idx, title, master_idx, write_time) VALUES (?, ?, ?, ?)';
+    let insertProject = await db.queryParamCnt_Arr(insertProjectQuery, [chatroom_idx, title, master_idx, write_time]);
 
-
-    for (let i = 0 ; i < taskArray.length ; i++) {
-      let insertTaskQuery = 'INSERT INTO tkb.role_task (role_idx, content) VALUES (?, ?)';
-      var insertTask = await db.queryParamCnt_Arr(insertTaskQuery, [insertProject.insertId, taskArray[i]]);
-      if (!insertTask) {
-        flag = false;
-        break;
-      }
+    if (taskArray) {
+      for (let i = 0 ; i < taskArray.length ; i++) {
+        let insertTaskQuery = 'INSERT INTO tkb.role_task (role_idx, content) VALUES (?, ?)';
+        var insertTask = await db.queryParamCnt_Arr(insertTaskQuery, [insertProject.insertId, taskArray[i]]);
+        if (!insertTask) {
+          flag = false;
+          break;
+        }
+      }  
     }
+
     if(!flag || !insertProject) {
       return false;
     } else {
@@ -1741,16 +1743,16 @@ module.exports = {
   },
   readRoleProject : async (...args) => {
     let u_idx = args[0];
-    let g_idx = args[1];
+    let chatroom_idx = args[1];
 
-    if (!g_idx) {
-      let findUserJoinedQuery = 'SELECT g_idx FROM tkb.joined WHERE u_idx = ?';
+    if (!chatroom_idx) {
+      let findUserJoinedQuery = 'SELECT chatroom_idx FROM tkb.chatroom_joined WHERE u_idx = ?';
       let findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
 
       let result = [];
       for (let i = 0 ; i < findUserJoined.length ; i++) {
-        var getRoleProjectQuery = 'SELECT * FROM tkb.role WHERE g_idx = ?';
-        var getRoleProject = await db.queryParamCnt_Arr(getRoleProjectQuery, [findUserJoined[i].g_idx]);
+        var getRoleProjectQuery = 'SELECT * FROM tkb.role WHERE chatroom_idx = ?';
+        var getRoleProject = await db.queryParamCnt_Arr(getRoleProjectQuery, [findUserJoined[i].chatroom_idx]);
         
         for (let j = 0 ; j < getRoleProject.length ; j++) {
           result.push(getRoleProject[j]);
@@ -1758,8 +1760,8 @@ module.exports = {
       }
       return result;
     } else {
-      var getRoleProjectQuery = 'SELECT * FROM tkb.role WHERE g_idx = ?';
-      var getRoleProject = await db.queryParamCnt_Arr(getRoleProjectQuery, [g_idx]);
+      var getRoleProjectQuery = 'SELECT * FROM tkb.role WHERE chatroom_idx = ?';
+      var getRoleProject = await db.queryParamCnt_Arr(getRoleProjectQuery, [chatroom_idx]);
 
       if (!getRoleProject) {
         return false;

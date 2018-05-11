@@ -9,7 +9,7 @@ const db = require('../../module/pool.js');
 const sql = require('../../module/sql.js');
 const statuscode = require('../../module/statuscode.js');
 
-router.get(['/', '/:g_idx'], async(req, res, next) => {
+router.get(['/', '/:chatroom_idx'], async(req, res, next) => {
 	let token = req.headers.token;
   let decoded = jwt.verify(token);
   if (decoded === -1) {
@@ -18,9 +18,9 @@ router.get(['/', '/:g_idx'], async(req, res, next) => {
     });
   } else {
     let u_idx = decoded.u_idx;
-		let g_idx = req.params.g_idx;
+		let chatroom_idx = req.params.chatroom_idx;
 		
-		let result = await sql.readRoleProject(u_idx, g_idx);
+		let result = await sql.readRoleProject(u_idx, chatroom_idx);
 		if (!result) {
 			res.status(500).send({
 				message : "Internal Server Error"

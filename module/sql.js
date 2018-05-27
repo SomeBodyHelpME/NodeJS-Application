@@ -4,6 +4,7 @@ const schedule = require('node-schedule');
 
 const pool = require('../config/dbPool.js');
 const db = require('./pool.js');
+const chat = require('./chat.js');
 const statuscode = require('./statuscode.js');
 
 // FCM
@@ -35,6 +36,9 @@ module.exports = {
 
     let createDefaultChatroomQuery = 'INSERT INTO tkb.group_chatroom (real_name, ctrl_name, photo, g_idx) VALUES (?, ?, ?, ?)';
     let createDefaultChatroom = await db.queryParamCnt_Arr(createDefaultChatroomQuery, [real_name, ctrl_name, photo, createGroup.insertId]);
+
+    let createTable = await chat.makeNewChatroomTable(ctrl_name);
+
     // console.log(createDefaultChatroom);
     let g_idx = createGroup.insertId;
     let default_chatroom_idx = createDefaultChatroom.insertId;
@@ -76,6 +80,8 @@ module.exports = {
 
     let insertNewPersonQuery = 'INSERT INTO tkb.chatroom_joined (chatroom_idx, g_idx, u_idx) VALUES (?, ?, ?)';
     let insertNewPerson = await db.queryParamCnt_Arr(insertNewPersonQuery, [createChatRoom.insertId, g_idx, u_idx]);
+
+    let createTable = await chat.makeNewChatroomTable(ctrl_name);
 
     if (userArray) {
       for (let i = 0 ; i < userArray.length ; i++) {
@@ -722,8 +728,13 @@ module.exports = {
     console.log(chatroom_idx);
     console.log(write_time);
     console.log(content);
+    
+    let insertNoticeResponseQuery = 'INSERT INTO tkb.notice_response (notice_idx, u_idx, status) VALUES (?, ?, ?)';
+    var insertNoticeResponse = await db.queryParamCnt_Arr(insertNoticeResponseQuery, [insertNotice.insertId, u_idx, 1]);
+
     let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM tkb.chatroom_joined WHERE chatroom_idx = ? AND u_idx != ?';
     var searchAllUsersInSpecificGroup = await db.queryParamCnt_Arr(searchAllUsersInSpecificGroupQuery, [chatroom_idx, u_idx]);
+
     for(let i = 0 ; i < searchAllUsersInSpecificGroup.length ; i++) {
       let insertNoticeResponseQuery = 'INSERT INTO tkb.notice_response (notice_idx, u_idx, status) VALUES (?, ?, ?)';
       var insertNoticeResponse = await db.queryParamCnt_Arr(insertNoticeResponseQuery, [insertNotice.insertId, searchAllUsersInSpecificGroup[i].u_idx, 0]);
@@ -1273,7 +1284,7 @@ module.exports = {
     }
   },
   sendFCMData : async (...args) => {
-    /*
+    /*  ver2
       나의 정보가 변경되었을 때에는 데이터베이스에서 변화가 있을까?
       i) status === 0 : 그룹 수정, 삭제    그룹 삭제??? 이거 어떻게 할거지???(그룹 삭제를 모든 사람이 나갔을 때 라고 한다면, 따로 작업할 필요는 없다)
          그룹 수정시에 group_index만 넘어오도록 하여 그 그룹에 속한 유저들의 정보만 바뀌게 한다.
@@ -1288,6 +1299,28 @@ module.exports = {
          ===> getUserInfo 이것 사용
 
       문제점) 그룹의 사진, 이름을 바꾸는 라우터가 없기 때문에 i)번을 작업할 필요가 없다.
+    */
+
+    /*  ver4
+    프로필 수정 => user refresh
+    그룹 / 채팅방 수정 => group / chatroom refresh
+
+    그룹에 초대되었을 때(해씀)
+    그룹에 존재하는 사람 : Group_joined / user
+    그룹에 초대된 사람 : Group_joined / user / group / Chatroom_joined / chatroom 이거invite/group
+
+    채팅방에 초대되었을 때(해씀)
+    채팅방에 존재하는 사람 : Chatroom_joined /
+    채팅방에 초대된 사람 : Chatroom_joined / chatroom      이거 invite/chatroom
+
+    그룹에서 나갈 때(해씀)
+    그룹에 존재하는 사람 : Group_joined / Chatroom_joined
+    // 그룹에서 나가는 사람 : Group_joined / Chatroom_joined   이거 /leave/group
+
+    채팅방에서 나갈 때(해씀)
+    채팅방에 존재하는 사람 : Chatroom_joined 
+    // 채팅방에서 나가는 사람 : Chatroom_joined         이거 /leave/chatroom
+
     */
     let userArray = args[0];
     let status = args[1];

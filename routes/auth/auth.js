@@ -124,15 +124,15 @@ router.post('/invite/group', async(req, res, next) => {
     if(status && status.length === 0) {
       let result = await sql.joinNewPersonGroup(g_idx, findUser[0].u_idx);
       
-      let sendFCM_AllUser = await sql.sendFCMData([findUser[0].u_idx], statuscode.FiveThingsChange, g_idx);
-      if(!sendFCM_AllUser) {
-        res.status(500).send({
-          message : "Internal Server Error"
-        });
-      } else {
+      if(result) {
         res.status(201).send({
           message: "Success to Invite Person",
           data : findUser[0].u_idx
+        });
+        let sendFCM_AllUser = await sql.sendFCMData([findUser[0].u_idx], statuscode.FiveThingsChange, g_idx);
+      } else {
+        res.status(500).send({
+          message : "Internal Server Error"
         });
       }
     } else {
@@ -161,11 +161,6 @@ router.post('/invite/chatroom', async(req, res, next) => {
         message: "Success to Invite Person"
       });
       let sendFCM_AllUser = await sql.sendFCMData(userArray, statuscode.ChatroomChatroom_joinedChange, chatroom_idx);
-      // if(!sendFCM_AllUser) {
-      //   res.status(500).send({
-      //     message : "Internal Server Error"
-      //   });
-      // }  
     } else {
       res.status(500).send({
         message : "Internal Server Error"

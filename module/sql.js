@@ -213,7 +213,7 @@ module.exports = {
     var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
 
     // 공지 밀린 것
-    let NoticeArray = [];
+    let NoticesArray = [];
     for(let i = 0 ; i < findUserJoined.length ; i++) {
       let GroupJson = {};
       let GroupArray1 = [];
@@ -232,7 +232,7 @@ module.exports = {
         GroupJson.g_idx = findUserJoined[i].g_idx;
         GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
         GroupJson.data = GroupArray1;
-        NoticeArray.push(GroupJson);
+        NoticesArray.push(GroupJson);
       }
     }
     // 신호등 밀린 것
@@ -284,7 +284,7 @@ module.exports = {
     }// for(let i = 0)
 
     let result = {
-      notice : NoticeArray,
+      notices : NoticesArray,
       lights : LightsArray,
       votes : VotesArray
     };
@@ -1988,8 +1988,12 @@ module.exports = {
 
     if (flag === false) {
       return false;
+    } else {
+      return true;
     }
-
+  },
+  updateRoleUserIndex : async (...args) => {
+    let role_task_idx = args[0];
     let result = [];
     let getUserIndexQuery = 'SELECT u_idx FROM role_user WHERE role_task_idx = ?';
     let getUserIndex = await db.queryParamCnt_Arr(getUserIndexQuery, [role_task_idx]);

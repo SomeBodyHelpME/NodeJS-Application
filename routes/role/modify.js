@@ -63,10 +63,17 @@ router.put('/user', async(req, res, next) => {
 				message : "Internal Server Error"
 			});
 		} else {
-			res.status(201).send({
-				message : "Success to Modify User",
-				data : result
-			});
+			let result2 = await sql.updateRoleUserIndex(role_task_idx);
+			if (!result2) {
+				res.status(500).send({
+					message : "Internal Server Error"
+				});
+			} else {
+				res.status(201).send({
+					message : "Success to Modify User",
+					data : result2
+				});
+			}
 		}
 	}
 });

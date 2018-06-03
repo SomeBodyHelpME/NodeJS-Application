@@ -64,6 +64,7 @@ router.put('/user', async(req, res, next) => {
 			});
 		} else {
 			let result2 = await sql.updateRoleUserIndex(role_task_idx);
+			console.log(result2);
 			if (!result2) {
 				res.status(500).send({
 					message : "Internal Server Error"

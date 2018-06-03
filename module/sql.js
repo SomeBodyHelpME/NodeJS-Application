@@ -1997,7 +1997,7 @@ module.exports = {
     let result = [];
     let getUserIndexQuery = 'SELECT u_idx FROM role_user WHERE role_task_idx = ?';
     let getUserIndex = await db.queryParamCnt_Arr(getUserIndexQuery, [role_task_idx]);
-
+    console.log(getUserIndex);
     if (getUserIndex) {
       for (let i = 0 ; i < getUserIndex.length ; i++) {
         result.push(getUserIndex[i].u_idx);

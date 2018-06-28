@@ -328,7 +328,7 @@ module.exports = {
     var findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx, g_idx]);
     let result = [];
     for(let i = 0 ; i < findUserJoined.length ; i++) {
-      let findEachGroupNoticeQuery = 'SELECT tkb.notice.*, tkb.notice_response.status FROM tkb.notice JOIN tkb.notice_response USING(notice_idx) WHERE chatroom_idx = ? ORDER BY tkb.notice.notice_idx DESC';
+      let findEachGroupNoticeQuery = 'SELECT tkb.notice.*, tkb.notice_response.status AS response_status FROM tkb.notice JOIN tkb.notice_response USING(notice_idx) WHERE chatroom_idx = ? ORDER BY tkb.notice.notice_idx DESC';
       var findEachGroupNotice = await db.queryParamCnt_Arr(findEachGroupNoticeQuery, [findUserJoined[i].chatroom_idx]);
       console.log(findEachGroupNotice);
       if(findEachGroupNotice === undefined) {
@@ -357,7 +357,6 @@ module.exports = {
     // 수신자에 대한 내용
     let resArray = [];
     for(let i = 0 ; i < findUserJoined.length ; i++) {
-      let GroupJson = {};
       
       let findEachGroupLightsQuery =
       `SELECT tkb.lights.*, tkb.light_response.color FROM tkb.light_response JOIN tkb.lights USING(light_idx)
@@ -389,7 +388,6 @@ module.exports = {
     // 발신자에 대한 내용
     let reqArray = [];
     for(let i = 0 ; i < findUserJoined.length ; i++) {
-      let GroupJson = {};
       
       let findEachGroupLightsQuery = 'SELECT * FROM tkb.lights WHERE chatroom_idx = ? AND u_idx = ? ORDER BY tkb.lights.light_idx DESC';
       var findEachGroupLights = await db.queryParamCnt_Arr(findEachGroupLightsQuery, [findUserJoined[i].chatroom_idx, u_idx]);

@@ -194,12 +194,13 @@ router.post('/vote', async(req, res, next) => {
     let content = req.body.content;
     let title = req.body.title;
     let choice = req.body.choice;
-    let endtime = req.body.endtime;
+    // let endtime = req.body.endtime;
 
-    if (!endtime) {
-      endtime = moment().add(7, 'days').format("YYYY-MM-DD HH:mm:ss");
-    } 
-    let result = await sql.makeVote(u_idx, chat_idx, chatroom_idx, write_time, title, content, choice, endtime);
+    // if (!endtime) {
+    //   endtime = moment().add(7, 'days').format("YYYY-MM-DD HH:mm:ss");
+    // } 
+    // let result = await sql.makeVote(u_idx, chat_idx, chatroom_idx, write_time, title, content, choice, endtime);
+    let result = await sql.makeVote(u_idx, chat_idx, chatroom_idx, write_time, title, content, choice);
     if(!result) {
       res.status(500).send({
         message : "Internal Server Error"

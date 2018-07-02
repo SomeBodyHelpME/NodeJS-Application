@@ -689,6 +689,9 @@ module.exports = {
     if(!getAllChoiceforEachVote) {
       return false;
     } else {
+      for (let i = 0 ; i < getAllChoiceforEachVote.length ; i++) {
+        getAllChoiceforEachVote[i].userArray = [];
+      }
       return getAllChoiceforEachVote;
     }
   },// forEachVoteExample
@@ -703,9 +706,13 @@ module.exports = {
   forEachVoteCombine : async (...args) => {
     let choiceresult = args[0];
     let responseresult = args[1];
-
+    
     for (let i = 0 ; i < responseresult.length ; i++) {
-      choiceresult[responseresult[i].value].append(responseresult[i].u_idx);
+      if (!responseresult[i].value) {
+        continue;
+      }
+      choiceresult[responseresult[i].value].userArray.append(responseresult[i].u_idx);
+      
     }
     return choiceresult;
   },

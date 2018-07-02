@@ -705,7 +705,7 @@ module.exports = {
     let responseresult = args[1];
 
     for (let i = 0 ; i < responseresult.length ; i++) {
-      choiceresult[responseresult[i].value].userArray.append(responseresult[i].u_idx);
+      choiceresult[responseresult[i].value].append(responseresult[i].u_idx);
     }
     return choiceresult;
   },

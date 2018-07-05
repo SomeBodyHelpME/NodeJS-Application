@@ -709,13 +709,18 @@ module.exports = {
   forEachVoteCombine : async (...args) => {
     let choiceresult = args[0];
     let responseresult = args[1];
-    
+    console.log(choiceresult);
+    console.log(responseresult);
     for (let i = 0 ; i < responseresult.length ; i++) {
       if (!responseresult[i].value) {
         continue;
       }
-      choiceresult[responseresult[i].value].userArray.append(responseresult[i].u_idx);
-      
+      for(let j = 0 ; j < choiceresult.length ; j++) {
+        if (choiceresult[j].vote_content_idx === responseresult[i].value) {
+          choiceresult[j].userArray.push(responseresult[i].u_idx);
+        }
+      }
+      // choiceresult[responseresult[i].value].userArray.append(responseresult[i].u_idx);
     }
     return choiceresult;
   },

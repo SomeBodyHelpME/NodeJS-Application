@@ -550,7 +550,10 @@ module.exports = {
     if (!findUserJoined) {
       return false;
     } else {
-      return senderArray;
+      return {
+        NotFinished : NotFinishedArray,
+        Finished : FinishedArray
+      };
     }
   },
   forEachNotice : async (...args) => {

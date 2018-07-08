@@ -215,7 +215,6 @@ module.exports = {
     // 공지 밀린 것
     let NoticesArray = [];
     for(let i = 0 ; i < findUserJoined.length ; i++) {
-      let GroupJson = {};
       let GroupArray1 = [];
       
       let findNoticeIndexQuery = 'SELECT * FROM tkb.notice WHERE chatroom_idx = ?';
@@ -225,20 +224,24 @@ module.exports = {
         var findNotice = await db.queryParamCnt_Arr(findNoticeQuery, [findNoticeIndex[j].notice_idx, 0, u_idx]);
         if(findNotice.length != 0) {
           let AgendaJson = findNoticeIndex[j];
+          AgendaJson.g_idx = findUserJoined[i].g_idx;
+          AgendaJson.chatroom_idx = findUserJoined[i].chatroom_idx;
+
           GroupArray1.push(AgendaJson);
         }
       }
       if(GroupArray1.length != 0) {
-        GroupJson.g_idx = findUserJoined[i].g_idx;
-        GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
-        GroupJson.data = GroupArray1;
-        NoticesArray.push(GroupJson);
+        NoticesArray = NoticesArray.concat(GroupArray1);
       }
     }
+    
+    NoticesArray.sort(function(a, b) {      // descending order
+      return a.write_time > b.write_time ? -1 : a.write_time < b.write_time ? 1 : 0;
+    });
+
     // 신호등 밀린 것
     let LightsArray = [];
     for(let i = 0 ; i < findUserJoined.length ; i++) {
-      let GroupJson = {};
       let GroupArray2 = [];
       
       let findLightsIndexQuery = 'SELECT tkb.lights.* FROM tkb.lights WHERE chatroom_idx = ?';
@@ -248,21 +251,23 @@ module.exports = {
         var findLights = await db.queryParamCnt_Arr(findLightsQuery, [findLightsIndex[j].light_idx, "r", u_idx]); // 색깔 : r y g
         if(findLights.length != 0) {
           let AgendaJson = findLightsIndex[j];
+          AgendaJson.g_idx = findUserJoined[i].g_idx;
+          AgendaJson.chatroom_idx = findUserJoined[i].chatroom_idx;
           GroupArray2.push(AgendaJson);
         }
       }// for(let j = 0)
       if(GroupArray2.length != 0) {
-        GroupJson.g_idx = findUserJoined[i].g_idx;
-        GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
-        GroupJson.data = GroupArray2;
-        LightsArray.push(GroupJson);
+        LightsArray = LightsArray.concat(GroupArray2);
       }
     }// for(let i = 0)
+
+    LightsArray.sort(function(a, b) {      // descending order
+      return a.write_time > b.write_time ? -1 : a.write_time < b.write_time ? 1 : 0;
+    });
 
     //투표 밀린 것
     let VotesArray = [];
     for(let i = 0 ; i < findUserJoined.length ; i++) {
-      let GroupJson = {};
       let GroupArray3 = [];
       
       let findVotesIndexQuery = 'SELECT * FROM tkb.vote WHERE chatroom_idx = ?';
@@ -272,16 +277,19 @@ module.exports = {
         var findVotes = await db.queryParamCnt_Arr(findVotesQuery, [findVotesIndex[j].vote_idx, 0, u_idx]); // 미응답은 : w, 응답은 : a
         if(findVotes.length != 0) {
           let AgendaJson = findVotesIndex[j];
+          AgendaJson.g_idx = findUserJoined[i].g_idx;
+          AgendaJson.chatroom_idx = findUserJoined[i].chatroom_idx;
           GroupArray3.push(AgendaJson);
         }
       }// for(let j = 0)
       if(GroupArray3.length != 0) {
-        GroupJson.g_idx = findUserJoined[i].g_idx;
-        GroupJson.chatroom_idx = findUserJoined[i].chatroom_idx;
-        GroupJson.data = GroupArray3;
-        VotesArray.push(GroupJson);
+        VotesArray = VotesArray.concat(GroupArray3);
       }
     }// for(let i = 0)
+
+    VotesArray.sort(function(a, b) {      // descending order
+      return a.write_time > b.write_time ? -1 : a.write_time < b.write_time ? 1 : 0;
+    });
 
     let result = {
       notices : NoticesArray,
@@ -717,7 +725,9 @@ module.exports = {
       }
       for(let j = 0 ; j < choiceresult.length ; j++) {
         if (choiceresult[j].vote_content_idx === responseresult[i].value) {
-          choiceresult[j].userArray.push(responseresult[i].u_idx);
+          if (choiceresult[j].userArray) {
+            choiceresult[j].userArray.push(responseresult[i].u_idx);
+          }
         }
       }
       // choiceresult[responseresult[i].value].userArray.append(responseresult[i].u_idx);

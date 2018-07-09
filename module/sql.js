@@ -226,7 +226,6 @@ module.exports = {
           let AgendaJson = findNoticeIndex[j];
           AgendaJson.g_idx = findUserJoined[i].g_idx;
           AgendaJson.chatroom_idx = findUserJoined[i].chatroom_idx;
-
           GroupArray1.push(AgendaJson);
         }
       }

@@ -918,87 +918,119 @@ module.exports = {
       return getSingleNotice;
     }
   },
-  showSingleLightsDetail : async (...args) => {
+  showSingleLightsContent : async (...args) => {
     let light_idx = args[0];
     let u_idx = args[1];
 
     let getLightsInfoQuery = 'SELECT * FROM tkb.lights WHERE light_idx = ?';
     let getLightsInfo = await db.queryParamCnt_Arr(getLightsInfoQuery, [light_idx]);
 
-    var result = {};
     if (getLightsInfo[0].u_idx === u_idx) {   //작성자
-      let getLightsResponseQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ?';
-      let getLightsResponse = await db.queryParamCnt_Arr(getLightsResponseQuery, [light_idx]);
-
-      result.lights = getLightsInfo[0];
-      result.response = getLightsResponse;
-      result.message = '';
-
+      getLightsInfo[0].response_color = 'a';
+      getLightsInfo[0].response_content = null;
     } else {
-      if (getLightsInfo[0].open_status === 0) {
-        let getLightsResponseOneUserQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ? AND u_idx = ?'; 
-        let getLightsResponseOneUser = await db.queryParamCnt_Arr(getLightsResponseOneUserQuery, [light_idx, u_idx]);
-        
-        if (getLightsResponseOneUser.length === 0) {
-          result.lights = getLightsInfo[0];
-          result.response = [];
-          result.message = '';
-
-        } else if (getLightsResponseOneUser[0].color === 'g') {
-          let getLightsResponseQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ?';
-          let getLightsResponse = await db.queryParamCnt_Arr(getLightsResponseQuery, [light_idx]);
-
-          result.lights = getLightsInfo[0];
-          result.response = getLightsResponse;
-          result.message = '';
-
-        } else if (getLightsResponseOneUser[0].color === 'y') {
-          result.lights = getLightsInfo[0];
-          result.response = getLightsResponseOneUser;
-          result.message = '';
-
-        } else if (getLightsResponseOneUser[0].color === 'r') {
-          result.lights = getLightsInfo[0];
-          result.response = [];
-          result.message = ''; 
-
-        }
-      } else {
-        let getLightsResponseOneUserQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ? AND u_idx = ?'; 
-        let getLightsResponseOneUser = await db.queryParamCnt_Arr(getLightsResponseOneUserQuery, [light_idx, u_idx]);
-
-        result.lights = getLightsInfo[0];
-        result.response = getLightsResponseOneUser;
-        result.message = '';
-      }
-
-
-
-      // let checkColorQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ? AND u_idx = ?'; 
-      // let checkColor = await db.queryParamCnt_Arr(checkColorQuery, [light_idx, u_idx]);
+      let getLightsResponseOneUserQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ? AND u_idx = ?'; 
+      let getLightsResponseOneUser = await db.queryParamCnt_Arr(getLightsResponseOneUserQuery, [light_idx, u_idx]);
       
-      // if (checkColor[0].color === 'g') {
-      //   let getLightsResponseQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ?';
-      //   let getLightsResponse = await db.queryParamCnt_Arr(getLightsResponseQuery, [light_idx]);
-
-      //   result.lights = getLightsInfo[0];
-      //   result.response = getLightsResponse;
-
-      // } else if (checkColor[0].color === 'y') {
-      //   result.lights = getLightsInfo[0];
-      //   result.response = checkColor;
-
-      // } else {      //checkColor[0].color === 'r'
-      //   result.lights = getLightsInfo[0];
-      //   result.response = [];
-      // }
-
+      if (getLightsResponseOneUser[0].color === 'g') {
+        getLightsInfo[0].response_color = 'g';
+        getLightsInfo[0].response_content = getLightsResponseOneUser[0].content;
+      } else if (getLightsResponseOneUser[0].color === 'y') {
+        getLightsInfo[0].response_color = 'y';
+        getLightsInfo[0].response_content = getLightsResponseOneUser[0].content;
+      } else if (getLightsResponseOneUser[0].color === 'r') {
+        getLightsInfo[0].response_color = 'r';
+        getLightsInfo[0].response_content = null;
+      }
     }
     
-    
-    
-    return true;
+    if (!getLightsInfo) {
+      return false;
+    } else {
+      return getLightsInfo[0];
+    }
   },
+  // showSingleLightsDetail : async (...args) => {
+  //   let light_idx = args[0];
+  //   let u_idx = args[1];
+
+  //   let getLightsInfoQuery = 'SELECT * FROM tkb.lights WHERE light_idx = ?';
+  //   let getLightsInfo = await db.queryParamCnt_Arr(getLightsInfoQuery, [light_idx]);
+
+  //   var result = {};
+  //   if (getLightsInfo[0].u_idx === u_idx) {   //작성자
+  //     let getLightsResponseQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ?';
+  //     let getLightsResponse = await db.queryParamCnt_Arr(getLightsResponseQuery, [light_idx]);
+
+  //     result.lights = getLightsInfo[0];
+  //     result.response = getLightsResponse;
+  //     result.message = '';
+
+  //   } else {
+  //     if (getLightsInfo[0].open_status === 0) {
+  //       let getLightsResponseOneUserQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ? AND u_idx = ?'; 
+  //       let getLightsResponseOneUser = await db.queryParamCnt_Arr(getLightsResponseOneUserQuery, [light_idx, u_idx]);
+        
+  //       if (getLightsResponseOneUser.length === 0) {
+  //         result.lights = getLightsInfo[0];
+  //         result.response = [];
+  //         result.message = '';
+
+  //       } else if (getLightsResponseOneUser[0].color === 'g') {
+  //         let getLightsResponseQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ?';
+  //         let getLightsResponse = await db.queryParamCnt_Arr(getLightsResponseQuery, [light_idx]);
+
+  //         result.lights = getLightsInfo[0];
+  //         result.response = getLightsResponse;
+  //         result.message = '';
+
+  //       } else if (getLightsResponseOneUser[0].color === 'y') {
+  //         result.lights = getLightsInfo[0];
+  //         result.response = getLightsResponseOneUser;
+  //         result.message = '';
+
+  //       } else if (getLightsResponseOneUser[0].color === 'r') {
+  //         result.lights = getLightsInfo[0];
+  //         result.response = [];
+  //         result.message = ''; 
+
+  //       }
+  //     } else {
+  //       let getLightsResponseOneUserQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ? AND u_idx = ?'; 
+  //       let getLightsResponseOneUser = await db.queryParamCnt_Arr(getLightsResponseOneUserQuery, [light_idx, u_idx]);
+
+  //       result.lights = getLightsInfo[0];
+  //       result.response = getLightsResponseOneUser;
+  //       result.message = '';
+  //     }
+
+
+
+  //     // let checkColorQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ? AND u_idx = ?'; 
+  //     // let checkColor = await db.queryParamCnt_Arr(checkColorQuery, [light_idx, u_idx]);
+      
+  //     // if (checkColor[0].color === 'g') {
+  //     //   let getLightsResponseQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ?';
+  //     //   let getLightsResponse = await db.queryParamCnt_Arr(getLightsResponseQuery, [light_idx]);
+
+  //     //   result.lights = getLightsInfo[0];
+  //     //   result.response = getLightsResponse;
+
+  //     // } else if (checkColor[0].color === 'y') {
+  //     //   result.lights = getLightsInfo[0];
+  //     //   result.response = checkColor;
+
+  //     // } else {      //checkColor[0].color === 'r'
+  //     //   result.lights = getLightsInfo[0];
+  //     //   result.response = [];
+  //     // }
+
+  //   }
+    
+    
+    
+  //   return true;
+  // },
   fcmSendWhenMakeThings : async (...args) => {
     let u_idx = args[0];
     let chatroom_idx = args[1];

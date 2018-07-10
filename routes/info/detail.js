@@ -166,7 +166,7 @@ router.get('/single/vote/:vote_idx', async(req, res, next) => {
 router.get('/single/notice/:notice_idx', async(req, res, next) => {
   let notice_idx = req.params.notice_idx;
 
-  let result = sql.showSingleNoticeDetail(notice_idx);
+  let result = await sql.showSingleNoticeDetail(notice_idx);
   if (!result) {
     res.status(500).send({
       message : "Internal Server Error"
@@ -180,18 +180,27 @@ router.get('/single/notice/:notice_idx', async(req, res, next) => {
 });
 
 router.get('/single/lights/:light_idx', async(req, res, next) => {
-  let light_idx = req.params.light_idx;
-
-  let result = sql.showSingleLightsDetail(light_idx);
-  if (!result) {
-    res.status(500).send({
-      message : "Internal Server Error"
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if(decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
     });
   } else {
-    res.status(200).send({
-      message : "Success to Load Single Lights Detail",
-      data : result
-    });
+    let u_idx = decoded.u_idx;
+    let light_idx = req.params.light_idx;
+
+    let result = await sql.showSingleLightsContent(light_idx, u_idx);
+    if (!result) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    } else {
+      res.status(200).send({
+        message : "Success to Load Single Lights Detail",
+        data : result
+      });
+    }
   }
 });
 

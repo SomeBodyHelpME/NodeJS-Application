@@ -932,16 +932,8 @@ module.exports = {
       let getLightsResponseOneUserQuery = 'SELECT * FROM tkb.light_response WHERE light_idx = ? AND u_idx = ?'; 
       let getLightsResponseOneUser = await db.queryParamCnt_Arr(getLightsResponseOneUserQuery, [light_idx, u_idx]);
       
-      if (getLightsResponseOneUser[0].color === 'g') {
-        getLightsInfo[0].response_color = 'g';
-        getLightsInfo[0].response_content = getLightsResponseOneUser[0].content;
-      } else if (getLightsResponseOneUser[0].color === 'y') {
-        getLightsInfo[0].response_color = 'y';
-        getLightsInfo[0].response_content = getLightsResponseOneUser[0].content;
-      } else if (getLightsResponseOneUser[0].color === 'r') {
-        getLightsInfo[0].response_color = 'r';
-        getLightsInfo[0].response_content = null;
-      }
+      getLightsInfo[0].response_color = getLightsResponseOneUser[0].color;
+      getLightsInfo[0].response_content = getLightsResponseOneUser[0].content;
     }
     
     if (!getLightsInfo) {

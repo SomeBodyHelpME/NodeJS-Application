@@ -1387,14 +1387,18 @@ module.exports = {
               to: client_token,
               data: {
                 data : status
-              }
+              },
+              priority: "high",
+              content_available: true
             };  // message
           } else {
             message = {
               to: client_token,
               data: {
                 data : statuscode.Group_joinedUserChange
-              }
+              },
+              priority: "high",
+              content_available: true
             };  // message
           } // else
           
@@ -1418,7 +1422,9 @@ module.exports = {
             to:client_token,
             data: {
               data : statuscode.Chatroom_joinedChange
-            }
+            },
+            priority: "high",
+            content_available: true
           };  // message
 
           for(let j = 0 ; j < userArray.length ; j++) {
@@ -1451,7 +1457,9 @@ module.exports = {
             to: client_token,
             data: {
               data : status
-            }
+            },
+            priority: "high",
+            content_available: true
           };  // message
 
           fcm.send(message, function(err, response) {
@@ -1475,7 +1483,9 @@ module.exports = {
             to: client_token,
             data: {
               data : status
-            }
+            },
+            priority: "high",
+            content_available: true
           };  // message
 
           fcm.send(message, function(err, response) {
@@ -1500,7 +1510,9 @@ module.exports = {
             to: client_token,
             data: {
               data : status
-            }
+            },
+            priority: "high",
+            content_available: true
           };  // message
         } // for
       } // if (getAllUser)

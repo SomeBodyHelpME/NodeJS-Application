@@ -569,7 +569,7 @@ module.exports = {
     
     //let showAllNoticeQuery = 'SELECT * FROM tkb.group JOIN tkb.notice USING(chatroom_idx) WHERE chatroom_idx = ? ORDER BY write_time';  //이름 같이 전송해야 할 때
     let showAllNoticeQuery = 'SELECT tkb.notice.*, tkb.notice_response.status AS response_status FROM tkb.notice JOIN tkb.notice_response USING(notice_idx) WHERE chatroom_idx = ? AND tkb.notice_response.u_idx = ? ORDER BY notice_idx DESC';
-    var showAllNotice = await db.queryParamCnt_Arr(showAllNoticeQuery, [chatroom_idx]);
+    var showAllNotice = await db.queryParamCnt_Arr(showAllNoticeQuery, [chatroom_idx, u_idx]);
     if(!showAllNotice) {
       return false;
     } else {

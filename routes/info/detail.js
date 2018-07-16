@@ -10,6 +10,10 @@ router.get('/notice/:chatroom_idx', async(req, res, next) => {
   let token = req.headers.token;
   let decoded = jwt.verify(token);
   if (decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
     let u_idx = decoded.u_idx;
     let chatroom_idx = req.params.chatroom_idx;
     let result = await sql.forEachNotice(u_idx, chatroom_idx);
@@ -19,8 +23,8 @@ router.get('/notice/:chatroom_idx', async(req, res, next) => {
       });
     } else {
       res.status(200).send({
-          message : "Success to Load Notices for the Specific Room",
-          data : result
+        message : "Success to Load Notices for the Specific Room",
+        data : result
       });
     }  
   }

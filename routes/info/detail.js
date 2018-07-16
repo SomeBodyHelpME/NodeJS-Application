@@ -7,9 +7,13 @@ const db = require('../../module/pool.js');
 const sql = require('../../module/sql.js');
 
 router.get('/notice/:chatroom_idx', async(req, res, next) => {
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if (decoded === -1) {
+    let u_idx = decoded.u_idx;
     let chatroom_idx = req.params.chatroom_idx;
-    let result = await sql.forEachNotice(chatroom_idx);
-    if(!result) {
+    let result = await sql.forEachNotice(u_idx, chatroom_idx);
+    if (!result) {
       res.status(500).send({
         message : "Internal Server Error"
       });
@@ -18,7 +22,8 @@ router.get('/notice/:chatroom_idx', async(req, res, next) => {
           message : "Success to Load Notices for the Specific Room",
           data : result
       });
-    }
+    }  
+  }
 });
 
 router.get('/lights/:chatroom_idx', async(req, res, next) => {

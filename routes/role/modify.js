@@ -92,11 +92,11 @@ router.put('/response', upload.fields({name : "file", maxCount : MAXNUM}), async
     let u_idx = decoded.u_idx;
 		let role_task_idx = req.body.role_task_idx;
 		let role_response_idx = req.body.role_response_idx;
-		let content = req.body.content;
+		let response_content = req.body.response_content;
 		let minusArray = req.body.minusArray;
 		let plusArray = req.files.file;
 
-		let result = await sql.updateRoleResponse(u_idx, role_task_idx, role_response_idx, content, minusArray, plusArray);
+		let result = await sql.updateRoleResponse(u_idx, role_task_idx, role_response_idx, response_content, minusArray, plusArray);
 		if (result === 0) {
 			res.status(500).send({
 				message : "Internal Server Error"

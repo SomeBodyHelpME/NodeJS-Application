@@ -2079,7 +2079,7 @@ module.exports = {
     let u_idx = args[0];
     let role_task_idx = args[1];
     let role_response_idx = args[2];
-    let content = args[3];
+    let response_content = args[3];
     let minusArray = args[4];
     let plusArray = args[5];
 
@@ -2090,7 +2090,7 @@ module.exports = {
 
     if(checkWriter.length === 1) {
       let updateRoleResponseQuery = 'UPDATE tkb.role_response SET content = ? WHERE role_response_idx = ?';
-      let updateRoleResponse = await db.queryParamCnt_Arr(updateRoleResponseQuery, [content, role_response_idx]);
+      let updateRoleResponse = await db.queryParamCnt_Arr(updateRoleResponseQuery, [response_content, role_response_idx]);
 
       if (minusArray) {
         for (let i = 0 ; i < minusArray.length ; i++) {

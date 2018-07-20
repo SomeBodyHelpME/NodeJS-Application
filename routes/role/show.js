@@ -9,32 +9,6 @@ const db = require('../../module/pool.js');
 const sql = require('../../module/sql.js');
 const statuscode = require('../../module/statuscode.js');
 
-router.get('/:type/:index', async(req, res, next) => {
-	let token = req.headers.token;
-  let decoded = jwt.verify(token);
-  if (decoded === -1) {
-    res.status(400).send({
-      message : "Verification Failed"
-    });
-  } else {
-    let u_idx = decoded.u_idx;
-    let type = req.params.type;
-		let index = req.params.index;
-		
-		let result = await sql.readRoleProject(u_idx, type, index);
-		if (!result) {
-			res.status(500).send({
-				message : "Internal Server Error"
-			});
-		} else {
-			res.status(200).send({
-				message : "Success to Get Project",
-				data : result
-			});
-		}
-	}
-});
-
 router.get('/task/:role_idx', async(req, res, next) => {
 	let role_idx = req.params.role_idx;
 
@@ -96,6 +70,32 @@ router.get('/feedback/:role_response_idx', async(req, res, next) => {
 			message : "Success to Get Feedback",
 			data : result
 		});
+	}
+});
+
+router.get('/:type/:index', async(req, res, next) => {
+	let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if (decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+    let type = req.params.type;
+		let index = req.params.index;
+		
+		let result = await sql.readRoleProject(u_idx, type, index);
+		if (!result) {
+			res.status(500).send({
+				message : "Internal Server Error"
+			});
+		} else {
+			res.status(200).send({
+				message : "Success to Get Project",
+				data : result
+			});
+		}
 	}
 });
 

@@ -49,6 +49,8 @@ module.exports = {
 
     let updateChatroomIndexToGroupQuery = 'UPDATE tkb.group SET default_chatroom_idx = ? WHERE g_idx = ?';
     let updateChatroomIndexToGroup = await db.queryParamCnt_Arr(updateChatroomIndexToGroupQuery, [default_chatroom_idx, g_idx]);
+
+    let insertNewEndpoint = await chat.makeNewEndpoint(u_idx, default_chatroom_idx);
     // console.log(createDefaultChatroom);
 
     // console.log(updateChatroomIndexToGroup);
@@ -82,13 +84,15 @@ module.exports = {
     let insertNewPerson = await db.queryParamCnt_Arr(insertNewPersonQuery, [createChatRoom.insertId, g_idx, u_idx]);
 
     let createTable = await chat.makeNewChatroomTable(ctrl_name);
-
+    let insertNewEndpoint = await chat.makeNewEndpoint(u_idx, createChatRoom.insertId);
     if (userArray) {
       for (let i = 0 ; i < userArray.length ; i++) {
         let insertNewFriendQuery = 'INSERT INTO tkb.chatroom_joined (chatroom_idx, g_idx, u_idx) VALUES (?, ?, ?)';
         let insertNewFriend = await db.queryParamCnt_Arr(insertNewFriendQuery, [createChatRoom.insertId, g_idx, userArray[i]]);
 
-        if (!insertNewFriend) {
+        let insertNewEndpoint = await chat.makeNewEndpoint(userArray[i], createChatRoom.insertId);
+
+        if (!insertNewFriend || !insertNewEndpoint) {
           break;
         }
       }  
@@ -125,7 +129,9 @@ module.exports = {
     let insertDefaultChatroomQuery = 'INSERT INTO tkb.chatroom_joined (u_idx, g_idx, chatroom_idx) VALUES (?, ?, ?)';
     let insertDefaultChatroom = await db.queryParamCnt_Arr(insertDefaultChatroomQuery, [u_idx, g_idx, getDefaultChatroomIndex[0].default_chatroom_idx]);
     
-    if(!insertUserInfo || !getDefaultChatroomIndex || !insertDefaultChatroom) {
+    let insertNewEndpoint = await chat.makeNewEndpoint(u_idx, getDefaultChatroomIndex[0].default_chatroom_idx);
+
+    if(!insertUserInfo || !getDefaultChatroomIndex || !insertDefaultChatroom || !insertNewEndpoint) {
       return false;
     } else {
       return true;
@@ -168,13 +174,15 @@ module.exports = {
     for (let i = 0 ; i < userArray.length ; i++) {
       let insertUserInfoQuery = 'INSERT INTO tkb.chatroom_joined (u_idx, g_idx, chatroom_idx) VALUES (?, ?, ?)';
       var insertUserInfo = await db.queryParamCnt_Arr(insertUserInfoQuery, [userArray[i], g_idx, chatroom_idx]);
+
+      var insertNewEndpoint = await chat.makeNewEndpoint(userArray[i], chatroom_idx);
       // console.log(insertUserInfo);
-      if (!insertUserInfo) {
+      if (!insertUserInfo || !insertNewEndpoint) {
         break;
       }
     }
     
-    if(!insertUserInfo) {   //!searchGroupInfo || !searchUserInfo || 
+    if(!insertUserInfo || !insertNewEndpoint) {   //!searchGroupInfo || !searchUserInfo || 
       return false;
     } else {
       return true;

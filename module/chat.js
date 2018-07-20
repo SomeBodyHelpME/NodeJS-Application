@@ -18,5 +18,20 @@ module.exports = {
     let createTable = await db.queryParamCnt_None(createTableQuery);
     console.log(createTable);
     return createTable;
+  },
+  makeNewEndpoint : async (...args) => {
+    let u_idx = args[0];
+    let chatroom_idx = args[1];
+    
+    let value = 1;
+
+    let insertNewEndpointQuery = 'INSERT INTO chatroom.endpoint (chatroom_idx, u_idx, value) VALUES (?, ?, ?)';
+    let insertNewEndpoint = await db.queryParamCnt_Arr(insertNewEndpointQuery, [chatroom_idx, u_idx, value]);
+
+    if (!insertNewEndpoint) {
+      return false;
+    } else {
+      return true;
+    }
   }
 };

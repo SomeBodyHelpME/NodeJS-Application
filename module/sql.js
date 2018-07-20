@@ -1843,11 +1843,12 @@ module.exports = {
   },
   readRoleProject : async (...args) => {
     let u_idx = args[0];
-    let chatroom_idx = args[1];
+    let type = args[1];
+    let index = args[2];
 
-    if (!chatroom_idx) {
-      let findUserJoinedQuery = 'SELECT chatroom_idx FROM tkb.chatroom_joined WHERE u_idx = ?';
-      let findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx]);
+    if (type === 'g') {
+      let findUserJoinedQuery = 'SELECT chatroom_idx FROM tkb.chatroom_joined WHERE u_idx = ? AND g_idx = ?';
+      let findUserJoined = await db.queryParamCnt_Arr(findUserJoinedQuery, [u_idx, index]);
 
       let result = [];
       for (let i = 0 ; i < findUserJoined.length ; i++) {
@@ -1859,7 +1860,7 @@ module.exports = {
         }
       }
       return result;
-    } else {
+    } else if (type === 'c') {
       var getRoleProjectQuery = 'SELECT * FROM tkb.role WHERE chatroom_idx = ?';
       var getRoleProject = await db.queryParamCnt_Arr(getRoleProjectQuery, [chatroom_idx]);
 
@@ -1868,6 +1869,8 @@ module.exports = {
       } else {
         return getRoleProject;
       }
+    } else {
+      return false;
     }
   },
   readRoleTask : async (...args) => {

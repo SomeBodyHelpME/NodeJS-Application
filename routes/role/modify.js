@@ -80,8 +80,7 @@ router.put('/user', async(req, res, next) => {
 });
 
 var MAXNUM = 10;
-router.put('/response', upload.fields({name : "file", maxCount : MAXNUM}), async(req, res, next) => {
-
+router.put('/response', upload.array("file", MAXNUM), async(req, res, next) => {
 	let token = req.headers.token;
   let decoded = jwt.verify(token);
   if (decoded === -1) {
@@ -94,8 +93,8 @@ router.put('/response', upload.fields({name : "file", maxCount : MAXNUM}), async
 		let role_response_idx = req.body.role_response_idx;
 		let response_content = req.body.response_content;
 		let minusArray = req.body.minusArray;
-		let plusArray = req.files.file;
-
+		let plusArray = req.files;
+		
 		let result = await sql.updateRoleResponse(u_idx, role_task_idx, role_response_idx, response_content, minusArray, plusArray);
 		if (result === 0) {
 			res.status(500).send({

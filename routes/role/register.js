@@ -83,7 +83,7 @@ router.post('/user', async(req, res, next) => {
 });
 
 var MAXNUM = 10;
-router.post('/response', upload.fields([{name : "file", maxCount : MAXNUM}]), async(req, res, next) => {
+router.post('/response', upload.array("file", MAXNUM), async(req, res, next) => {
 	let token = req.headers.token;
   let decoded = jwt.verify(token);
   if (decoded === -1) {

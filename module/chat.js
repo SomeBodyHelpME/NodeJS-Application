@@ -22,16 +22,22 @@ module.exports = {
   makeNewEndpoint : async (...args) => {
     let u_idx = args[0];
     let chatroom_idx = args[1];
-    
-    let value = 1;
 
-    let insertNewEndpointQuery = 'INSERT INTO chatroom.endpoint (chatroom_idx, u_idx, value) VALUES (?, ?, ?)';
-    let insertNewEndpoint = await db.queryParamCnt_Arr(insertNewEndpointQuery, [chatroom_idx, u_idx, value]);
+    let value = 0;
 
-    if (!insertNewEndpoint) {
-      return false;
-    } else {
+    let getUserInfoQuery = 'SELECT * FROM chatroom.endpoint WHERE u_idx = ? AND chatroom_idx = ?';
+    let getUserInfo = await db.queryParamCnt_Arr(getUserInfoQuery, [u_idx, chatroom_idx]);
+    if (getUserInfo.length !==0) {
       return true;
-    }
+    } else {
+      let insertNewEndpointQuery = 'INSERT INTO chatroom.endpoint (chatroom_idx, u_idx, value) VALUES (?, ?, ?)';
+      let insertNewEndpoint = await db.queryParamCnt_Arr(insertNewEndpointQuery, [chatroom_idx, u_idx, value]);
+
+      if (!insertNewEndpoint) {
+        return false;
+      } else {
+        return true;
+      }
+    }    
   }
 };

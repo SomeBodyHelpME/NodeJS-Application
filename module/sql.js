@@ -1311,6 +1311,9 @@ module.exports = {
     let u_idx = args[0];
     let chatroom_idx = args[1];
 
+    let deleteEndPointQuery = 'DELETE FROM chatroom.endpoint WHERE u_idx = ? AND chatroom_idx = ?';
+    let deleteEndPoint = await db.queryParamCnt_Arr(deleteEndPointQuery, [u_idx, chatroom_idx]);
+
     let leaveChatroomQuery = 'DELETE FROM tkb.chatroom_joined WHERE chatroom_idx = ? AND u_idx = ?';
     var leaveChatroom = await db.queryParamCnt_Arr(leaveChatroomQuery, [chatroom_idx, u_idx]);
     if(!leaveChatroom) {

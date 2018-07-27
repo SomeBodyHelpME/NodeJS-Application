@@ -42,11 +42,10 @@ module.exports = {
   },
   insertNewMessageInMainFunction : async (...args) => {
     let chatroom_idx = args[0];
-    let index = args[1];
-    let content = args[2];
-    let write_time = args[3];
-    let u_idx = args[4];
-    let type = args[5];
+    let content = args[1];
+    let write_time = args[2];
+    let u_idx = args[3];
+    let type = args[4];
     let count = 0;
 
     let getChatroomCtrlNameQuery = 'SELECT ctrl_name FROM tkb.group_chatroom WHERE chatroom_idx = ?';
@@ -56,7 +55,7 @@ module.exports = {
       return false;
     } else {
       let insertMessageQuery = 'INSERT INTO chatroom.' + getChatroomCtrlName[0].ctrl_name + ' (u_idx, content, write_time, count, type) VALUES (?, ?, ?, ?, ?)';
-      let insertMessage = await db.queryParamCnt_Arr(insertMessageQuery, [u_idx, index + ' / ' + content, write_time, count, type]);
+      let insertMessage = await db.queryParamCnt_Arr(insertMessageQuery, [u_idx, content, write_time, count, type]);
 
       if (!insertMessage) {
         return false;

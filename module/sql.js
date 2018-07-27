@@ -131,6 +131,14 @@ module.exports = {
     
     let insertNewEndpoint = await chat.makeNewEndpoint(u_idx, getDefaultChatroomIndex[0].default_chatroom_idx);
 
+    // let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
+    // let insertNewMessageResult = await chat.insertNewMessageInMainFunction(getDefaultChatroomIndex[0].default_chatroom_idx)
+    // let chatroom_idx = args[0];
+    // let index = args[1];
+    // let content = args[2];
+    // let write_time = args[3];
+    // let u_idx = args[4];
+    // let type = args[5];
     if(!insertUserInfo || !getDefaultChatroomIndex || !insertDefaultChatroom || !insertNewEndpoint) {
       return false;
     } else {
@@ -769,11 +777,19 @@ module.exports = {
     for(let i = 0 ; i < searchAllUsersInSpecificGroup.length ; i++) {
       let insertNoticeResponseQuery = 'INSERT INTO tkb.notice_response (notice_idx, u_idx, status) VALUES (?, ?, ?)';
       var insertNoticeResponse = await db.queryParamCnt_Arr(insertNoticeResponseQuery, [insertNotice.insertId, searchAllUsersInSpecificGroup[i].u_idx, 0]);
+      if (!insertNoticeResponse) {
+        break;
+      }
     }
-    if(!insertNotice || !searchAllUsersInSpecificGroup) {
+    if(!insertNotice || !searchAllUsersInSpecificGroup || !insertNoticeResponse) {
       return false;
     } else {
-      return insertNotice.insertId;
+      let insertNewMessageResult = await chat.insertNewMessageInMainFunction(chatroom_idx, insertNotice.insertId + ' / ' + content, write_time, u_idx, 5);
+      if (!insertNewMessageResult) {
+        return false;
+      } else {
+        return insertNotice.insertId;  
+      }
     }
   },
   makeLights : async (...args) => {
@@ -822,7 +838,13 @@ module.exports = {
     if(!insertLights) {
       return false;
     } else {
-      return insertLights.insertId;
+      let insertNewMessageResult = await chat.insertNewMessageInMainFunction(chatroom_idx, insertLights.insertId, write_time, u_idx, 6);
+
+      if (!insertNewMessageResult) {
+        return false;
+      } else {
+        return insertLights.insertId;  
+      }
     }
   },
   // makePick : async (...args) => {
@@ -891,7 +913,13 @@ module.exports = {
     if(!insertVote || !searchAllUsersInSpecificGroup) {
       return false;
     } else {
-      return insertVote.insertId;
+      let insertNewMessageResult = await chat.insertNewMessageInMainFunction(chatroom_idx, insertVote.insertId, write_time, u_idx, 7);
+
+      if (!insertNewMessageResult) {
+        return false;
+      } else {
+        return insertVote.insertId;
+      }
     }
   },
   modifyVote : async (...args) => {
@@ -1756,7 +1784,13 @@ module.exports = {
     if(!flag || !insertProject) {
       return false;
     } else {
-      return true;
+      let insertNewMessageResult = await chat.insertNewMessageInMainFunction(chatroom_idx, insertProject.insertId, write_time, master_idx, 8);
+      
+      if (!insertNewMessageResult) {
+        return false;
+      } else {
+        return true;  
+      }
     }
   },
   // createRoleTask : async (...args) => {

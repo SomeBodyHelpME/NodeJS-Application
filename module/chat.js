@@ -39,5 +39,30 @@ module.exports = {
         return true;
       }
     }    
+  },
+  insertNewMessageInMainFunction : async (...args) => {
+    let chatroom_idx = args[0];
+    let index = args[1];
+    let content = args[2];
+    let write_time = args[3];
+    let u_idx = args[4];
+    let type = args[5];
+    let count = 0;
+
+    let getChatroomCtrlNameQuery = 'SELECT ctrl_name FROM tkb.group_chatroom WHERE chatroom_idx = ?';
+    let getChatroomCtrlName = await db.queryParamCnt_Arr(getChatroomCtrlNameQuery, [chatroom_idx]);
+
+    if (!getChatroomCtrlName) {
+      return false;
+    } else {
+      let insertMessageQuery = 'INSERT INTO chatroom.' + getChatroomCtrlName[0].ctrl_name + ' (u_idx, content, write_time, count, type) VALUES (?, ?, ?, ?, ?)';
+      let insertMessage = await db.queryParamCnt_Arr(insertMessageQuery, [u_idx, index + ' / ' + content, write_time, count, type]);
+
+      if (!insertMessage) {
+        return false;
+      } else {
+        return insertMessage;
+      }
+    }
   }
 };

@@ -54,6 +54,8 @@ module.exports = {
     // console.log(createDefaultChatroom);
 
     // console.log(updateChatroomIndexToGroup);
+    let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
+    let insertNewMessageResult = await chat.insertNewMessageInMainFunction(default_chatroom_idx, u_idx, write_time, u_idx, 9);
 
     let result = {
       "default_chatroom_idx" : createDefaultChatroom.insertId,
@@ -63,7 +65,7 @@ module.exports = {
       "photo" : photo
     };
 
-    if (!createGroup || !insertNewPersonGroup || !createDefaultChatroom || !insertNewPersonChatroom || !updateChatroomIndexToGroup) {
+    if (!createGroup || !insertNewPersonGroup || !createDefaultChatroom || !insertNewPersonChatroom || !updateChatroomIndexToGroup || !insertNewMessageResult) {
       return false;
     } else {
       return result;
@@ -76,6 +78,7 @@ module.exports = {
     let ctrl_name = args[3];
     let photo = args[4];
     let userArray = args[5];
+    let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
 
     let createChatRoomQuery = 'INSERT INTO tkb.group_chatroom (real_name, ctrl_name, photo, g_idx) VALUES (?, ?, ?, ?)';
     let createChatRoom = await db.queryParamCnt_Arr(createChatRoomQuery, [real_name, ctrl_name, photo, g_idx]);
@@ -85,13 +88,16 @@ module.exports = {
 
     let createTable = await chat.makeNewChatroomTable(ctrl_name);
     let insertNewEndpoint = await chat.makeNewEndpoint(u_idx, createChatRoom.insertId);
+     
     if (userArray) {
+      var makingArraytoStringResult = await chat.makingArraytoString(userArray.push(u_idx));
+      var insertNewMessageResult = await chat.insertNewMessageInMainFunction(createChatRoom.insertId, makingArraytoStringResult, write_time, u_idx, 9);
       for (let i = 0 ; i < userArray.length ; i++) {
         let insertNewFriendQuery = 'INSERT INTO tkb.chatroom_joined (chatroom_idx, g_idx, u_idx) VALUES (?, ?, ?)';
         let insertNewFriend = await db.queryParamCnt_Arr(insertNewFriendQuery, [createChatRoom.insertId, g_idx, userArray[i]]);
 
         let insertNewEndpoint = await chat.makeNewEndpoint(userArray[i], createChatRoom.insertId);
-
+     
         if (!insertNewFriend || !insertNewEndpoint) {
           break;
         }
@@ -104,7 +110,7 @@ module.exports = {
       "ctrl_name" : ctrl_name,
       "photo" : photo
     };
-    if(!createChatRoom || !insertNewPerson) {
+    if(!createChatRoom || !insertNewPerson || !insertNewMessageResult) {
       return false;
     } else {
       return result;
@@ -131,15 +137,10 @@ module.exports = {
     
     let insertNewEndpoint = await chat.makeNewEndpoint(u_idx, getDefaultChatroomIndex[0].default_chatroom_idx);
 
-    // let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
-    // let insertNewMessageResult = await chat.insertNewMessageInMainFunction(getDefaultChatroomIndex[0].default_chatroom_idx)
-    // let chatroom_idx = args[0];
-    // let index = args[1];
-    // let content = args[2];
-    // let write_time = args[3];
-    // let u_idx = args[4];
-    // let type = args[5];
-    if(!insertUserInfo || !getDefaultChatroomIndex || !insertDefaultChatroom || !insertNewEndpoint) {
+    let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
+    let insertNewMessageResult = await chat.insertNewMessageInMainFunction(getDefaultChatroomIndex[0].default_chatroom_idx, u_idx, write_time, u_idx, 9);
+    
+    if(!insertUserInfo || !getDefaultChatroomIndex || !insertDefaultChatroom || !insertNewEndpoint || !insertNewMessageResult) {
       return false;
     } else {
       return true;
@@ -173,24 +174,31 @@ module.exports = {
     let chatroom_idx = args[0];
     let g_idx = args[1];
     let userArray = args[2];
+    let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
 
     // let searchGroupInfoQuery = 'SELECT * FROM tkb.group WHERE g_idx = ?';
     // var searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [g_idx]);
     // let searchUserInfoQuery = 'SELECT * FROM tkb.user WHERE u_idx = ?';
     // var searchUserInfo = await db.queryParamCnt_Arr(searchUserInfoQuery, [u_idx]);
 
-    for (let i = 0 ; i < userArray.length ; i++) {
-      let insertUserInfoQuery = 'INSERT INTO tkb.chatroom_joined (u_idx, g_idx, chatroom_idx) VALUES (?, ?, ?)';
-      var insertUserInfo = await db.queryParamCnt_Arr(insertUserInfoQuery, [userArray[i], g_idx, chatroom_idx]);
+    if (userArray) {
+      var makingArraytoStringResult = await chat.makingArraytoString(userArray);
+      var insertNewMessageResult = await chat.insertNewMessageInMainFunction(createChatRoom.insertId, makingArraytoStringResult, write_time, makingArraytoStringResult, 9);
+      
+      for (let i = 0 ; i < userArray.length ; i++) {
+        let insertUserInfoQuery = 'INSERT INTO tkb.chatroom_joined (u_idx, g_idx, chatroom_idx) VALUES (?, ?, ?)';
+        var insertUserInfo = await db.queryParamCnt_Arr(insertUserInfoQuery, [userArray[i], g_idx, chatroom_idx]);
 
-      var insertNewEndpoint = await chat.makeNewEndpoint(userArray[i], chatroom_idx);
-      // console.log(insertUserInfo);
-      if (!insertUserInfo || !insertNewEndpoint) {
-        break;
+        var insertNewEndpoint = await chat.makeNewEndpoint(userArray[i], chatroom_idx);
+
+        // console.log(insertUserInfo);
+        if (!insertUserInfo || !insertNewEndpoint) {
+          break;
+        }
       }
     }
     
-    if(!insertUserInfo || !insertNewEndpoint) {   //!searchGroupInfo || !searchUserInfo || 
+    if(!insertUserInfo || !insertNewEndpoint || !insertNewMessageResult) {   //!searchGroupInfo || !searchUserInfo || 
       return false;
     } else {
       return true;
@@ -784,7 +792,7 @@ module.exports = {
     if(!insertNotice || !searchAllUsersInSpecificGroup || !insertNoticeResponse) {
       return false;
     } else {
-      let insertNewMessageResult = await chat.insertNewMessageInMainFunction(chatroom_idx, insertNotice.insertId + ' / ' + content, write_time, u_idx, 5);
+      let insertNewMessageResult = await chat.insertNewMessageInMainFunction(chatroom_idx, insertNotice.insertId + '/' + content, write_time, u_idx, 5);
       if (!insertNewMessageResult) {
         return false;
       } else {
@@ -838,7 +846,7 @@ module.exports = {
     if(!insertLights) {
       return false;
     } else {
-      let insertNewMessageResult = await chat.insertNewMessageInMainFunction(chatroom_idx, insertLights.insertId, write_time, u_idx, 6);
+      let insertNewMessageResult = await chat.insertNewMessageInMainFunction(chatroom_idx, insertLights.insertId + '/' + content, write_time, u_idx, 6);
 
       if (!insertNewMessageResult) {
         return false;
@@ -913,7 +921,7 @@ module.exports = {
     if(!insertVote || !searchAllUsersInSpecificGroup) {
       return false;
     } else {
-      let insertNewMessageResult = await chat.insertNewMessageInMainFunction(chatroom_idx, insertVote.insertId, write_time, u_idx, 7);
+      let insertNewMessageResult = await chat.insertNewMessageInMainFunction(chatroom_idx, insertVote.insertId + '/' + title, write_time, u_idx, 7);
 
       if (!insertNewMessageResult) {
         return false;
@@ -1321,6 +1329,13 @@ module.exports = {
     let u_idx = args[0];
     let g_idx = args[1];
 
+    let getAllChatroomQuery = 'SELECT chatroom_idx FROM tkb.chatroom_joined WHERE u_idx = ? AND g_idx = ?';
+    let getAllChatroom = await db.queryParamCnt_Arr(getAllChatroomQuery, [u_idx, g_idx]);
+
+    let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
+    for (let i = 0 ; i < getAllChatroom.length ; i++) {
+      let insertNewMessageResult = await chat.insertNewMessageInMainFunction(getAllChatroom[i].chatroom_idx, u_idx, write_time, u_idx, 10);
+    }
     let leaveGroupQuery = 'DELETE FROM tkb.group_joined WHERE g_idx = ? AND u_idx = ?';
     var leaveGroup = await db.queryParamCnt_Arr(leaveGroupQuery, [g_idx, u_idx]);
     if(!leaveGroup) {
@@ -1338,6 +1353,9 @@ module.exports = {
   leaveChatroom : async (...args) => {
     let u_idx = args[0];
     let chatroom_idx = args[1];
+    let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
+    
+    let insertNewMessageResult = await chat.insertNewMessageInMainFunction(chatroom_idx, u_idx, write_time, u_idx, 10);
 
     let deleteEndPointQuery = 'DELETE FROM chatroom.endpoint WHERE u_idx = ? AND chatroom_idx = ?';
     let deleteEndPoint = await db.queryParamCnt_Arr(deleteEndPointQuery, [u_idx, chatroom_idx]);
@@ -1784,7 +1802,7 @@ module.exports = {
     if(!flag || !insertProject) {
       return false;
     } else {
-      let insertNewMessageResult = await chat.insertNewMessageInMainFunction(chatroom_idx, insertProject.insertId, write_time, master_idx, 8);
+      let insertNewMessageResult = await chat.insertNewMessageInMainFunction(chatroom_idx, insertProject.insertId + '/' + title, write_time, master_idx, 8);
       
       if (!insertNewMessageResult) {
         return false;

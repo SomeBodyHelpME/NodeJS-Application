@@ -63,5 +63,19 @@ module.exports = {
         return insertMessage;
       }
     }
+  },
+  makingArraytoString : async (...args) => {
+    var arr = args[0];
+
+    var str = '';
+
+    if (arr && arr.length > 0) {
+      str = str + arr[0];
+      for (let i = 1 ; i < arr.length ; i++) {
+        str = str + '/' + arr[i];
+        console.log(str);
+      }
+    }
+    return str;
   }
 };

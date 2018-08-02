@@ -1075,27 +1075,27 @@ module.exports = {
 
     var flag = true;
 
-    if (status === statuscode.makeNotice) {
-      var notifyMsg = {
-          title: '팀플의 요정',   //제목
-          body: '공지가 등록되었습니다!!'  //보낼메시지
-      };
-    } else if (status === statuscode.makeLights) {
-      var notifyMsg = {
-        title: '팀플의 요정',   //제목
-        body: '신호등이 등록되었습니다!!'  //보낼메시지
-      };
-    } else if (status === statuscode.makeVote) {
-      var notifyMsg = {
-        title: '팀플의 요정',   //제목
-        body: '투표가 등록되었습니다!!'  //보낼메시지
-      };
-    } else if (status === statuscode.makeRole) {
-      var notifyMsg = {
-        title: '팀플의 요정',   //제목
-        body: '역할이 등록되었습니다!!'  //보낼메시지
-      };
-    }
+    // if (status === statuscode.makeNotice) {
+    //   var notifyMsg = {
+    //       title: '팀플의 요정',   //제목
+    //       body: '공지가 등록되었습니다!!'  //보낼메시지
+    //   };
+    // } else if (status === statuscode.makeLights) {
+    //   var notifyMsg = {
+    //     title: '팀플의 요정',   //제목
+    //     body: '신호등이 등록되었습니다!!'  //보낼메시지
+    //   };
+    // } else if (status === statuscode.makeVote) {
+    //   var notifyMsg = {
+    //     title: '팀플의 요정',   //제목
+    //     body: '투표가 등록되었습니다!!'  //보낼메시지
+    //   };
+    // } else if (status === statuscode.makeRole) {
+    //   var notifyMsg = {
+    //     title: '팀플의 요정',   //제목
+    //     body: '역할이 등록되었습니다!!'  //보낼메시지
+    //   };
+    // }
 
     let getUsersListInGroupQuery = 'SELECT u_idx FROM tkb.chatroom_joined WHERE chatroom_idx = ? AND u_idx != ?';
     var getUsersListInGroup = await db.queryParamCnt_Arr(getUsersListInGroupQuery, [chatroom_idx, u_idx]);
@@ -1111,7 +1111,11 @@ module.exports = {
 
           var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
               to: client_token,
-              notification: notifyMsg
+              data: {
+                data : status
+              },
+              priority: "high",
+              content_available: true
           };
 
           fcm.send(message, function(err, response) {

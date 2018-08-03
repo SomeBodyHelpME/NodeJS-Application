@@ -953,8 +953,8 @@ module.exports = {
   },
   showSingleNoticeDetail : async (...args) => {
     let notice_idx = args[0];
-
-    let getSingleNoticeQuery = 'SELECT * FROM tkb.notice WHERE notice_idx = ?';
+    
+    let getSingleNoticeQuery = 'SELECT tkb.notice.*, tkb.notice_response.status AS response_status FROM tkb.notice JOIN tkb.notice_response USING(notice_idx) WHERE notice_idx = ?';
     let getSingleNotice = await db.queryParamCnt_Arr(getSingleNoticeQuery, [notice_idx]);
 
     if (!getSingleNotice) {

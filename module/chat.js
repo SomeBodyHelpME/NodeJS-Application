@@ -23,15 +23,19 @@ module.exports = {
     let u_idx = args[0];
     let chatroom_idx = args[1];
 
-    let value = 0;
-
     let getUserInfoQuery = 'SELECT * FROM chatroom.endpoint WHERE u_idx = ? AND chatroom_idx = ?';
     let getUserInfo = await db.queryParamCnt_Arr(getUserInfoQuery, [u_idx, chatroom_idx]);
-    if (getUserInfo.length !==0) {
+    if (getUserInfo.length !== 0) {
       return true;
     } else {
+      let getChatroomCtrlNameQuery = 'SELECT ctrl_name FROM tkb.group_chatroom WHERE chatroom_idx = ?';
+      let getChatroomCtrlName = await db.queryParamCnt_Arr(getChatroomCtrlNameQuery, [chatroom_idx]);
+
+      let getLastIndexQuery = 'SELECT count(*) AS count FROM chatroom.' + getChatroomCtrlName[0].ctrl_name;
+      let getLastIndex = await db.queryParamCnt_None(getLastIndexQuery);
+
       let insertNewEndpointQuery = 'INSERT INTO chatroom.endpoint (chatroom_idx, u_idx, value) VALUES (?, ?, ?)';
-      let insertNewEndpoint = await db.queryParamCnt_Arr(insertNewEndpointQuery, [chatroom_idx, u_idx, value]);
+      let insertNewEndpoint = await db.queryParamCnt_Arr(insertNewEndpointQuery, [chatroom_idx, u_idx, getLastIndex[0].count]);
 
       if (!insertNewEndpoint) {
         return false;

@@ -25,7 +25,7 @@ module.exports = {
 
     let getUserInfoQuery = 'SELECT * FROM chatroom.endpoint WHERE u_idx = ? AND chatroom_idx = ?';
     let getUserInfo = await db.queryParamCnt_Arr(getUserInfoQuery, [u_idx, chatroom_idx]);
-    if (getUserInfo.length !== 0) {
+    if (getUserInfo.length !== 0 || u_idx === 0) {
       return true;
     } else {
       let getChatroomCtrlNameQuery = 'SELECT ctrl_name FROM tkb.group_chatroom WHERE chatroom_idx = ?';
@@ -64,7 +64,7 @@ module.exports = {
       if (!insertMessage) {
         return false;
       } else {
-        return insertMessage;
+        return insertMessage.insertId;
       }
     }
   },

@@ -33,7 +33,7 @@ router.post('/', async(req, res, next) => { //역할 등록
 					message : "Internal Server Error"
 				});
 			} else {
-				let result2 = await sql.fcmSendWhenMakeThings(u_idx, chatroom_idx, statuscode.makeVote);
+				let result2 = await sql.fcmSendWhenMakeThings(u_idx, chatroom_idx, statuscode.makeVote, result[0], result[1]);
 	      if(!result2) {
 	        res.status(500).send({
 	          message : "Internal Server Error"

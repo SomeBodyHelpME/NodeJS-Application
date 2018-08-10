@@ -80,6 +80,8 @@ module.exports = {
     let userArray = args[5];
     let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
 
+    let flag = true;
+
     let createChatRoomQuery = 'INSERT INTO tkb.group_chatroom (real_name, ctrl_name, photo, g_idx) VALUES (?, ?, ?, ?)';
     let createChatRoom = await db.queryParamCnt_Arr(createChatRoomQuery, [real_name, ctrl_name, photo, g_idx]);
 
@@ -90,7 +92,8 @@ module.exports = {
     let insertNewEndpoint = await chat.makeNewEndpoint(u_idx, createChatRoom.insertId);
      
     if (userArray) {
-      var makingArraytoStringResult = await chat.makingArraytoString(userArray.push(u_idx));
+      let userArray2 = userArray.slice();
+      var makingArraytoStringResult = await chat.makingArraytoString(userArray2.push(u_idx));
       var insertNewMessageResult = await chat.insertNewMessageInMainFunction(createChatRoom.insertId, makingArraytoStringResult, write_time, u_idx, 9);
       for (let i = 0 ; i < userArray.length ; i++) {
         let insertNewFriendQuery = 'INSERT INTO tkb.chatroom_joined (chatroom_idx, g_idx, u_idx) VALUES (?, ?, ?)';
@@ -99,6 +102,7 @@ module.exports = {
         let insertNewEndpoint = await chat.makeNewEndpoint(userArray[i], createChatRoom.insertId);
      
         if (!insertNewFriend || !insertNewEndpoint) {
+          flag = false;
           break;
         }
       }  
@@ -110,7 +114,7 @@ module.exports = {
       "ctrl_name" : ctrl_name,
       "photo" : photo
     };
-    if(!createChatRoom || !insertNewPerson || !insertNewMessageResult) {
+    if(!createChatRoom || !insertNewPerson || !insertNewMessageResult || !flag) {
       return false;
     } else {
       return result;
@@ -183,7 +187,7 @@ module.exports = {
 
     if (userArray) {
       var makingArraytoStringResult = await chat.makingArraytoString(userArray);
-      var insertNewMessageResult = await chat.insertNewMessageInMainFunction(createChatRoom.insertId, makingArraytoStringResult, write_time, makingArraytoStringResult, 9);
+      var insertNewMessageResult = await chat.insertNewMessageInMainFunction(chatroom_idx, makingArraytoStringResult, write_time, makingArraytoStringResult, 9);
       
       for (let i = 0 ; i < userArray.length ; i++) {
         let insertUserInfoQuery = 'INSERT INTO tkb.chatroom_joined (u_idx, g_idx, chatroom_idx) VALUES (?, ?, ?)';
@@ -796,7 +800,7 @@ module.exports = {
       if (!insertNewMessageResult) {
         return false;
       } else {
-        return insertNotice.insertId;  
+        return [insertNotice.insertId, insertNewMessageResult];
       }
     }
   },
@@ -851,7 +855,7 @@ module.exports = {
       if (!insertNewMessageResult) {
         return false;
       } else {
-        return insertLights.insertId;  
+        return [insertLights.insertId, insertNewMessageResult];
       }
     }
   },
@@ -926,7 +930,7 @@ module.exports = {
       if (!insertNewMessageResult) {
         return false;
       } else {
-        return insertVote.insertId;
+        return [insertVote.insertId, insertNewMessageResult];
       }
     }
   },
@@ -953,7 +957,7 @@ module.exports = {
   },
   showSingleNoticeDetail : async (...args) => {
     let notice_idx = args[0];
-    
+
     let getSingleNoticeQuery = 'SELECT tkb.notice.*, tkb.notice_response.status AS response_status FROM tkb.notice JOIN tkb.notice_response USING(notice_idx) WHERE notice_idx = ?';
     let getSingleNotice = await db.queryParamCnt_Arr(getSingleNoticeQuery, [notice_idx]);
 
@@ -1072,30 +1076,9 @@ module.exports = {
     let u_idx = args[0];
     let chatroom_idx = args[1];
     let status = args[2];
-
+    let index = args[3];
+    let chat_idx = args[4];
     var flag = true;
-
-    // if (status === statuscode.makeNotice) {
-    //   var notifyMsg = {
-    //       title: '팀플의 요정',   //제목
-    //       body: '공지가 등록되었습니다!!'  //보낼메시지
-    //   };
-    // } else if (status === statuscode.makeLights) {
-    //   var notifyMsg = {
-    //     title: '팀플의 요정',   //제목
-    //     body: '신호등이 등록되었습니다!!'  //보낼메시지
-    //   };
-    // } else if (status === statuscode.makeVote) {
-    //   var notifyMsg = {
-    //     title: '팀플의 요정',   //제목
-    //     body: '투표가 등록되었습니다!!'  //보낼메시지
-    //   };
-    // } else if (status === statuscode.makeRole) {
-    //   var notifyMsg = {
-    //     title: '팀플의 요정',   //제목
-    //     body: '역할이 등록되었습니다!!'  //보낼메시지
-    //   };
-    // }
 
     let getUsersListInGroupQuery = 'SELECT u_idx FROM tkb.chatroom_joined WHERE chatroom_idx = ? AND u_idx != ?';
     var getUsersListInGroup = await db.queryParamCnt_Arr(getUsersListInGroupQuery, [chatroom_idx, u_idx]);
@@ -1112,11 +1095,25 @@ module.exports = {
           var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
               to: client_token,
               data: {
-                data : status
+                status : status,
+                chatroom_idx : chatroom_idx,
+                index : index,
+                chat_idx : chat_idx
               },
               priority: "high",
               content_available: true
           };
+
+          message.data.title = '팀플의 요정';   //제목
+          if (status === statuscode.makeNotice) {
+            message.data.body = '공지가 등록되었습니다!!';  //보낼메시지
+          } else if (status === statuscode.makeLights) {
+            message.data.body = '신호등이 등록되었습니다!!';  //보낼메시지
+          } else if (status === statuscode.makeVote) {
+            message.data.body = '투표가 등록되었습니다!!';  //보낼메시지
+          } else if (status === statuscode.makeRole) {
+            message.data.body = '역할이 등록되었습니다!!';  //보낼메시지
+          }
 
           fcm.send(message, function(err, response) {
             if(err) {
@@ -1811,7 +1808,7 @@ module.exports = {
       if (!insertNewMessageResult) {
         return false;
       } else {
-        return true;  
+        return [insertProject.insertId, insertNewMessageResult];
       }
     }
   },

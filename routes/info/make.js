@@ -67,7 +67,7 @@ router.post('/chatroom', upload.single('photo'), async(req, res, next) => {
     let g_idx = req.body.g_idx;
     let real_name = req.body.name;
     let ctrl_name = real_name + '_' + moment().format('YYMMDDHHmmss');
-
+    console.log(userArray);
     if (!g_idx || !real_name) {
       res.status(400).send({
         message : "Null Value"
@@ -114,7 +114,7 @@ router.post('/notice', async(req, res, next) => {
           message : "Internal Server Error"
         });
       } else {
-        let result2 = await sql.fcmSendWhenMakeThings(u_idx, chatroom_idx, statuscode.makeNotice);
+        let result2 = await sql.fcmSendWhenMakeThings(u_idx, chatroom_idx, statuscode.makeNotice, result[0], result[1]);
         if(!result2) {
           res.status(500).send({
             message : "Internal Server Error"
@@ -158,7 +158,7 @@ router.post('/lights', async(req, res, next) => {
           message : "Internal Server Error"
         });
       } else {
-        let result2 = await sql.fcmSendWhenMakeThings(u_idx, chatroom_idx, statuscode.makeLights);
+        let result2 = await sql.fcmSendWhenMakeThings(u_idx, chatroom_idx, statuscode.makeLights, result[0], result[1]);
         if(!result2) {
           res.status(500).send({
             message : "Internal Server Error"
@@ -234,7 +234,7 @@ router.post('/vote', async(req, res, next) => {
           message : "Internal Server Error"
         });
       } else {
-        let result2 = await sql.fcmSendWhenMakeThings(u_idx, chatroom_idx, statuscode.makeVote);
+        let result2 = await sql.fcmSendWhenMakeThings(u_idx, chatroom_idx, statuscode.makeVote, result[0], result[1]);
         if(!result2) {
           res.status(500).send({
             message : "Internal Server Error"

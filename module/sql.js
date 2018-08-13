@@ -92,7 +92,8 @@ module.exports = {
     let insertNewEndpoint = await chat.makeNewEndpoint(u_idx, createChatRoom.insertId);
      
     if (userArray) {
-      let userArray2 = userArray.slice();
+      let userArray2 = [];
+      userArray2 = userArray.slice();
       var makingArraytoStringResult = await chat.makingArraytoString(userArray2.push(u_idx));
       var insertNewMessageResult = await chat.insertNewMessageInMainFunction(createChatRoom.insertId, makingArraytoStringResult, write_time, u_idx, 9);
       for (let i = 0 ; i < userArray.length ; i++) {

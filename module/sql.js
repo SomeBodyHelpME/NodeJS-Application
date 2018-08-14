@@ -1192,7 +1192,7 @@ module.exports = {
     let u_idx = args[0];
     let notice_idx = args[1];
 
-    let deleteNoticeQuery = 'DELETE tkb.notice WHERE u_idx = ? AND notice_idx = ?';
+    let deleteNoticeQuery = 'DELETE FROM tkb.notice WHERE u_idx = ? AND notice_idx = ?';
     let deleteNotice = await db.queryParamCnt_Arr(deleteNoticeQuery, [u_idx, notice_idx]);
 
     if (!deleteNotice) {
@@ -1205,7 +1205,7 @@ module.exports = {
     let u_idx = args[0];
     let light_idx = args[1];
 
-    let deleteLightsQuery = 'DELETE tkb.lights WHERE u_idx = ? AND light_idx = ?';
+    let deleteLightsQuery = 'DELETE FROM tkb.lights WHERE u_idx = ? AND light_idx = ?';
     let deleteLights = await db.queryParamCnt_Arr(deleteLightsQuery, [u_idx, light_idx]);
 
     if (!deleteLights) {
@@ -1218,7 +1218,7 @@ module.exports = {
   //   let u_idx = args[0];
   //   let pick_idx = args[1];
 
-  //   let deletePickQuery = 'DELETE tkb.pick WHERE u_idx = ? AND pick_idx = ?';
+  //   let deletePickQuery = 'DELETE FROM tkb.pick WHERE u_idx = ? AND pick_idx = ?';
   //   let deletePick = await db.queryParamCnt_Arr(deletePickQuery, [u_idx, pick_idx]);
 
   //   if (!deletePick) {
@@ -1231,7 +1231,7 @@ module.exports = {
     let u_idx = args[0];
     let vote_idx = args[1];
 
-    let deleteVoteQuery = 'DELETE tkb.vote WHERE u_idx = ? AND vote_idx = ?';
+    let deleteVoteQuery = 'DELETE FROM tkb.vote WHERE u_idx = ? AND vote_idx = ?';
     let deleteVote = await db.queryParamCnt_Arr(deleteVoteQuery, [u_idx, vote_idx]);
 
     if (!deleteVote) {

@@ -122,7 +122,7 @@ router.post('/notice', async(req, res, next) => {
         } else {
           res.status(201).send({
               message : "Success Make Notice",
-              data : result
+              data : result[0]
           });
         }//else
       }//else
@@ -166,7 +166,7 @@ router.post('/lights', async(req, res, next) => {
         } else {
           res.status(201).send({
               message : "Success Make Lights",
-              data : result
+              data : result[0]
           });
         }//else
       }//else
@@ -242,7 +242,7 @@ router.post('/vote', async(req, res, next) => {
         } else {
           res.status(201).send({
             message : "Success Make Vote",
-            data : result
+            data : result[0]
           });
         }//else
       }

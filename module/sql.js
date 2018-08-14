@@ -90,15 +90,14 @@ module.exports = {
 
     let createTable = await chat.makeNewChatroomTable(ctrl_name);
     let insertNewEndpoint = await chat.makeNewEndpoint(u_idx, createChatRoom.insertId);
-     
-    if (userArray) {
 
+    if (userArray) {
       if (userArray.length === 0) {
         var insertNewMessageResult = await chat.insertNewMessageInMainFunction(createChatRoom.insertId, u_idx, write_time, u_idx, 9);
       } else {
         let userArray2 = userArray.slice();
-      var makingArraytoStringResult = await chat.makingArraytoString(userArray2.push(u_idx));
-      var insertNewMessageResult = await chat.insertNewMessageInMainFunction(createChatRoom.insertId, makingArraytoStringResult, write_time, u_idx, 9);
+        var makingArraytoStringResult = await chat.makingArraytoString(userArray2.push(u_idx));
+        var insertNewMessageResult = await chat.insertNewMessageInMainFunction(createChatRoom.insertId, makingArraytoStringResult, write_time, u_idx, 9);
       }
       for (let i = 0 ; i < userArray.length ; i++) {
         let insertNewFriendQuery = 'INSERT INTO tkb.chatroom_joined (chatroom_idx, g_idx, u_idx) VALUES (?, ?, ?)';

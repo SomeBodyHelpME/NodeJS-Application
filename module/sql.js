@@ -768,18 +768,16 @@ module.exports = {
   },
   makeNotice : async (...args) => {
     let u_idx = args[0];
-    let chat_idx = args[1];
-    let chatroom_idx = args[2];
-    let write_time = args[3];
-    let content = args[4];
+    let chatroom_idx = args[1];
+    let write_time = args[2];
+    let content = args[3];
 
     // let searchGroupInfoQuery = 'SELECT * FROM tkb.group WHERE chatroom_idx = ?';
     // let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [chatroom_idx]);
 
-    let insertNoticeQuery = 'INSERT INTO tkb.notice (u_idx, chat_idx, chatroom_idx, write_time, content) VALUES (?, ?, ?, ?, ?)';
-    var insertNotice = await db.queryParamCnt_Arr(insertNoticeQuery, [u_idx, chat_idx, chatroom_idx, write_time, content]);
+    let insertNoticeQuery = 'INSERT INTO tkb.notice (u_idx, chatroom_idx, write_time, content) VALUES (?, ?, ?, ?)';
+    var insertNotice = await db.queryParamCnt_Arr(insertNoticeQuery, [u_idx, chatroom_idx, write_time, content]);
     console.log(u_idx);
-    console.log(chat_idx);
     console.log(chatroom_idx);
     console.log(write_time);
     console.log(content);
@@ -816,14 +814,13 @@ module.exports = {
     let content = args[4];
     // 이것은 피엠찡과 얘기해보자
     let write_time = args[5];
-    let chat_idx = args[6];
-    let userArray = args[7];        // select 문을 한 결과가 넘어와야 함
+    let userArray = args[6];        // select 문을 한 결과가 넘어와야 함
 
     // let searchGroupInfoQuery = 'SELECT * FROM tkb.group WHERE chatroom_idx = ?';
     // let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [chatroom_idx]);
 
-    let insertLightsQuery = 'INSERT INTO tkb.lights (u_idx, chatroom_idx, open_status, entire_status, content, write_time, chat_idx) VALUES (?, ?, ?, ?, ?, ?, ?)';
-    var insertLights = await db.queryParamCnt_Arr(insertLightsQuery, [u_idx, chatroom_idx, open_status, entire_status, content, write_time, chat_idx]);
+    let insertLightsQuery = 'INSERT INTO tkb.lights (u_idx, chatroom_idx, open_status, entire_status, content, write_time) VALUES (?, ?, ?, ?, ?, ?)';
+    var insertLights = await db.queryParamCnt_Arr(insertLightsQuery, [u_idx, chatroom_idx, open_status, entire_status, content, write_time]);
     console.log('insertLights',insertLights);
     if(entire_status == 1) {
 //      let searchAllUsersInSpecificGroupQuery = 'SELECT u_idx FROM tkb.joined WHERE chatroom_idx = ? AND u_idx != ?';
@@ -884,20 +881,18 @@ module.exports = {
   // },
   makeVote : async (...args) => {
     let u_idx = args[0];
-    let chat_idx = args[1];
-    let chatroom_idx = args[2];
-
-    let write_time = args[3];
-    let title = args[4];
-    let content = args[5];
-    let choice = args[6];  //배열의 형태로 넘어옴 ex) ['신촌', '이대', '시청']
-    let endtime = args[7];
+    let chatroom_idx = args[1];
+    let write_time = args[2];
+    let title = args[3];
+    let content = args[4];
+    let choice = args[5];  //배열의 형태로 넘어옴 ex) ['신촌', '이대', '시청']
+    let endtime = args[6];
 
     // let searchGroupInfoQuery = 'SELECT * FROM tkb.group WHERE chatroom_idx = ?';
     // let searchGroupInfo = await db.queryParamCnt_Arr(searchGroupInfoQuery, [chatroom_idx]);
 
-    let insertVoteQuery = 'INSERT INTO tkb.vote (u_idx, chat_idx, chatroom_idx, write_time, title, content, endtime) VALUES (?, ?, ?, ?, ?, ?, ?)';
-    var insertVote = await db.queryParamCnt_Arr(insertVoteQuery, [u_idx, chat_idx, chatroom_idx, write_time, title, content, endtime]);
+    let insertVoteQuery = 'INSERT INTO tkb.vote (u_idx, chatroom_idx, write_time, title, content, endtime) VALUES (?, ?, ?, ?, ?, ?)';
+    var insertVote = await db.queryParamCnt_Arr(insertVoteQuery, [u_idx, chatroom_idx, write_time, title, content, endtime]);
 
     for(let i = 0 ; i < choice.length ; i++) {
       let insertVoteContentQuery = 'INSERT INTO tkb.vote_content (vote_idx, content) VALUES (?, ?)';

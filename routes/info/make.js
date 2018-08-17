@@ -98,17 +98,16 @@ router.post('/notice', async(req, res, next) => {
     });
   } else {
     let u_idx = decoded.u_idx;
-    let chat_idx = req.body.chat_idx;
     let chatroom_idx = req.body.chatroom_idx;
     let content = req.body.content;
     let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
 
-    if (!chat_idx || !chatroom_idx || !content) {
+    if (!chatroom_idx || !content) {
       res.status(400).send({
         message : "Null Value"
       });
     } else {
-      let result = await sql.makeNotice(u_idx, chat_idx, chatroom_idx, write_time, content);
+      let result = await sql.makeNotice(u_idx, chatroom_idx, write_time, content);
       if(!result) {
         res.status(500).send({
           message : "Internal Server Error"
@@ -139,7 +138,6 @@ router.post('/lights', async(req, res, next) => {
     });
   } else {
     let u_idx = decoded.u_idx;
-    let chat_idx = req.body.chat_idx;
     let chatroom_idx = req.body.chatroom_idx;
     let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
     let content = req.body.content;
@@ -147,12 +145,12 @@ router.post('/lights', async(req, res, next) => {
     let entire_status = req.body.entire_status;
     let userArray = req.body.userArray;
 
-    if (!chat_idx || !chatroom_idx || !content || !open_status || !entire_status) {
+    if (!chatroom_idx || !content || !open_status || !entire_status) {
       res.status(400).send({
         message : "Null Value"
       });
     } else {
-      let result = await sql.makeLights(u_idx, chatroom_idx, open_status, entire_status, content, write_time, chat_idx, userArray);
+      let result = await sql.makeLights(u_idx, chatroom_idx, open_status, entire_status, content, write_time, userArray);
       if(!result) {
         res.status(500).send({
           message : "Internal Server Error"
@@ -212,7 +210,6 @@ router.post('/vote', async(req, res, next) => {
     });
   } else {
     let u_idx = decoded.u_idx;
-    let chat_idx = req.body.chat_idx;
     let chatroom_idx = req.body.chatroom_idx;
     let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
     let content = req.body.content;
@@ -220,7 +217,7 @@ router.post('/vote', async(req, res, next) => {
     let choice = req.body.choice;
     let endtime = req.body.endtime;
 
-    if (!chat_idx || !chatroom_idx || !content || !title || !choice) {
+    if (!chatroom_idx || !content || !title || !choice) {
       res.status(400).send({
         message : "Null Value"
       });
@@ -228,7 +225,7 @@ router.post('/vote', async(req, res, next) => {
       if (!endtime) {
         endtime = moment().add(7, 'days').format("YYYY-MM-DD HH:mm:ss");
       } 
-      let result = await sql.makeVote(u_idx, chat_idx, chatroom_idx, write_time, title, content, choice, endtime);
+      let result = await sql.makeVote(u_idx, chatroom_idx, write_time, title, content, choice, endtime);
       if(!result) {
         res.status(500).send({
           message : "Internal Server Error"

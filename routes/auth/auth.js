@@ -171,7 +171,7 @@ router.post('/invite/group', async(req, res, next) => {
 });
 
 router.post('/invite/chatroom', async(req, res, next) => {
-  let userArray = JSON.parse(req.body.userArray);
+  let userArray = req.body.userArray;
   let chatroom_idx = req.body.chatroom_idx;
   let g_idx = req.body.g_idx;
   

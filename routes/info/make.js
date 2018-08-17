@@ -53,7 +53,7 @@ router.post('/chatroom', upload.single('photo'), async(req, res, next) => {
   }
   var userArray = [];
   if(req.body.userArray != undefined) {
-    userArray = JSON.parse(req.body.userArray);
+    userArray = req.body.userArray;
   }
 
   let token = req.headers.token;

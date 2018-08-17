@@ -189,10 +189,7 @@ module.exports = {
     // let searchUserInfoQuery = 'SELECT * FROM tkb.user WHERE u_idx = ?';
     // var searchUserInfo = await db.queryParamCnt_Arr(searchUserInfoQuery, [u_idx]);
 
-    if (userArray) {
-      var makingArraytoStringResult = await chat.makingArraytoString(userArray);
-      var insertNewMessageResult = await chat.insertNewMessageInMainFunction(chatroom_idx, makingArraytoStringResult, write_time, makingArraytoStringResult, 9);
-      
+    if (userArray) {      
       for (let i = 0 ; i < userArray.length ; i++) {
         let insertUserInfoQuery = 'INSERT INTO tkb.chatroom_joined (u_idx, g_idx, chatroom_idx) VALUES (?, ?, ?)';
         var insertUserInfo = await db.queryParamCnt_Arr(insertUserInfoQuery, [userArray[i], g_idx, chatroom_idx]);
@@ -204,6 +201,9 @@ module.exports = {
           break;
         }
       }
+
+      var makingArraytoStringResult = await chat.makingArraytoString(userArray);
+      var insertNewMessageResult = await chat.insertNewMessageInMainFunction(chatroom_idx, makingArraytoStringResult, write_time, makingArraytoStringResult, 9);
     }
     
     if(!insertUserInfo || !insertNewEndpoint || !insertNewMessageResult) {   //!searchGroupInfo || !searchUserInfo || 

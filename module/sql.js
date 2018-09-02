@@ -304,8 +304,8 @@ module.exports = {
     for(let i = 0 ; i < findUserJoined.length ; i++) {
       let GroupArray3 = [];
       
-      let findVotesIndexQuery = 'SELECT * FROM tkb.vote WHERE chatroom_idx = ?';
-      var findVotesIndex = await db.queryParamCnt_Arr(findVotesIndexQuery, [findUserJoined[i].chatroom_idx]);
+      let findVotesIndexQuery = 'SELECT * FROM tkb.vote WHERE chatroom_idx = ? AND status = ?';
+      var findVotesIndex = await db.queryParamCnt_Arr(findVotesIndexQuery, [findUserJoined[i].chatroom_idx, 0]);
       for(let j = 0 ; j < findVotesIndex.length ; j++) {
         let findVotesQuery = 'SELECT * FROM tkb.vote_response WHERE vote_idx = ? AND status = ? AND u_idx = ?';
         var findVotes = await db.queryParamCnt_Arr(findVotesQuery, [findVotesIndex[j].vote_idx, 0, u_idx]); // 미응답은 : w, 응답은 : a

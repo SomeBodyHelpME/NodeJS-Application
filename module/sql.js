@@ -1339,6 +1339,9 @@ module.exports = {
     for (let i = 0 ; i < getAllChatroom.length ; i++) {
       let insertNewMessageResult = await chat.insertNewMessageInMainFunction(getAllChatroom[i].chatroom_idx, u_idx, write_time, u_idx, 10);
     }
+    let leaveChatroomQuery = 'DELETE FROM tkb.chatroom_joined WHERE u_idx = ? AND g_idx = ?';
+    let leaveChatroom = await db.queryParamCnt_Arr(leaveChatroomQuery, [u_idx, g_idx]);
+    console.log("leaveGroup's leaveChatroom : ", leaveChatroom);
     let leaveGroupQuery = 'DELETE FROM tkb.group_joined WHERE g_idx = ? AND u_idx = ?';
     var leaveGroup = await db.queryParamCnt_Arr(leaveGroupQuery, [g_idx, u_idx]);
     if(!leaveGroup) {

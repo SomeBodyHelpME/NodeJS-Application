@@ -125,6 +125,31 @@ router.get('/register/check', async(req, res, next) => {
   }
 });
 
+router.post('/logout', async(req, res, next) => {
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if (decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+
+    let updateQuery = 'UPDATE tkb.user SET token = ? WHERE u_idx = ?';
+    let updateResult = await db.queryParamCnt_Arr(updateQuery, [null, u_idx]);
+
+    if (!updateResult) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    } else {
+      res.status(201).send({
+        message : "Success to Logout"
+      });
+    }
+  }
+});
+
 router.post('/invite/group', async(req, res, next) => {
   let name = req.body.name;
   let phone = req.body.phone;

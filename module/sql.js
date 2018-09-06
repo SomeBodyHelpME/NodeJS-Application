@@ -1097,7 +1097,7 @@ module.exports = {
           var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
               to: client_token,
               data: {
-                status : status,
+                data : status,
                 chatroom_idx : chatroom_idx,
                 index : index,
                 chat_idx : chat_idx

@@ -1361,23 +1361,30 @@ module.exports = {
     let chatroom_idx = args[1];
     let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
     
-    let insertNewMessageResult = await chat.insertNewMessageInMainFunction(chatroom_idx, u_idx, write_time, u_idx, 10);
+    let checkDefaultChatroomQuery = 'SELECT g_idx FROM tkb.group WHERE default_chatroom_idx = ?';
+    let checkDefaultChatroom = await db.queryParamCnt_Arr(checkDefaultChatroomQuery, [chatroom_idx]);
 
-    let deleteEndPointQuery = 'DELETE FROM chatroom.endpoint WHERE u_idx = ? AND chatroom_idx = ?';
-    let deleteEndPoint = await db.queryParamCnt_Arr(deleteEndPointQuery, [u_idx, chatroom_idx]);
-
-    let leaveChatroomQuery = 'DELETE FROM tkb.chatroom_joined WHERE chatroom_idx = ? AND u_idx = ?';
-    var leaveChatroom = await db.queryParamCnt_Arr(leaveChatroomQuery, [chatroom_idx, u_idx]);
-    if(!leaveChatroom) {
-      return false;
+    if (checkDefaultChatroom.length === 1) {
+      return 1;
     } else {
-      let leftPersonCountQuery = 'SELECT u_idx FROM tkb.chatroom_joined WHERE chatroom_idx = ?';
-      var leftPersonCount = await db.queryParamCnt_Arr(leftPersonCountQuery, [chatroom_idx]);
-      if(leftPersonCount.length === 0) {
-        let deleteChatroomInfoQuery = 'DELETE FROM tkb.group_chatroom WHERE chatroom_idx = ?';
-        var deleteChatroomInfo = await db.queryParamCnt_Arr(deleteChatroomInfoQuery, [chatroom_idx]);
+      let insertNewMessageResult = await chat.insertNewMessageInMainFunction(chatroom_idx, u_idx, write_time, u_idx, 10);
+
+      let deleteEndPointQuery = 'DELETE FROM chatroom.endpoint WHERE u_idx = ? AND chatroom_idx = ?';
+      let deleteEndPoint = await db.queryParamCnt_Arr(deleteEndPointQuery, [u_idx, chatroom_idx]);
+
+      let leaveChatroomQuery = 'DELETE FROM tkb.chatroom_joined WHERE chatroom_idx = ? AND u_idx = ?';
+      var leaveChatroom = await db.queryParamCnt_Arr(leaveChatroomQuery, [chatroom_idx, u_idx]);
+      if(!leaveChatroom) {
+        return 0;
+      } else {
+        let leftPersonCountQuery = 'SELECT u_idx FROM tkb.chatroom_joined WHERE chatroom_idx = ?';
+        var leftPersonCount = await db.queryParamCnt_Arr(leftPersonCountQuery, [chatroom_idx]);
+        if(leftPersonCount.length === 0) {
+          let deleteChatroomInfoQuery = 'DELETE FROM tkb.group_chatroom WHERE chatroom_idx = ?';
+          var deleteChatroomInfo = await db.queryParamCnt_Arr(deleteChatroomInfoQuery, [chatroom_idx]);
+        }
+        return leaveChatroom;
       }
-      return leaveChatroom;
     }
   },
   closeVote : async (...args) => {

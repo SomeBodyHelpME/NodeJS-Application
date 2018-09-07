@@ -356,9 +356,13 @@ router.delete('/leave/chatroom', async(req, res, next) => {
       let u_idx = decoded.u_idx;
 
       let result = await sql.leaveChatroom(u_idx, chatroom_idx);
-      if(!result) {
+      if (result === 0) {
         res.status(500).send({
           message : "Internal Server Error"
+        });
+      } else if (result === 1) {
+        res.status(400).send({
+          message : "Default Chatroom"
         });
       } else {
         if (result.affectedRows !== 0) {

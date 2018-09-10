@@ -2007,13 +2007,19 @@ module.exports = {
   readRoleFeedback : async (...args) => {
     let role_response_idx = args[0];
 
+    let getSingleRoleResponseQuery = 'SELECT * FROM tkb.role_response WHERE role_response_idx = ?';
+    let getSingleRoleResponse = await db.queryParamCnt_Arr(getSingleRoleResponseQuery, [role_response_idx]);
+
     let getRoleFeedbackQuery = 'SELECT * FROM tkb.role_feedback WHERE role_response_idx = ? ORDER BY role_feedback_idx';
     let getRoleFeedback = await db.queryParamCnt_Arr(getRoleFeedbackQuery, [role_response_idx]);
 
-    if (!getRoleFeedback) {
+    if (!getSingleRoleResponse || !getRoleFeedback) {
       return false;
     } else {
-      return getRoleFeedback;
+      return {
+        'response' : getSingleRoleResponse,
+        'feedback' : getRoleFeedback
+      };
     }
   },
   updateRoleProject : async (...args) => {

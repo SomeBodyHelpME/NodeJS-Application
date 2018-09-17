@@ -101,10 +101,10 @@ router.post('/response', upload.array("file", MAXNUM), async(req, res, next) => 
 		let role_idx = req.body.role_idx;
 		let role_task_idx = req.body.role_task_idx;
 		let response_content = req.body.response_content;
-		let files = req.files.file;	// Array
+		let files = req.files;	// Array
 		let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
-		console.log('req.files : ', req.files);
-		console.log('files : ', files);
+		// console.log('req.files : ', req.files);
+		// console.log('files : ', files);
 		if (!role_idx || !role_task_idx || !response_content) {
       res.status(400).send({
         message : "Null Value"

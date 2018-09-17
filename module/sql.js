@@ -1874,7 +1874,7 @@ module.exports = {
       // if (checkResponse.length === 0) {
         let insertResponseQuery = 'INSERT INTO tkb.role_response (role_idx, role_task_idx, content, u_idx, write_time) VALUES (?, ?, ?, ?, ?)';
         var insertResponse = await db.queryParamCnt_Arr(insertResponseQuery, [role_idx, role_task_idx, response_content, u_idx, write_time]);
-        console.log(files);
+        // console.log(files);
         if (files !== undefined) {
           for(let i = 0 ; i < files.length ; i++) {
             let insertFileQuery = 'INSERT INTO tkb.role_file (role_response_idx, file) VALUES (?, ?)';

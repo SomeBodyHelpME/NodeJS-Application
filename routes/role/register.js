@@ -103,7 +103,8 @@ router.post('/response', upload.array("file", MAXNUM), async(req, res, next) => 
 		let response_content = req.body.response_content;
 		let files = req.files.file;	// Array
 		let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
-
+		console.log('req.files : ', req.files);
+		console.log('files : ', files);
 		if (!role_idx || !role_task_idx || !response_content) {
       res.status(400).send({
         message : "Null Value"

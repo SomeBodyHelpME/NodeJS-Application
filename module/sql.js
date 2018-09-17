@@ -1879,6 +1879,7 @@ module.exports = {
           for(let i = 0 ; i < files.length ; i++) {
             let insertFileQuery = 'INSERT INTO tkb.role_file (role_response_idx, file) VALUES (?, ?)';
             var insertFile = await db.queryParamCnt_Arr(insertFileQuery, [insertResponse.insertId, files[i].location]);
+            console.log("insertFile : ", insertFile);
           }  
         } 
       // } else {

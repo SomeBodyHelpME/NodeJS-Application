@@ -1114,7 +1114,7 @@ module.exports = {
           } else if (status === statuscode.makeVote) {
             message.data.body = '투표가 등록되었습니다!!';  //보낼메시지
           } else if (status === statuscode.makeRole) {
-            message.data.body = '역할이 등록되었습니다!!';  //보낼메시지
+            message.data.body = '역할분담이 등록되었습니다!!';  //보낼메시지
           }
 
           fcm.send(message, function(err, response) {

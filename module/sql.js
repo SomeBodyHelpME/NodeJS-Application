@@ -1874,11 +1874,12 @@ module.exports = {
       // if (checkResponse.length === 0) {
         let insertResponseQuery = 'INSERT INTO tkb.role_response (role_idx, role_task_idx, content, u_idx, write_time) VALUES (?, ?, ?, ?, ?)';
         var insertResponse = await db.queryParamCnt_Arr(insertResponseQuery, [role_idx, role_task_idx, response_content, u_idx, write_time]);
-        console.log(files);
+        // console.log(files);
         if (files !== undefined) {
           for(let i = 0 ; i < files.length ; i++) {
             let insertFileQuery = 'INSERT INTO tkb.role_file (role_response_idx, file) VALUES (?, ?)';
             var insertFile = await db.queryParamCnt_Arr(insertFileQuery, [insertResponse.insertId, files[i].location]);
+            console.log("insertFile : ", insertFile);
           }  
         } 
       // } else {
@@ -2010,6 +2011,9 @@ module.exports = {
     let getSingleRoleResponseQuery = 'SELECT * FROM tkb.role_response WHERE role_response_idx = ?';
     let getSingleRoleResponse = await db.queryParamCnt_Arr(getSingleRoleResponseQuery, [role_response_idx]);
 
+    let getAllFileQuery = 'SELECT * FROM tkb.role_file WHERE role_response_idx = ?';
+    let getAllFile = await db.queryParamCnt_Arr(getAllFileQuery, [role_response_idx]);
+
     let getRoleFeedbackQuery = 'SELECT * FROM tkb.role_feedback WHERE role_response_idx = ? ORDER BY role_feedback_idx';
     let getRoleFeedback = await db.queryParamCnt_Arr(getRoleFeedbackQuery, [role_response_idx]);
 
@@ -2018,6 +2022,7 @@ module.exports = {
     } else {
       return {
         'response' : getSingleRoleResponse,
+        'files' : getAllFile,
         'feedback' : getRoleFeedback
       };
     }

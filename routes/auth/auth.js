@@ -100,8 +100,8 @@ router.post('/register', async(req, res, next) => {
   }
 });
 
-router.get('/register/check', async(req, res, next) => {
-  var id = req.query.id;
+router.post('/register/check', async(req, res, next) => {
+  var id = req.body.id;
   if (!id) {
     res.status(400).send({
       message : "Null Value"

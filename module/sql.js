@@ -2263,9 +2263,10 @@ module.exports = {
   // },
   deleteRoleResponse : async (...args) => {
     let role_response_idx = args[0];
+    let u_idx = args[1];
 
-    let deleteRoleResponseQuery = 'DELETE FROM tkb.role_response WHERE role_response_idx = ?';
-    let deleteRoleResponse = await db.queryParamCnt_Arr(deleteRoleResponseQuery, [role_response_idx]);
+    let deleteRoleResponseQuery = 'DELETE FROM tkb.role_response WHERE role_response_idx = ? AND u_idx = ?';
+    let deleteRoleResponse = await db.queryParamCnt_Arr(deleteRoleResponseQuery, [role_response_idx, u_idx]);
 
     if (!deleteRoleResponse) {
       return false;
@@ -2274,11 +2275,11 @@ module.exports = {
     }
   },
   deleteRoleFeedback : async (...args) => {
-    let role_response_idx = args[0];
+    let role_feedback_idx = args[0];
     let u_idx = args[1];
 
-    let deleteRoleFeedbackQuery = 'DELETE FROM tkb.role_feedback WHERE role_response_idx = ? AND u_idx = ?';
-    let deleteRoleFeedback = await db.queryParamCnt_Arr(deleteRoleFeedbackQuery, [role_response_idx, u_idx]);
+    let deleteRoleFeedbackQuery = 'DELETE FROM tkb.role_feedback WHERE role_feedback_idx = ? AND u_idx = ?';
+    let deleteRoleFeedback = await db.queryParamCnt_Arr(deleteRoleFeedbackQuery, [role_feedback_idx, u_idx]);
 
     if (!deleteRoleFeedback) {
       return false;

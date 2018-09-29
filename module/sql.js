@@ -1584,6 +1584,13 @@ module.exports = {
             priority: "high",
             content_available: true
           };  // message
+          fcm.send(message, function(err, response) {
+            if(err) {
+              console.log("Something has gone wrong!", err);
+            } else {
+              console.log("Successfully sent with response: ", response);
+            }
+          }); // fcm.send
         } // for
       } // if (getAllUser)
       // let userArray = [];

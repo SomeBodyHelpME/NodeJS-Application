@@ -32,5 +32,28 @@ module.exports = {
         }else {
             return decoded;
         }
+    },
+    // Check jwt
+    verify2 : function(token) {
+        let decoded;
+        let result = 1;
+        try {
+            decoded = jwt.verify(token, secretKey);
+        }
+        catch(err) {
+            if(err.message === 'jwt expired') {
+                console.log('expired token');
+                result = -2;
+            }
+            else if(err.message === 'invalid token') {
+                console.log('invalid token');
+                result = -1;
+            }
+        }
+        if (result < 0) {
+            return result;
+        } else {
+            return decoded;    
+        }
     }
 };

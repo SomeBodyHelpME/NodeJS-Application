@@ -102,15 +102,19 @@ router.post('/register', async(req, res, next) => {
 
 router.post('/token', async(req, res, next) => {
   let token = req.headers.token;
-  let decoded = jwt.verify(token);
-  if (decoded === -1) {
+  let decoded = jwt.verify2(token);
+  if (decoded === -2) {
     let id = req.body.id;
     let u_idx = req.body.u_idx;
 
     const token = jwt.sign(id, u_idx);
     res.status(400).send({
-      message : "Verification Failed",
+      message : "Verification Failed : Expired",
       token : token
+    });
+  } else if (decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed : Invalid"
     });
   } else {
     res.status(200).send({

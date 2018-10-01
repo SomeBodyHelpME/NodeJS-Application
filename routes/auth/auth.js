@@ -100,6 +100,25 @@ router.post('/register', async(req, res, next) => {
   }
 });
 
+router.post('/token', async(req, res, next) => {
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if (decoded === -1) {
+    let id = req.body.id;
+    let u_idx = req.body.u_idx;
+
+    const token = jwt.sign(id, u_idx);
+    res.status(400).send({
+      message : "Verification Failed",
+      token : token
+    });
+  } else {
+    res.status(200).send({
+      message : "Verification Success"
+    });
+  }
+});
+
 router.post('/register/check', async(req, res, next) => {
   var id = req.body.id;
   if (!id) {

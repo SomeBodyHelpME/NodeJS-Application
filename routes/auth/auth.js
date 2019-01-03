@@ -77,8 +77,8 @@ router.post('/register', async(req, res, next) => {
   } else {
     const salt = await crypto.randomBytes(32);
     const hashedpwd = await crypto.pbkdf2(pwd, salt.toString('base64'), 100000, 32, 'sha512');
-    let checkIDQuery = 'SELECT * FROM tkb.user WHERE id = ?';
-    let checkID = await db.queryParamCnt_Arr(checkIDQuery, [id]);
+    let checkIDQuery = 'SELECT * FROM tkb.user WHERE name = ? AND phone = ?';
+    let checkID = await db.queryParamCnt_Arr(checkIDQuery, [name, phone]);
     if (checkID.length === 0) {
 
       let insertQuery = 'INSERT INTO tkb.user (name, salt, pwd, phone, id, token, photo) VALUES (?, ?, ?, ?, ?, ?, ?)';
@@ -94,7 +94,7 @@ router.post('/register', async(req, res, next) => {
       }
     } else {
       res.status(400).send({
-        message: "ID Already Exist"
+        message: "Register Failed"
       });
     }
   }

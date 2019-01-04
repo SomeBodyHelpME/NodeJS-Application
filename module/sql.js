@@ -944,7 +944,9 @@ module.exports = {
     let checkWriterQuery = 'SELECT u_idx FROM tkb.vote WHERE vote_idx = ? AND u_idx = ?';
     var checkWriter = await db.queryParamCnt_Arr(checkWriterQuery, [vote_idx, u_idx]);
 
-    if(checkWriter.length === 1) {
+    if (!checkWriter) {
+      return -1;
+    } else if(checkWriter.length === 1) {
       let deleteAllContentQuery = 'DELETE FROM tkb.vote_content WHERE vote_idx = ?';
       var deleteAllContent = await db.queryParamCnt_Arr(deleteAllContentQuery, [vote_idx]);
 
@@ -952,9 +954,9 @@ module.exports = {
         let insertVoteContentQuery = 'INSERT INTO tkb.vote_content (vote_idx, vote_content_idx, content) VALUES (?, ?, ?)';
         var insertVoteContent = await db.queryParamCnt_Arr(insertVoteContentQuery, [vote_idx, i, choice[i]]);
       }
-      return true;
+      return 1;
     } else {
-      return false;
+      return 0;
     }
   },
   showSingleNoticeDetail : async (...args) => {

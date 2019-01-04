@@ -264,7 +264,11 @@ router.put('/vote', async(req, res, next) => {
       });
     } else {
       let result = await sql.modifyVote(u_idx, vote_idx, choice);
-      if(!result) {
+      if(result === -1) {
+        res.status(500).send({
+          message : "Internal Server Error"
+        });
+      } else if (result === 0) {
         res.status(400).send({
           message : "Wrong Person"
         });

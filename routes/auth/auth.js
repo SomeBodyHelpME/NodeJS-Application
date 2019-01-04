@@ -148,6 +148,19 @@ router.post('/register/check', async(req, res, next) => {
   }
 });
 
+router.put('/password', async req, res, next) => {
+  let phone = req.body.phone;
+  let name = req.body.name;
+  let id = req.body.id;
+
+  let checkQuery = 'SELECT * FROM tkb.user WHERE phone = ? AND name = ? AND id = ?';
+  let checkResult = await db.queryParamCnt_Arr(checkQuery, [phone, name, id]);
+
+  if (!checkResult && checkResult.length === 1) {
+    
+  }
+}
+
 router.post('/logout', async(req, res, next) => {
   let token = req.headers.token;
   let decoded = jwt.verify(token);

@@ -9,7 +9,7 @@ const db = require('../../module/pool.js');
 const sql = require('../../module/sql.js');
 const statuscode = require('../../module/statuscode.js');
 
-router.post('/chatroom', upload.single('photo'), async(req, res, next) => {
+router.post('/group', upload.single('photo'), async(req, res, next) => {
   var photo = ' ';
   if(req.file != undefined) {
     photo = req.file.location;
@@ -25,27 +25,66 @@ router.post('/chatroom', upload.single('photo'), async(req, res, next) => {
     let real_name = req.body.name;
     let ctrl_name = real_name + '_' + moment().format('YYMMDDHHmmss');
 
-    let createChatRoomQuery = 'INSERT INTO chat.group (real_name, ctrl_name, photo) VALUES (?, ?, ?)';
-    let createChatRoom = await db.queryParamCnt_Arr(createChatRoomQuery, [real_name, ctrl_name, photo]);
-
-    let insertNewPersonQuery = 'INSERT INTO chat.joined (g_idx, u_idx) VALUES (?, ?)';
-    let insertNewPerson = await db.queryParamCnt_Arr(insertNewPersonQuery, [createChatRoom.insertId, u_idx]);
-
-    let result = {
-      "g_idx" : createChatRoom.insertId,
-      "real_name" : real_name,
-      "ctrl_name" : ctrl_name,
-      "photo" : photo
-    };
-    if(!createChatRoom || !insertNewPerson) {
-      res.status(500).send({
-        message : "Internal Server Error"
+    if (!real_name) {
+      res.status(400).send({
+        message : "Null Value"
       });
     } else {
-      res.status(201).send({
-        message : "Success to Make New Room",
-        data : result
+      let result = await sql.makeNewGroup(u_idx, real_name, ctrl_name, photo);
+      
+      if(!result) {
+        res.status(500).send({
+          message : "Internal Server Error"
+        });
+      } else {    
+        res.status(201).send({
+          message : "Success to Make New Group",
+          data : result
+        });
+      }
+    }
+  }
+});
+
+router.post('/chatroom', upload.single('photo'), async(req, res, next) => {
+  var photo = ' ';
+  if(req.file != undefined) {
+    photo = req.file.location;
+  }
+  var userArray = [];
+  if(req.body.userArray != undefined) {
+    userArray = req.body.userArray;
+  }
+
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if(decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+    let g_idx = req.body.g_idx;
+    let real_name = req.body.name;
+    let ctrl_name = real_name + '_' + moment().format('YYMMDDHHmmss');
+    console.log(userArray);
+    if (!g_idx || !real_name) {
+      res.status(400).send({
+        message : "Null Value"
       });
+    } else {
+      let result = await sql.makeNewChatroom(u_idx, g_idx, real_name, ctrl_name, photo, userArray);
+      
+      if (!result) {
+        res.status(500).send({
+          message : "Internal Server Error"
+        });
+      } else {
+        res.status(201).send({
+          message : "Success to Make New Chatroom",
+          data : result
+        });
+      }
     }
   }
 });
@@ -59,27 +98,32 @@ router.post('/notice', async(req, res, next) => {
     });
   } else {
     let u_idx = decoded.u_idx;
-    let chat_idx = req.body.chat_idx;
-    let g_idx = req.body.g_idx;
+    let chatroom_idx = req.body.chatroom_idx;
     let content = req.body.content;
     let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
 
-    let result = await sql.makeNotice(u_idx, chat_idx, g_idx, write_time, content);
-    if(!result) {
-      res.status(500).send({
-        message : "Internal Server Error"
+    if (!chatroom_idx || !content) {
+      res.status(400).send({
+        message : "Null Value"
       });
     } else {
-      let result2 = await sql.fcmSendWhenMakeThings(u_idx, g_idx, statuscode.makeNotice);
-      if(!result2) {
+      let result = await sql.makeNotice(u_idx, chatroom_idx, write_time, content);
+      if(!result) {
         res.status(500).send({
           message : "Internal Server Error"
         });
       } else {
-        res.status(201).send({
-            message : "Success Make Notice",
-            data : result
-        });
+        let result2 = await sql.fcmSendWhenMakeThings(u_idx, chatroom_idx, statuscode.makeNotice, result[0], result[1]);
+        if(!result2) {
+          res.status(500).send({
+            message : "Internal Server Error"
+          });
+        } else {
+          res.status(201).send({
+              message : "Success Make Notice",
+              data : result[0]
+          });
+        }//else
       }//else
     }//else
   }//else
@@ -94,63 +138,68 @@ router.post('/lights', async(req, res, next) => {
     });
   } else {
     let u_idx = decoded.u_idx;
-    let chat_idx = req.body.chat_idx;
-    let g_idx = req.body.g_idx;
+    let chatroom_idx = req.body.chatroom_idx;
     let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
     let content = req.body.content;
     let open_status = req.body.open_status;
     let entire_status = req.body.entire_status;
     let userArray = req.body.userArray;
 
-    let result = await sql.makeLights(u_idx, g_idx, open_status, entire_status, content, write_time, chat_idx, userArray);
-    if(!result) {
-      res.status(500).send({
-        message : "Internal Server Error"
+    if (!chatroom_idx || !content || !open_status || !entire_status) {
+      res.status(400).send({
+        message : "Null Value"
       });
     } else {
-      let result2 = await sql.fcmSendWhenMakeThings(u_idx, g_idx, statuscode.makeLights);
-      if(!result2) {
+      let result = await sql.makeLights(u_idx, chatroom_idx, open_status, entire_status, content, write_time, userArray);
+      if(!result) {
         res.status(500).send({
           message : "Internal Server Error"
         });
       } else {
-        res.status(201).send({
-            message : "Success Make Lights",
-            data : result
-        });
+        let result2 = await sql.fcmSendWhenMakeThings(u_idx, chatroom_idx, statuscode.makeLights, result[0], result[1]);
+        if(!result2) {
+          res.status(500).send({
+            message : "Internal Server Error"
+          });
+        } else {
+          res.status(201).send({
+              message : "Success Make Lights",
+              data : result[0]
+          });
+        }//else
       }//else
     }//else
   }//else
 });
 
-router.post('/pick', async(req, res, next) => {
-  let token = req.headers.token;
-  let decoded = jwt.verify(token);
-  if (decoded === -1) {
-    res.status(400).send({
-      message : "Verification Failed"
-    });
-  } else {
-    let u_idx = decoded.u_idx;
-    let write_id = req.body.write_id;
-    let chat_idx = req.body.chat_idx;
-    let g_idx = req.body.g_idx;
-    let write_time = req.body.write_time;
-    let content = req.body.content;
-    let result = await sql.makePick(u_idx, write_id, chat_idx, g_idx, write_time, content);
-    if(!result) {
-      res.status(500).send({
-        message : "Internal Server Error"
-      });
-    } else {
-      res.status(201).send({
-        message: "Success Make Pick"
-      });
-    }
-  }
+// router.post('/pick', async(req, res, next) => {
+//   let token = req.headers.token;
+//   let decoded = jwt.verify(token);
+//   if (decoded === -1) {
+//     res.status(400).send({
+//       message : "Verification Failed"
+//     });
+//   } else {
+//     let u_idx = decoded.u_idx;
+//     let write_id = req.body.write_id;
+//     let chat_idx = req.body.chat_idx;
+//     let g_idx = req.body.g_idx;
+//     let write_time = req.body.write_time;
+//     let content = req.body.content;
+//     let result = await sql.makePick(u_idx, write_id, chat_idx, g_idx, write_time, content);
+//     if(!result) {
+//       res.status(500).send({
+//         message : "Internal Server Error"
+//       });
+//     } else {
+//       res.status(201).send({
+//         message: "Success Make Pick"
+//       });
+//     }
+//   }
 
 
-});
+// });
 
 router.post('/vote', async(req, res, next) => {
   let token = req.headers.token;
@@ -161,27 +210,39 @@ router.post('/vote', async(req, res, next) => {
     });
   } else {
     let u_idx = decoded.u_idx;
-    let chat_idx = req.body.chat_idx;
-    let g_idx = req.body.g_idx;
+    let chatroom_idx = req.body.chatroom_idx;
     let write_time = moment().format("YYYY-MM-DD HH:mm:ss");
     let content = req.body.content;
     let title = req.body.title;
     let choice = req.body.choice;
     let endtime = req.body.endtime;
 
-    if (!endtime) {
-      endtime = moment().add(7, 'days').format("YYYY-MM-DD HH:mm:ss");
-    } 
-    let result = await sql.makeVote(u_idx, chat_idx, g_idx, write_time, title, content, choice, endtime);
-    if(!result) {
-      res.status(500).send({
-        message : "Internal Server Error"
+    if (!chatroom_idx || !content || !title || !choice) {
+      res.status(400).send({
+        message : "Null Value"
       });
     } else {
-      res.status(201).send({
-        message : "Success Make Vote",
-        data : result
-      });
+      if (!endtime) {
+        endtime = moment().add(7, 'days').format("YYYY-MM-DD HH:mm:ss");
+      } 
+      let result = await sql.makeVote(u_idx, chatroom_idx, write_time, title, content, choice, endtime);
+      if(!result) {
+        res.status(500).send({
+          message : "Internal Server Error"
+        });
+      } else {
+        let result2 = await sql.fcmSendWhenMakeThings(u_idx, chatroom_idx, statuscode.makeVote, result[0], result[1]);
+        if(!result2) {
+          res.status(500).send({
+            message : "Internal Server Error"
+          });
+        } else {
+          res.status(201).send({
+            message : "Success Make Vote",
+            data : result[0]
+          });
+        }//else
+      }
     }
   }
 });
@@ -197,15 +258,25 @@ router.put('/vote', async(req, res, next) => {
     let u_idx = decoded.u_idx;
     let vote_idx = req.body.vote_idx;
     let choice = req.body.choice;
-    let result = await sql.modifyVote(u_idx, vote_idx, choice);
-    if(!result) {
+    if (!vote_idx || !choice) {
       res.status(400).send({
-        message : "Wrong Person"
+        message : "Null Value"
       });
     } else {
-      res.status(201).send({
-        message: "Success Modify Vote"
-      });
+      let result = await sql.modifyVote(u_idx, vote_idx, choice);
+      if(result === -1) {
+        res.status(500).send({
+          message : "Internal Server Error"
+        });
+      } else if (result === 0) {
+        res.status(400).send({
+          message : "Wrong Person"
+        });
+      } else {
+        res.status(201).send({
+          message: "Success Modify Vote"
+        });
+      }
     }
   }
 });

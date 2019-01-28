@@ -32,67 +32,67 @@ router.get('/unperformed', async(req, res, next) => {
     }
 });
 
-router.get('/address', async(req, res, next) => {
-	  let token = req.headers.token;
-    let decoded = jwt.verify(token);
-    if(decoded === -1)
-    {
-        res.status(400).send({
-            message : "Verification Failed"
-        });
-    }
-    else{
-        let u_idx = decoded.u_idx;
-        let result = await sql.findAllGroupMemberAddr(u_idx);
+// router.get('/address', async(req, res, next) => {
+// 	  let token = req.headers.token;
+//     let decoded = jwt.verify(token);
+//     if(decoded === -1)
+//     {
+//         res.status(400).send({
+//             message : "Verification Failed"
+//         });
+//     }
+//     else{
+//         let u_idx = decoded.u_idx;
+//         let result = await sql.findAllGroupMemberAddr(u_idx);
 
-        res.status(200).send({
-          	message : "Success to Load Address",
-          	data : result
-        });
+//         res.status(200).send({
+//           	message : "Success to Load Address",
+//           	data : result
+//         });
 
-    }
-});
+//     }
+// });
 
-router.get('/userlist/chat', async(req, res, next) => {
-	var g_idx = req.query.g_idx;
+// router.get('/userlist/chat', async(req, res, next) => {
+// 	var g_idx = req.query.g_idx;
 
-	let result = await sql.showSpecificMemberInChat(g_idx);
-  if(!result) {
-    res.status(500).send({
-      message : "Internal Server Error"
-    });
-  } else {
-    res.status(200).send({
-    	message : "Success to Load Userlist",
-    	data : result
-    });
-  }
-});
+// 	let result = await sql.showSpecificMemberInChat(g_idx);
+//   if(!result) {
+//     res.status(500).send({
+//       message : "Internal Server Error"
+//     });
+//   } else {
+//     res.status(200).send({
+//     	message : "Success to Load Userlist",
+//     	data : result
+//     });
+//   }
+// });
 
-router.get('/userlist/lights', async(req, res, next) => {
-	  var g_idx = req.query.g_idx;
+// router.get('/userlist/lights', async(req, res, next) => {
+// 	  var g_idx = req.query.g_idx;
 
-	  let token = req.headers.token;
-    let decoded = jwt.verify(token);
-    if(decoded === -1) {
-        res.status(400).send({
-            message : "Verification Failed"
-        });
-    } else {
-    	let u_idx = decoded.u_idx;
-      let result = await sql.showSpecificMemberInLights(u_idx,g_idx);
-      if(!result) {
-        res.status(500).send({
-          message : "Internal Server Error"
-        });
-      } else {
-        res.status(200).send({
-        	message : "Success to Load Userlist",
-        	data : result
-        });
-      }
-    }
-});
+// 	  let token = req.headers.token;
+//     let decoded = jwt.verify(token);
+//     if(decoded === -1) {
+//         res.status(400).send({
+//             message : "Verification Failed"
+//         });
+//     } else {
+//     	let u_idx = decoded.u_idx;
+//       let result = await sql.showSpecificMemberInLights(u_idx,g_idx);
+//       if(!result) {
+//         res.status(500).send({
+//           message : "Internal Server Error"
+//         });
+//       } else {
+//         res.status(200).send({
+//         	message : "Success to Load Userlist",
+//         	data : result
+//         });
+//       }
+//     }
+// });
 
 // router.get('/chatlist', async(req, res, next) => {
 // 	  let token = req.headers.token;
@@ -118,7 +118,7 @@ router.get('/userlist/lights', async(req, res, next) => {
 //     }
 // });
 
-router.get('/grouplist', async(req, res, next) => {
+router.get('/group', async(req, res, next) => {
   let token = req.headers.token;
   let decoded = jwt.verify(token);
   if(decoded === -1) {
@@ -141,7 +141,8 @@ router.get('/grouplist', async(req, res, next) => {
   }
 });
 
-router.get('/joined', async(req, res, next) => {
+// router.get('/chatroom/:g_idx', async(req, res, next) => {
+router.get('/chatroom', async(req, res, next) => {
   let token = req.headers.token;
   let decoded = jwt.verify(token);
   if(decoded === -1) {
@@ -150,14 +151,62 @@ router.get('/joined', async(req, res, next) => {
     });
   } else {
     let u_idx = decoded.u_idx;
-    let result = await sql.getJoinedInfo(u_idx);
+    // let g_idx = req.params.g_idx;
+    // let result = await sql.showAllChatroomJoined(u_idx, g_idx);
+    let result = await sql.showAllChatroomJoined(u_idx);
     if(!result) {
       res.status(500).send({
         message : "Internal Server Error"
       });
     } else {
       res.status(200).send({
-        message : "Success to Load Joined Information",
+        message : "Success to Load Chatroom List",
+        data : result
+      });
+    }
+  }
+});
+
+router.get('/joined/group', async(req, res, next) => {
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if(decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+    let result = await sql.getGJoinedInfo(u_idx);
+    if(!result) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    } else {
+      res.status(200).send({
+        message : "Success to Load Group Joined Information",
+        data : result
+      });
+    }
+  }
+});
+
+router.get('/joined/chatroom', async(req, res, next) => {
+  let token = req.headers.token;
+  let decoded = jwt.verify(token);
+  if(decoded === -1) {
+    res.status(400).send({
+      message : "Verification Failed"
+    });
+  } else {
+    let u_idx = decoded.u_idx;
+    let result = await sql.getCJoinedInfo(u_idx);
+    if(!result) {
+      res.status(500).send({
+        message : "Internal Server Error"
+      });
+    } else {
+      res.status(200).send({
+        message : "Success to Load Chatroom Joined Information",
         data : result
       });
     }

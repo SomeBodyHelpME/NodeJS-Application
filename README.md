@@ -13,13 +13,16 @@
 - Pick : Pick is a scrap and bookmark. If you want to save useful information or a chat message that you need to remember, you can scrap the book and put the bookmark at the same time.
 - Vote : You can easily manage your vote on the voting screen, and senders can send push notifications to non-voters.
 
+## API
+[API Documents](https://github.com/SomeBodyHelpME/NodeJS-Application/tree/master/api)
+
+## Chatting Server
+[Chatting Server](https://github.com/SomeBodyHelpME/Node_SocketChat/tree/dev2)
+
 ## Screen Shot
 ![1](./images/teamyo_1.png)
 ![2](./images/teamyo_2.png)
 ![3](./images/teamyo_3.png)
-
-## API
-[API Documents](https://github.com/SomeBodyHelpME/NodeJS-Application/tree/master/api)
 
 ## Spec
 > Native application for IOS, Android users.
